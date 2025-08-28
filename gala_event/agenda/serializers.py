@@ -14,10 +14,9 @@ class AgendaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Agenda
         fields = [
-            'id', 'title', 'description', 'event_type', 'start_datetime', 
-            'end_datetime', 'place', 'room', 'floor', 'speakers', 'capacity',
-            'is_mandatory', 'requires_registration', 'materials_url', 
-            'is_active', 'is_cancelled', 'duration_minutes', 'is_past', 
+            'id', 'title', 'description', 'start_time' , 
+            'end_time', 'place','speakers',
+            'duration_minutes', 'is_past', 
             'is_ongoing', 'speakers_names', 'registrations_count',
             'created_at', 'updated_at'
         ]
@@ -69,9 +68,8 @@ class AgendaListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Agenda
         fields = [
-            'id', 'title', 'event_type', 'start_datetime', 'end_datetime',
-            'place', 'duration_minutes', 'speakers_names', 'is_mandatory',
-            'requires_registration', 'is_cancelled'
+            'id', 'title', 'start_time', 'end_time',
+            'place', 'duration_minutes', 'speakers_names'
         ]
 
 class AgendaCreateUpdateSerializer(serializers.ModelSerializer):
@@ -80,9 +78,8 @@ class AgendaCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Agenda
         fields = [
-            'title', 'description', 'event_type', 'start_datetime', 
-            'end_datetime', 'place', 'room', 'floor', 'speakers', 'capacity',
-            'is_mandatory', 'requires_registration', 'materials_url', 
+            'title', 'description','start_time', 
+            'end_time', 'place', 'speakers', 'capacity',
             'is_active'
         ]
     
@@ -100,10 +97,9 @@ class AgendaPublicSerializer(serializers.ModelSerializer):
     class Meta:
         model = Agenda
         fields = [
-            'id', 'title', 'description', 'event_type', 'start_datetime', 
-            'end_datetime', 'place', 'room', 'floor', 'speakers', 
-            'duration_minutes', 'speakers_names', 'is_mandatory',
-            'requires_registration', 'materials_url'
+            'id', 'title', 'description','start_time', 
+            'end_time', 'place', 'speakers', 
+            'duration_minutes', 'speakers_names'
         ]
 
 class AgendaRegistrationSerializer(serializers.ModelSerializer):

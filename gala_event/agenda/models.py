@@ -12,7 +12,7 @@ class Speaker(models.Model):
     def __str__(self):
         return self.name
 
-class AgendaItem(models.Model):
+class Agenda(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     start_time = models.DateTimeField()
@@ -28,3 +28,14 @@ class AgendaItem(models.Model):
 
     class Meta:
         ordering = ['start_time']
+
+
+class AgendaRegistration(models.Model):
+    
+    agenda_item = models.ForeignKey(Agenda, on_delete=models.CASCADE, related_name='registrations')
+    registered_at = models.DateTimeField(auto_now_add=True)
+    attended = models.BooleanField(default=False)
+    attendance_marked_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.participant} - {self.agenda_item}"

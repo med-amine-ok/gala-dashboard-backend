@@ -27,26 +27,24 @@ class DashboardOverviewView(APIView):
         pending_participants = Participant.objects.filter(status='pending').count()
         approved_participants = Participant.objects.filter(status='approved').count()
         total_companies = Company.objects.filter(status='active').count()
-        total_events = Agenda.objects.filter(is_active=True, is_cancelled=False).count()
+        total_events = Agenda.objects.filter(created_at__date=today).count()
         total_tickets = Ticket.objects.count()
         checked_in_count = Ticket.objects.filter(status='checked_in').count()
         
         # Today's metrics
-        today_registrations = Participant.objects.filter(created_at__date=today).count()
+        today_registrations = Participant.objects.filter(registered_at__date=today).count()
         today_approvals = Participant.objects.filter(
             status='approved',
             updated_at__date=today
         ).count()
         today_checkins = TicketScan.objects.filter(
-            scanned_at__date=today,
-            scan_type='check_in'
+            scan_datetime__date=today,
+            scan_result='check_in'
         ).count()
         
         # Today's events
         today_events = Agenda.objects.filter(
-            start_datetime__date=today,
-            is_active=True,
-            is_cancelled=False
+            start_time__date=today,
         ).count()
         
         # Approval rate
@@ -97,15 +95,15 @@ class DashboardAnalyticsView(APIView):
         
         for i in range(30):
             date = (thirty_days_ago + timedelta(days=i)).date()
-            count = Participant.objects.filter(created_at__date=date).count()
+            count = Participant.objects.filter(registered_at__date=date).count()
             daily_registrations.append({
                 'date': date.isoformat(),
                 'registrations': count
             })
         
         # Registration by type
-        registration_types = Participant.objects.values('registration_type').annotate(
-            count=Count('registration_type')
+        registration_types = Participant.objects.values('participant_type').annotate(
+            count=Count('participant_type')
         ).order_by('-count')
         
         # Status breakdown
@@ -114,13 +112,13 @@ class DashboardAnalyticsView(APIView):
         )
         
         # Payment status breakdown
-        payment_breakdown = Participant.objects.values('payment_status').annotate(
-            count=Count('payment_status')
+        payment_breakdown = Participant.objects.values('status').annotate(
+            count=Count('status')
         )
         
         # Top companies by participants
         top_companies = Company.objects.annotate(
-            participant_count=Count('participants')
+            participant_count=Count('status')
         ).filter(participant_count__gt=0).order_by('-participant_count')[:10]
         
         company_stats = [
@@ -133,25 +131,23 @@ class DashboardAnalyticsView(APIView):
         
         # Event attendance prediction
         upcoming_events = Agenda.objects.filter(
-            start_datetime__gte=now,
-            start_datetime__lte=now + timedelta(days=7),
-            is_active=True,
-            is_cancelled=False
-        ).order_by('start_datetime')
+            start_time__gte=now,
+            start_time__lte=now + timedelta(days=7),
+        ).order_by('start_time')
         
         event_data = []
         for event in upcoming_events:
             event_data.append({
                 'title': event.title,
-                'start_datetime': event.start_datetime,
+                'start_time': event.start_time,
                 'place': event.place,
                 'event_type': event.event_type
             })
         
         # Check-in patterns (hourly for today)
         today_scans = TicketScan.objects.filter(
-            scanned_at__date=now.date(),
-            scan_type='check_in'
+            scan_datetime__date=now.date(),
+            scan_result='check_in'
         )
         
         hourly_checkins = {}
@@ -159,7 +155,7 @@ class DashboardAnalyticsView(APIView):
             hourly_checkins[f"{hour:02d}:00"] = 0
             
         for scan in today_scans:
-            hour_key = f"{scan.scanned_at.hour:02d}:00"
+            hour_key = f"{scan.scan_datetime.hour:02d}:00"
             hourly_checkins[hour_key] += 1
         
         return Response({
@@ -184,12 +180,12 @@ class DashboardRecentActivityView(APIView):
         activities = []
         
         # Recent registrations
-        recent_participants = Participant.objects.order_by('-created_at')[:10]
+        recent_participants = Participant.objects.order_by('-registered_at')[:10]
         for participant in recent_participants:
             activities.append({
                 'type': 'registration',
                 'message': f"New registration: {participant.first_name} {participant.last_name}",
-                'timestamp': participant.created_at,
+                'timestamp': participant.registered_at,
                 'participant_id': participant.id,
                 'status': participant.status
             })
@@ -211,8 +207,8 @@ class DashboardRecentActivityView(APIView):
         
         # Recent check-ins
         recent_scans = TicketScan.objects.filter(
-            scan_type='check_in'
-        ).select_related('ticket__participant', 'scanned_by').order_by('-scanned_at')[:10]
+            scan_result='check_in'
+        ).select_related('ticket__participant', 'scanned_by').order_by('-scan_datetime')[:10]
         
         for scan in recent_scans:
             activities.append({
@@ -281,9 +277,7 @@ class DashboardAlertsView(APIView):
         
         # Today's events
         today_events = Agenda.objects.filter(
-            start_datetime__date=timezone.now().date(),
-            is_active=True,
-            is_cancelled=False
+            start_time__date=timezone.now().date()
         ).count()
         
         if today_events > 0:
@@ -362,7 +356,7 @@ class DashboardExportView(APIView):
                 },
                 'events': {
                     'total': Agenda.objects.count(),
-                    'active': Agenda.objects.filter(is_active=True, is_cancelled=False).count(),
+                    'active': Agenda.objects.filter(start_time__date=timezone.now().date()).count(),
                 }
             }
         else:

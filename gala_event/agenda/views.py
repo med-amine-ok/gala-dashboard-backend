@@ -10,20 +10,19 @@ from datetime import timedelta
 from django.db.models import Count, Q
 from rest_framework import serializers
 
-from .models import Agenda, AgendaRegistration
+from .models import Agenda 
 from .serializers import AgendaSerializer
 
 
 class AgendaViewSet(viewsets.ModelViewSet):
     """Full CRUD operations for agenda (HR Admin only)"""
-    queryset = Agenda.objects.all().order_by('start_datetime')
+    queryset = Agenda.objects.all().order_by('start_time')
     serializer_class = AgendaSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['event_type']
     search_fields = ['title', 'place', 'speakers']
-    ordering_fields = ['start_datetime', 'title', 'created_at']
-    ordering = ['start_datetime']
+    ordering_fields = ['start_time', 'title', 'created_at']
+    ordering = ['start_time']
 
     def get_queryset(self):
         """Filter queryset based on query parameters"""
@@ -37,12 +36,12 @@ class AgendaViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(start_datetime__date__gte=start_date)
         if end_date:
             queryset = queryset.filter(end_datetime__date__lte=end_date)
-            
+
         # Filter active/cancelled
         show_cancelled = self.request.query_params.get('show_cancelled', 'false').lower()
         if show_cancelled != 'true':
-            queryset = queryset.filter(is_active=True, is_cancelled=False)
-            
+            queryset = queryset.filter(created_at__date=timezone.now().date())
+
         return queryset
 
     def perform_create(self, serializer):
@@ -108,7 +107,6 @@ class AgendaViewSet(viewsets.ModelViewSet):
     def statistics(self, request):
         """Enhanced statistics about agenda for dashboard"""
         total_events = Agenda.objects.count()
-        active_events = Agenda.objects.filter(is_active=True, is_cancelled=False).count()
         cancelled_events = Agenda.objects.filter(is_cancelled=True).count()
 
         # Events by type breakdown
@@ -133,9 +131,9 @@ class AgendaViewSet(viewsets.ModelViewSet):
         return Response({
             'total_events': total_events,
             'status_breakdown': {
-                'active': active_events,
+                
                 'cancelled': cancelled_events,
-                'inactive': total_events - active_events
+                'inactive': total_events 
             },
             'event_types': list(event_types),
             'today_events': today_events,

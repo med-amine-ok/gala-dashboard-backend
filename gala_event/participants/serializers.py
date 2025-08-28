@@ -1,18 +1,18 @@
 from rest_framework import serializers
-from .models import Participant, Payment
+from .models import Participant
 from companies.models import Company
 from django.core.validators import validate_email
 
-class PaymentSerializer(serializers.ModelSerializer):
-    """Serializer for Payment details"""
+# class PaymentSerializer(serializers.ModelSerializer):
+#     """Serializer for Payment details"""
     
-    class Meta:
-        model = Payment
-        fields = [
-            'id', 'amount', 'payment_method', 'transaction_id', 
-            'payment_date', 'payment_link', 'notes', 'created_at', 'updated_at'
-        ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+#     class Meta:
+#         model = Payment
+#         fields = [
+#             'id', 'amount', 'payment_method', 'transaction_id', 
+#             'payment_date', 'payment_link', 'notes', 'created_at', 'updated_at'
+#         ]
+#         read_only_fields = ['id', 'created_at', 'updated_at']
 
 class ParticipantRegistrationSerializer(serializers.ModelSerializer):
     """Serializer for participant registration (public form)"""
@@ -58,7 +58,7 @@ class ParticipantRegistrationSerializer(serializers.ModelSerializer):
 class ParticipantSerializer(serializers.ModelSerializer):
     """Full serializer for participant management (HR Admin view)"""
     company_name = serializers.CharField(source='company.name', read_only=True)
-    payment_details = PaymentSerializer(source='payment_details', read_only=True)
+    # payment_details = PaymentSerializer(source='payment_details', read_only=True)
     approved_by_name = serializers.CharField(source='approved_by.username', read_only=True)
     full_name = serializers.ReadOnlyField()
     is_approved = serializers.ReadOnlyField()

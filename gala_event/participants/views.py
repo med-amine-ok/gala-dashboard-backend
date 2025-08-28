@@ -7,9 +7,8 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.utils import timezone
 from datetime import timedelta
-from django.db.models import Count
-
-from .models import Participant, Payment
+from django.db.models import Count 
+from .models import Participant
 from .serializers import (
     ParticipantRegistrationSerializer, 
     ParticipantSerializer,
