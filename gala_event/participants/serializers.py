@@ -20,10 +20,10 @@ class ParticipantRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Participant
         fields = [
-            'first_name', 'last_name', 'email', 'phone', 'date_of_birth',
-            'registration_type', 'company', 'position', 'university', 
-            'graduation_year', 'cv_file', 'profile_photo', 'dietary_requirements',
-            'special_needs', 'linkedin_url'
+            'first_name', 'last_name', 'email', 'phone_number',
+            'registration_type', 'job_title', 'university',
+            'graduation_year', 'cv_file',
+            'linkedin_url'
         ]
     
     def validate_email(self, value):
@@ -67,19 +67,19 @@ class ParticipantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Participant
         fields = [
-            'id', 'registration_id', 'first_name', 'last_name', 'full_name',
-            'email', 'phone', 'date_of_birth', 'registration_type',
-            'company', 'company_name', 'position', 'university', 'graduation_year',
-            'status', 'payment_status', 'cv_file', 'profile_photo',
-            'dietary_requirements', 'special_needs', 'linkedin_url',
+            'id', 'first_name', 'last_name', 'full_name',
+            'email', 'phone_number', 'registration_type',
+            'company_name', 'job_title', 'university', 'graduation_year',
+            'status', 'payment_status', 'cv_file',
+            'linkedin_url',
             'approved_by', 'approved_by_name', 'approved_at', 'rejection_reason',
-            'is_approved', 'is_paid', 'payment_details',
-            'created_at', 'updated_at'
+            'is_approved', 'is_paid', 
+            'registered_at', 'updated_at'
         ]
         read_only_fields = [
-            'id', 'registration_id', 'full_name', 'is_approved', 'is_paid',
-            'company_name', 'approved_by_name', 'payment_details',
-            'created_at', 'updated_at'
+            'id', 'full_name', 'is_approved', 'is_paid',
+            'company_name', 'approved_by_name',
+            'registered_at', 'updated_at'
         ]
 
 class ParticipantApprovalSerializer(serializers.Serializer):
@@ -100,10 +100,10 @@ class ParticipantCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Participant
         fields = [
-            'first_name', 'last_name', 'email', 'phone', 'date_of_birth',
-            'registration_type', 'company', 'position', 'university', 
-            'graduation_year', 'status', 'payment_status', 'dietary_requirements',
-            'special_needs', 'linkedin_url'
+            'first_name', 'last_name', 'email', 'phone_number',
+            'registration_type','job_title', 'university',
+            'graduation_year', 'status', 'payment_status',
+            'linkedin_url'
         ]
     
     def validate_email(self, value):
@@ -120,7 +120,7 @@ class ParticipantListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Participant
         fields = [
-            'id', 'registration_id', 'full_name', 'email', 'registration_type',
+            'id','full_name', 'email', 'registration_type',
             'company_name', 'status', 'payment_status', 'created_at'
         ]
 

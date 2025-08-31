@@ -24,9 +24,6 @@ class Participant(models.Model):
     class ParticipantType(models.TextChoices):
         STUDENT = 'ST', 'Student'
         PROFESSIONAL = 'PR', 'Professional'
-        
-
-
     class Status(models.TextChoices):
         PENDING = 'PENDING', 'Pending'
         APPROVED = 'APPROVED', 'Approved'
@@ -37,9 +34,22 @@ class Participant(models.Model):
     email = models.EmailField(unique=True)
     phone_number = models.CharField(max_length=20, blank=True)
     job_title = models.CharField(max_length=100, blank=True)
-    linked_in = models.URLField(blank=True)
+    university = models.CharField(max_length=255, blank=True)
+    graduation_year = models.PositiveIntegerField(null=True, blank=True)
+    linkedin_url = models.URLField(blank=True)
+    cv_file = models.FileField(upload_to='media/cvs/', blank=True, null=True)
     participant_type = models.CharField(max_length=2, choices=ParticipantType.choices, default=ParticipantType.PROFESSIONAL)
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
+    registration_type = models.CharField(
+        max_length=100,
+        choices=[("vip", "VIP"), ("regular", "Regular"), ("student", "Student")],
+        default="regular"
+    )
+    payment_status = models.CharField(
+        max_length=50,
+        choices=[("pending", "Pending"), ("paid", "Paid"), ("failed", "Failed")],
+        default="pending"
+    )
 
     # This will be the HR Admin who approved the participant
     approved_by = models.ForeignKey(
@@ -49,9 +59,11 @@ class Participant(models.Model):
         blank=True,
         related_name='approved_participants'
     )
-    
     registered_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    rejection_reason = models.TextField(blank=True)
+    approved_at = models.DateTimeField(null=True, blank=True)
+    
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.email})"

@@ -8,5 +8,5 @@ router.register(r'participants', ParticipantViewSet, basename='participant')
 urlpatterns = [
     path('', include(router.urls)),
     path('register/', ParticipantRegistrationView.as_view(), name='participant-register'),
-    path('api-auth/', include('rest_framework.urls'))
+    
 ]

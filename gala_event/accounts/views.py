@@ -73,3 +73,12 @@ def get_csrf_token(request):
     from django.middleware.csrf import get_token
     csrf_token = get_token(request)
     return Response({'csrfToken': csrf_token}, status=status.HTTP_200_OK)
+
+class CSRFTokenView(APIView):
+
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        from django.middleware.csrf import get_token
+        csrf_token = get_token(request)
+        return Response({'csrfToken': csrf_token}, status=status.HTTP_200_OK)

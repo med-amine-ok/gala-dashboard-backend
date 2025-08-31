@@ -48,10 +48,10 @@ class ParticipantViewSet(viewsets.ModelViewSet):
     serializer_class = ParticipantSerializer
     permission_classes = [HRAdminPermission]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['status', 'registration_type', 'payment_status', 'company']
+    filterset_fields = ['status', 'registration_type', 'payment_status']
     search_fields = ['first_name', 'last_name', 'email']
-    ordering_fields = ['created_at', 'status', 'first_name']
-    ordering = ['-created_at']  # Default ordering
+    ordering_fields = ['registered_at', 'status', 'first_name']
+    ordering = ['-registered_at']  # Default ordering
 
     def get_serializer_class(self):
         if self.action in ['approve_reject']:

@@ -13,5 +13,4 @@ urlpatterns = [
     path('recent-activity/', DashboardRecentActivityView.as_view(), name='dashboard-recent-activity'),
     path('alerts/', DashboardAlertsView.as_view(), name='dashboard-alerts'),
     path('export/', DashboardExportView.as_view(), name='dashboard-export'),
-    path('api-auth/', include('rest_framework.urls'))
 ]

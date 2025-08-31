@@ -9,5 +9,4 @@ urlpatterns = [
     path('', include(router.urls)),
     path('public/', AgendaPublicView.as_view(), name='agenda-public'),
     path('today/', AgendaTodayView.as_view(), name='agenda-today'),
-    path('api-auth/', include('rest_framework.urls'))
 ]
