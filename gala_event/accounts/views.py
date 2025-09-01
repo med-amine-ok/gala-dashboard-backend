@@ -12,6 +12,7 @@ from rest_framework.parsers import JSONParser, FormParser
 from django.middleware.csrf import get_token
 from drf_yasg.utils import swagger_auto_schema
 from .models import CustomUser
+from .permissions import IsHRAdmin, IsParticipant
 from .serializers import (
     CustomUserSerializer, 
     LoginSerializer, 
@@ -56,7 +57,8 @@ class LogoutView(APIView):
         return Response({"message": "Logout successful"}, status=status.HTTP_200_OK)
 
 class CurrentUserView(APIView):
-    permission_classes = [IsAuthenticated]
+    # HR-only endpoint
+    permission_classes = [IsAuthenticated, IsHRAdmin]
 
     def get(self, request):
         try:

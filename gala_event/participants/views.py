@@ -12,6 +12,7 @@ from django.db.models import Count
 from django.db import transaction
 from accounts.models import CustomUser
 from accounts.serializers import ParticipantRegistrationSerializer
+from accounts.permissions import IsOwnerOrHRAdmin, IsParticipant, IsHRAdmin
 from .models import Participant
 from .serializers import (
     ParticipantSerializer,
@@ -230,7 +231,10 @@ class ParticipantDetailView(APIView):
                         {"error": "Only participants can access this endpoint."}, 
                         status=status.HTTP_403_FORBIDDEN
                     )
-                participant = request.user.participant_profile
+                # Ensure participant profile exists; create if missing
+                participant = getattr(request.user, 'participant_profile', None)
+                if participant is None:
+                    participant = Participant.objects.create(user=request.user)
             
             serializer = ParticipantSerializer(participant)
             return Response(serializer.data, status=status.HTTP_200_OK)
