@@ -1,12 +1,16 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from rest_framework import status
+from rest_framework import status, generics
 from django.utils import timezone
 from django.db.models import Count, Q
 from datetime import timedelta, datetime
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter, OrderingFilter
 
 from participants.models import Participant
+from .serializers import DashboardParticipantSerializer
+from accounts.permissions import IsHRAdmin
 from companies.models import Company
 from agenda.models import Agenda
 from tickets.models import Ticket, TicketScan
@@ -100,12 +104,7 @@ class DashboardAnalyticsView(APIView):
                 'date': date.isoformat(),
                 'registrations': count
             })
-        
-        # Registration by type
-        registration_types = Participant.objects.values('participant_type').annotate(
-            count=Count('participant_type')
-        ).order_by('-count')
-        
+
         # Status breakdown
         status_breakdown = Participant.objects.values('status').annotate(
             count=Count('status')
@@ -160,7 +159,6 @@ class DashboardAnalyticsView(APIView):
         
         return Response({
             'registration_trends': daily_registrations,
-            'registration_by_type': list(registration_types),
             'status_breakdown': list(status_breakdown),
             'payment_breakdown': list(payment_breakdown),
             'top_companies': company_stats,
@@ -363,3 +361,75 @@ class DashboardExportView(APIView):
             data = {'error': 'Invalid export type'}
         
         return Response(data, status=status.HTTP_200_OK)
+
+
+class ParticipantTableView(generics.ListAPIView):
+    """
+    View for HR dashboard participant table with approval/rejection functionality
+    Includes search and filtering capabilities
+    """
+    permission_classes = [IsAuthenticated, IsHRAdmin]
+    serializer_class = DashboardParticipantSerializer
+    queryset = Participant.objects.all().select_related('user', 'approved_by')
+    
+    # Add filtering and search capabilities
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['status', 'participant_type', 'graduation_year']
+    search_fields = ['user__first_name', 'user__last_name', 'university']
+    ordering_fields = ['graduation_year', 'registered_at', 'user__first_name']
+    ordering = ['-registered_at']  # Default ordering
+
+    def post(self, request, participant_id):
+        """
+        Handle approval/rejection actions for participants
+        """
+        try:
+            participant = self.queryset.get(id=participant_id)
+            action = request.data.get('action')
+            
+            if action == 'approve':
+                participant.status = Participant.Status.APPROVED
+                participant.approved_by = request.user
+                participant.approved_at = timezone.now()
+                participant.rejection_reason = ''  # Clear any previous rejection reason
+                participant.save()
+                
+                return Response({
+                    'message': 'Participant approved successfully',
+                    'participant': DashboardParticipantSerializer(participant).data
+                })
+            
+            elif action == 'reject':
+                rejection_reason = request.data.get('rejection_reason')
+                if not rejection_reason:
+                    return Response(
+                        {'error': 'Rejection reason is required'}, 
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                
+                participant.status = Participant.Status.REJECTED
+                participant.rejection_reason = rejection_reason
+                participant.approved_by = None
+                participant.approved_at = None
+                participant.save()
+                
+                return Response({
+                    'message': 'Participant rejected successfully',
+                    'participant': DashboardParticipantSerializer(participant).data
+                })
+            
+            return Response(
+                {'error': 'Invalid action. Use "approve" or "reject"'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        except Participant.DoesNotExist:
+            return Response(
+                {'error': 'Participant not found'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {'error': f'An error occurred: {str(e)}'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

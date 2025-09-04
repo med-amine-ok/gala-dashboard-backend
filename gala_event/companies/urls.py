@@ -7,6 +7,6 @@ router.register(r'companies', CompanyViewSet, basename='company')
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('list/', CompanyListView.as_view(), name='company-list'),
-    path('public/<int:pk>/', CompanyDetailPublicView.as_view(), name='company-detail'),
+    path('companies/list/', CompanyListView.as_view(), name='company-list'),
+    path('companies/public/<int:pk>/', CompanyDetailPublicView.as_view(), name='company-detail'),
 ]

@@ -123,7 +123,7 @@ class BulkEmailSerializer(serializers.Serializer):
     def validate_participant_filters(self, value):
         """Validate participant filters"""
         allowed_filters = [
-            'status', 'payment_status', 'registration_type', 
+            'status', 'payment_status', 
             'company', 'approved_after', 'approved_before'
         ]
         

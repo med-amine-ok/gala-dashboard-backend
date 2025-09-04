@@ -1,15 +1,22 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import ParticipantRegistrationView, ParticipantViewSet, ParticipantDetailView
+from .views import (
+    ParticipantRegistrationView, 
+    ParticipantViewSet, 
+    ParticipantProfileView,
+    ParticipantProfileUpdateView,
+    ParticipantListView
+)
 
 router = DefaultRouter()
-router.register(r'participants', ParticipantViewSet, basename='participant')
+# Only using ViewSet for read-only admin operations
+router.register(r'admin/view', ParticipantViewSet, basename='participant-admin')
 
 urlpatterns = [
     path('', include(router.urls)),
+    # Public registration endpoint
     path('register/', ParticipantRegistrationView.as_view(), name='participant-register'),
-    # Note: ParticipantDetailView is now accessed through the ViewSet
-    # Individual participant access: /api/participants/{id}/ (handled by ViewSet)
-    # Or if you want a separate endpoint for participants to access their own profile:
-    path('my-profile/', ParticipantDetailView.as_view(), name='my-participant-profile'),
+    # Participant's own profile management
+    path('profile/', ParticipantProfileView.as_view(), name='participant-profile'),
+    path('profile/update/', ParticipantProfileUpdateView.as_view(), name='participant-profile-update'),
 ]

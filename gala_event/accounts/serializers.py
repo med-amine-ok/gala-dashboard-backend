@@ -35,7 +35,7 @@ class LoginSerializer(serializers.Serializer):
                 else:
                     raise serializers.ValidationError('User account is disabled.')
             else:
-                raise serializers.ValidationError('Invalid email or password.')
+                raise serializers.ValidationError('Your account is not yet approved and is not active until you are approved. We will inform you via email once your account is activated.')
         else:
             raise serializers.ValidationError('Must include email and password.')
     
@@ -69,7 +69,7 @@ class ParticipantProfileSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'first_name', 'last_name', 'email', 'phone',
             'job_title', 'university', 'graduation_year', 'linkedin_url', 
-            'cv_file', 'participant_type', 'registration_type',
+            'cv_file', 'participant_type', 
             'registered_at'
         ]
         read_only_fields = ['id', 'email', 'registered_at']
@@ -116,7 +116,7 @@ class ParticipantRegistrationSerializer(serializers.ModelSerializer):
         fields = [
             'email', 'password', 'first_name', 'last_name', 'phone',
             'job_title', 'university', 'graduation_year', 'linkedin_url',
-            'cv_file', 'participant_type', 'registration_type'
+            'cv_file', 'participant_type'
         ]
 
     def validate_email(self, value):

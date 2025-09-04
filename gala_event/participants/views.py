@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status, permissions
+from rest_framework import viewsets, status, permissions, generics
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -7,11 +7,14 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.utils import timezone
+from accounts.permissions import IsParticipant
+from accounts.models import CustomUser
+from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Count 
 from django.db import transaction
 from accounts.models import CustomUser
-from accounts.serializers import ParticipantRegistrationSerializer
+from .serializers import ParticipantRegistrationSerializer
 from accounts.permissions import IsOwnerOrHRAdmin, IsParticipant, IsHRAdmin
 from .models import Participant
 from .serializers import (
@@ -19,6 +22,71 @@ from .serializers import (
     ParticipantApprovalSerializer
 )
 from drf_yasg.utils import swagger_auto_schema
+
+class ParticipantProfileView(APIView):
+    """
+    View for participants to view their own profile.
+    Only accessible by authenticated participants.
+    """
+    permission_classes = [IsAuthenticated, IsParticipant]
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
+
+    def get(self, request):
+        try:
+            # Get participant profile for current user
+            participant = request.user.participant_profile
+            serializer = ParticipantSerializer(participant)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except AttributeError:
+            return Response(
+                {"error": "Participant profile not found."}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {"error": f"An error occurred: {str(e)}"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class ParticipantProfileUpdateView(APIView):
+    """
+    View for participants to update their own profile.
+    Only accessible by authenticated participants.
+    """
+    permission_classes = [IsAuthenticated, IsParticipant]
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
+
+    def put(self, request):
+        try:
+            participant = request.user.participant_profile
+            serializer = ParticipantSerializer(
+                participant, 
+                data=request.data, 
+                partial=True  # Allow partial updates
+            )
+            
+            if serializer.is_valid():
+                # Save the updated profile
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
+        except AttributeError:
+            return Response(
+                {"error": "Participant profile not found."}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {"error": f"An error occurred: {str(e)}"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def patch(self, request):
+        """Handle PATCH requests same as PUT"""
+        return self.put(request)
+
 
 class ParticipantRegistrationView(APIView):
     # Public endpoint, no authentication required
@@ -39,9 +107,13 @@ class ParticipantRegistrationView(APIView):
                 with transaction.atomic():
                     participant = serializer.save()
                     return Response({
-                        "message": "Registration successful! You can now login with your email and password.",
-                        "participant_id": participant.id,
-                        "user_id": participant.user.id,
+                        "message": "Thank you for registering! Your account has been created successfully.",
+                        "next_steps": [
+                            "Your registration is pending admin approval",
+                            "You will receive an email notification once approved",
+                            "After approval, you can log in using your email and password"
+                        ],
+                        "status": "PENDING",
                         "email": participant.user.email
                     }, status=status.HTTP_201_CREATED)
             except Exception as e:
@@ -86,12 +158,28 @@ class IsOwnerOrHRAdmin(permissions.BasePermission):
         
         return False
 
-class ParticipantViewSet(viewsets.ModelViewSet):
-    queryset = Participant.objects.all()
+class ParticipantListView(generics.ListAPIView):
+    """
+    HR Admin view for listing approved participants
+    """
+    queryset = Participant.objects.filter(status=Participant.Status.APPROVED).select_related('user')
+    serializer_class = ParticipantSerializer
+    permission_classes = [IsHRAdmin]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['participant_type']
+    search_fields = ['job_title', 'university']
+    ordering_fields = ['registered_at']
+    ordering = ['-registered_at']
+
+class ParticipantViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Admin-only viewset for viewing participants (read-only)
+    """
+    queryset = Participant.objects.all().select_related('user')
     serializer_class = ParticipantSerializer
     permission_classes = [IsHRAdmin]  # Only HR Admins can manage all participants
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['status', 'registration_type', 'payment_status', 'participant_type']
+    filterset_fields = ['status', 'payment_status', 'participant_type']
     
     # Updated search fields to use User model fields through the relationship
     search_fields = ['user__first_name', 'user__last_name', 'user__email', 'job_title', 'university']
@@ -115,14 +203,18 @@ class ParticipantViewSet(viewsets.ModelViewSet):
             if action_type == 'approve':
                 participant.status = Participant.Status.APPROVED  # Use the correct enum value
                 participant.approved_by = request.user
+                participant.user.is_active = True
                 participant.approved_at = timezone.now()
-                participant.rejection_reason = ''  # Clear any previous rejection reason
+                participant.rejection_reason = ''  
+                participant.user.save()
                 
             elif action_type == 'reject':
                 participant.status = Participant.Status.REJECTED  # Use the correct enum value
                 participant.rejection_reason = serializer.validated_data.get('rejection_reason', '')
+                participant.user.is_active = False
                 participant.approved_by = None
                 participant.approved_at = None
+                participant.user.save()
                 
             participant.save()
             
@@ -149,11 +241,6 @@ class ParticipantViewSet(viewsets.ModelViewSet):
         paid_count = Participant.objects.filter(payment_status='paid').count()
         pending_payment = Participant.objects.filter(payment_status='pending').count()
         failed_payment = Participant.objects.filter(payment_status='failed').count()
-        
-        # Registration type counts
-        registration_types = Participant.objects.values('registration_type').annotate(
-            count=Count('registration_type')
-        )
         
         # Participant type counts
         participant_types = Participant.objects.values('participant_type').annotate(
@@ -191,7 +278,6 @@ class ParticipantViewSet(viewsets.ModelViewSet):
                 'pending': pending_payment,
                 'failed': failed_payment
             },
-            'registration_types': list(registration_types),
             'participant_types': list(participant_types),
             'university_distribution': list(university_distribution),
             'recent_registrations_7_days': recent_registrations,

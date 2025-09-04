@@ -52,11 +52,7 @@ class Participant(models.Model):
         choices=Status.choices, 
         default=Status.PENDING
     )
-    registration_type = models.CharField(
-        max_length=100,
-        choices=[("vip", "VIP"), ("regular", "Regular"), ("student", "Student")],
-        default="regular"
-    )
+
     payment_status = models.CharField(
         max_length=50,
         choices=[("pending", "Pending"), ("paid", "Paid"), ("failed", "Failed")],

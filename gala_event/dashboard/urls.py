@@ -4,7 +4,8 @@ from .views import (
     DashboardAnalyticsView,
     DashboardRecentActivityView,
     DashboardAlertsView,
-    DashboardExportView
+    DashboardExportView,
+    ParticipantTableView
 )
 
 urlpatterns = [
@@ -13,4 +14,6 @@ urlpatterns = [
     path('recent-activity/', DashboardRecentActivityView.as_view(), name='dashboard-recent-activity'),
     path('alerts/', DashboardAlertsView.as_view(), name='dashboard-alerts'),
     path('export/', DashboardExportView.as_view(), name='dashboard-export'),
+    path('participants-table/', ParticipantTableView.as_view(), name='participants-table'),
+    path('participants-table/<int:participant_id>/action/', ParticipantTableView.as_view(), name='participant-action'),
 ]

@@ -1,5 +1,61 @@
 from rest_framework import serializers
+from django.contrib.auth import get_user_model
 from .models import Participant
+
+User = get_user_model()
+
+class ParticipantRegistrationSerializer(serializers.Serializer):
+    """
+    Serializer for participant registration including user account creation
+    """
+    # User account fields
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True, style={'input_type': 'password'})
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    phone = serializers.CharField(required=False)
+
+    participant_type = serializers.ChoiceField(
+        choices=Participant.ParticipantType.choices
+    )
+    job_title = serializers.CharField(required=False, allow_blank=True)
+    university = serializers.CharField(required=False, allow_blank=True)
+    graduation_year = serializers.IntegerField(required=False, allow_null=True)
+    linkedin_url = serializers.URLField(required=False, allow_blank=True)
+    cv_file = serializers.FileField(required=False, allow_null=True)
+    
+
+    def validate_email(self, value):
+        """
+        Check if email is already registered
+        """
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("This email is already registered.")
+        return value
+
+    def create(self, validated_data):
+        """
+        Create new User and Participant profile
+        """
+        # Extract user data
+        user_data = {
+            'email': validated_data.pop('email'),
+            'password': validated_data.pop('password'),
+            'first_name': validated_data.pop('first_name'),
+            'last_name': validated_data.pop('last_name'),
+            'phone': validated_data.pop('phone', ''),
+            'is_active': False,  # Always set to False initially - requires HR approval
+            'role': 'P'  
+        }
+
+        # Set username as email
+        user_data['username'] = user_data['email']
+        # Create user account
+        user = User.objects.create_user(**user_data)
+
+        # Create participant profile
+        participant = Participant.objects.create(user=user, **validated_data)
+        return participant
 
 
 class ParticipantSerializer(serializers.ModelSerializer):
@@ -24,14 +80,14 @@ class ParticipantSerializer(serializers.ModelSerializer):
         model = Participant
         fields = [
             'id',
-            # From related user
+            
             'first_name', 'last_name', 'email', 'phone',
-            # Participant fields
-            'registration_type', 'participant_type', 'job_title', 'university', 'graduation_year',
+            
+             'participant_type', 'job_title', 'university', 'graduation_year',
             'status', 'payment_status', 'cv_file', 'linkedin_url',
-            # Approval metadata
+            
             'approved_by', 'approved_by_name', 'approved_at', 'rejection_reason',
-            # Convenience / meta
+            
             'full_name', 'is_approved', 'is_paid',
             'registered_at', 'updated_at'
         ]
@@ -69,7 +125,7 @@ class ParticipantCreateSerializer(serializers.ModelSerializer):
         model = Participant
         fields = [
             'first_name', 'last_name', 'email', 'phone',
-            'registration_type', 'participant_type', 'job_title', 'university',
+             'participant_type', 'job_title', 'university',
             'graduation_year', 'status', 'payment_status', 'linkedin_url'
         ]
         read_only_fields = ['first_name', 'last_name', 'email', 'phone']
@@ -84,6 +140,6 @@ class ParticipantListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Participant
         fields = [
-            'id', 'first_name', 'last_name', 'email', 'registration_type',
+            'id', 'first_name', 'last_name', 'email', 
             'status', 'payment_status', 'registered_at'
         ]
