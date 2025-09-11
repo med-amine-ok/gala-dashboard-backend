@@ -1,3 +1,4 @@
+from rest_framework_simplejwt.exceptions import TokenError
 from django.contrib.auth import login, logout
 from django.contrib.auth import authenticate
 from django.utils.decorators import method_decorator
@@ -6,6 +7,7 @@ from participants.models import Participant
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.parsers import JSONParser, FormParser
@@ -19,7 +21,7 @@ from .serializers import (
     ParticipantProfileSerializer
 )
 
-@method_decorator(csrf_exempt, name='dispatch')
+
 class LoginView(APIView):
     permission_classes = [AllowAny]
     parser_classes = [JSONParser, FormParser]
@@ -37,11 +39,15 @@ class LoginView(APIView):
             if user is None:
                 return Response({'error': 'Authentication failed.'}, status=status.HTTP_400_BAD_REQUEST)
 
-            # Log the actual user object into the session
-            login(request, user)
+            
+            refresh = RefreshToken.for_user(user)
+            access_token = str(refresh.access_token)
+            refresh_token = str(refresh)
 
             # Use the serializer's to_representation to get role info
-            response_data = serializer.to_representation(serializer.validated_data)
+            response_data = serializer.to_representation({'user': user})
+            response_data['access_token'] = access_token
+            response_data['refresh_token'] = refresh_token
 
             return Response({
                 "message": "Login successful",
@@ -49,13 +55,49 @@ class LoginView(APIView):
             }, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        logout(request)
-        return Response({"message": "Logout successful"}, status=status.HTTP_200_OK)
-
+        try:
+            
+            refresh_token = request.data.get('refresh_token')
+            
+            # If no refresh token provided, still allow logout (lenient approach)
+            if not refresh_token:
+                return Response({
+                    "message": "Logout successful"
+                }, status=status.HTTP_200_OK)
+            
+            # Try to blacklist the refresh token
+            try:
+                token = RefreshToken(refresh_token)
+                token.blacklist()
+                return Response({
+                    "message": "Logout successful"
+                }, status=status.HTTP_200_OK)
+                
+            except TokenError:
+                # Token is invalid, malformed, or already blacklisted
+                # Still return success because user wants to logout
+                return Response({
+                    "message": "Logout successful"
+                }, status=status.HTTP_200_OK)
+                
+            except AttributeError:
+                # Blacklist method not available (check if rest_framework_simplejwt.token_blacklist is installed)
+                return Response({
+                    "message": "Logout successful", 
+                    "note": "Token blacklisting not available"
+                }, status=status.HTTP_200_OK)
+                
+        except Exception as e:
+            # For any unexpected errors, still allow logout but log the issue
+            # In production, you'd want to log this error for debugging
+            return Response({
+                "message": "Logout successful"
+            }, status=status.HTTP_200_OK)
 class CurrentUserView(APIView):
     # HR-only endpoint
     permission_classes = [IsAuthenticated, IsHRAdmin]
@@ -155,39 +197,6 @@ class CheckAuthView(APIView):
             "is_hr_admin": request.user.role == CustomUser.Role.HR_ADMIN,
         }, status=status.HTTP_200_OK)
 
-# HR Admin only views
-class HRDashboardView(APIView):
-    permission_classes = [IsAuthenticated]
-    
-    def get(self, request):
-        # Check if user is HR Admin
-        if request.user.role != CustomUser.Role.HR_ADMIN:
-            return Response(
-                {"error": "Only HR Admins can access this endpoint."}, 
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        try:
-            # Get dashboard data for HR Admins
-            total_participants = Participant.objects.count()
-            pending_participants = Participant.objects.filter(
-                status=Participant.Status.PENDING
-            ).count()
-            approved_participants = Participant.objects.filter(
-                status=Participant.Status.APPROVED
-            ).count()
-            
-            return Response({
-                "total_participants": total_participants,
-                "pending_participants": pending_participants,
-                "approved_participants": approved_participants,
-            }, status=status.HTTP_200_OK)
-            
-        except Exception as e:
-            return Response(
-                {"error": "Unable to retrieve dashboard data."}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
 
 # CSRF token views
 @api_view(['GET'])

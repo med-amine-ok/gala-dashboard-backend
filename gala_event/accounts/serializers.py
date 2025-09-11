@@ -11,7 +11,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
         model = CustomUser
         fields = [
             'id', 'username', 'email', 'first_name', 'last_name', 
-            'phone', 'role', 'role_display', 'department', 'employee_id',
+            'role', 'role_display',
             'is_active', 'date_joined', 'last_login', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'date_joined', 'last_login', 'created_at', 'updated_at']
@@ -60,15 +60,13 @@ class ParticipantProfileSerializer(serializers.ModelSerializer):
     # Include user fields
     first_name = serializers.CharField(source='user.first_name')
     last_name = serializers.CharField(source='user.last_name')
-    email = serializers.EmailField(source='user.email', read_only=True)  # Email shouldn't be editable
-    phone = serializers.CharField(source='user.phone')
+    email = serializers.EmailField(source='user.email', read_only=True)  
     
     # Include participant fields
     class Meta:
         model = Participant
         fields = [
-            'id', 'first_name', 'last_name', 'email', 'phone',
-            'job_title', 'university', 'graduation_year', 'linkedin_url', 
+            'id', 'first_name', 'last_name', 'email','job_title', 'university', 'graduation_year', 'linkedin_url', 
             'cv_file', 'participant_type', 
             'registered_at'
         ]
@@ -80,7 +78,6 @@ class ParticipantProfileSerializer(serializers.ModelSerializer):
         user_data = {
             'first_name': validated_data.pop('user', {}).get('first_name', instance.user.first_name),
             'last_name': validated_data.pop('user', {}).get('last_name', instance.user.last_name),
-            'phone': validated_data.pop('user', {}).get('phone', instance.user.phone),
         }
         
         # Update the user
@@ -102,7 +99,6 @@ class ParticipantRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)
     first_name = serializers.CharField()
     last_name = serializers.CharField()
-    phone = serializers.CharField()
     
     # Participant fields
     job_title = serializers.CharField()
@@ -114,8 +110,7 @@ class ParticipantRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Participant
         fields = [
-            'email', 'password', 'first_name', 'last_name', 'phone',
-            'job_title', 'university', 'graduation_year', 'linkedin_url',
+            'email', 'password', 'first_name', 'last_name', 'job_title', 'university', 'graduation_year', 'linkedin_url',
             'cv_file', 'participant_type'
         ]
 
@@ -133,7 +128,7 @@ class ParticipantRegistrationSerializer(serializers.ModelSerializer):
         password = validated_data.pop('password')
         first_name = validated_data.pop('first_name')
         last_name = validated_data.pop('last_name')
-        phone = validated_data.pop('phone')
+        
 
         # Build user data, using email as username
         user = CustomUser.objects.create_user(
@@ -142,7 +137,7 @@ class ParticipantRegistrationSerializer(serializers.ModelSerializer):
             password=password,
             first_name=first_name,
             last_name=last_name,
-            phone=phone,
+            
             role=CustomUser.Role.PARTICIPANT,
         )
 

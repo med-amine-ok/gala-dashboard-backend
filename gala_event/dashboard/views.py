@@ -1,6 +1,5 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
 from rest_framework import status, generics
 from django.utils import timezone
 from django.db.models import Count, Q
@@ -19,7 +18,7 @@ from notifications.models import EmailLog
 
 class DashboardOverviewView(APIView):
     """Main dashboard overview with key metrics"""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsHRAdmin]
     
     def get(self, request):
         """Get overview statistics for dashboard home"""
@@ -87,24 +86,12 @@ class DashboardOverviewView(APIView):
 
 class DashboardAnalyticsView(APIView):
     """Detailed analytics for dashboard charts and graphs"""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsHRAdmin]
     
     def get(self, request):
         """Get analytics data for dashboard visualization"""
         now = timezone.now()
-        
-        # Registration trends (last 30 days)
-        thirty_days_ago = now - timedelta(days=30)
-        daily_registrations = []
-        
-        for i in range(30):
-            date = (thirty_days_ago + timedelta(days=i)).date()
-            count = Participant.objects.filter(registered_at__date=date).count()
-            daily_registrations.append({
-                'date': date.isoformat(),
-                'registrations': count
-            })
-
+    
         # Status breakdown
         status_breakdown = Participant.objects.values('status').annotate(
             count=Count('status')
@@ -158,7 +145,6 @@ class DashboardAnalyticsView(APIView):
             hourly_checkins[hour_key] += 1
         
         return Response({
-            'registration_trends': daily_registrations,
             'status_breakdown': list(status_breakdown),
             'payment_breakdown': list(payment_breakdown),
             'top_companies': company_stats,
@@ -169,7 +155,7 @@ class DashboardAnalyticsView(APIView):
 
 class DashboardRecentActivityView(APIView):
     """Recent activity feed for dashboard"""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsHRAdmin]
     
     def get(self, request):
         """Get recent activity across all modules"""
@@ -241,7 +227,7 @@ class DashboardRecentActivityView(APIView):
 
 class DashboardAlertsView(APIView):
     """Dashboard alerts and notifications"""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsHRAdmin]
     
     def get(self, request):
         """Get alerts and important notifications"""
@@ -327,7 +313,7 @@ class DashboardAlertsView(APIView):
 
 class DashboardExportView(APIView):
     """Export dashboard data"""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsHRAdmin]
     
     def get(self, request):
         """Get exportable summary data"""
@@ -345,7 +331,6 @@ class DashboardExportView(APIView):
                 },
                 'companies': {
                     'total': Company.objects.count(),
-                    'active': Company.objects.filter(status='active').count(),
                 },
                 'tickets': {
                     'total': Ticket.objects.count(),
@@ -354,7 +339,6 @@ class DashboardExportView(APIView):
                 },
                 'events': {
                     'total': Agenda.objects.count(),
-                    'active': Agenda.objects.filter(start_time__date=timezone.now().date()).count(),
                 }
             }
         else:
@@ -368,7 +352,7 @@ class ParticipantTableView(generics.ListAPIView):
     View for HR dashboard participant table with approval/rejection functionality
     Includes search and filtering capabilities
     """
-    permission_classes = [IsAuthenticated, IsHRAdmin]
+    permission_classes = [IsHRAdmin]
     serializer_class = DashboardParticipantSerializer
     queryset = Participant.objects.all().select_related('user', 'approved_by')
     

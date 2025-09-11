@@ -9,7 +9,7 @@ from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Count, Q
 from rest_framework import serializers
-
+from accounts.permissions import IsHRAdmin, IsParticipant
 from .models import Agenda 
 from .serializers import AgendaSerializer
 
@@ -18,7 +18,7 @@ class AgendaViewSet(viewsets.ModelViewSet):
     """Full CRUD operations for agenda (HR Admin only)"""
     queryset = Agenda.objects.all().order_by('start_time')
     serializer_class = AgendaSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsHRAdmin]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     search_fields = ['title', 'place', 'speakers']
     ordering_fields = ['start_time', 'title', 'created_at']
@@ -62,7 +62,7 @@ class AgendaViewSet(viewsets.ModelViewSet):
 
         if start_datetime and end_datetime and place:
             overlapping_events = Agenda.objects.filter(
-                is_active=True,
+                
                 is_cancelled=False,
                 place=place,  # Same place conflicts
                 start_datetime__lt=end_datetime,
@@ -95,7 +95,7 @@ class AgendaViewSet(viewsets.ModelViewSet):
     def activate_event(self, request, pk=None):
         """Activate/reactivate a specific event"""
         agenda_item = self.get_object()
-        agenda_item.is_active = True
+        
         agenda_item.is_cancelled = False
         agenda_item.save()
         
@@ -119,7 +119,7 @@ class AgendaViewSet(viewsets.ModelViewSet):
         # Today's events
         today_events = Agenda.objects.filter(
             start_datetime__date=now.date(),
-            is_active=True,
+            
             is_cancelled=False
         ).count()
 
@@ -155,7 +155,6 @@ class AgendaPublicView(APIView):
         
         # Base queryset - only active and non-cancelled events
         queryset = Agenda.objects.filter(
-            is_active=True, 
             is_cancelled=False
         ).order_by('start_datetime')
         
@@ -183,7 +182,6 @@ class AgendaPublicView(APIView):
                 'event_type': agenda.event_type,
                 'speakers': agenda.speakers,
                 'description': agenda.description
-                # Note: Excluding capacity and internal notes for public view
             })
         
         return Response(agenda_data, status=status.HTTP_200_OK)
@@ -198,7 +196,7 @@ class AgendaTodayView(APIView):
         today = timezone.now().date()
         today_events = Agenda.objects.filter(
             start_datetime__date=today,
-            is_active=True,
+            
             is_cancelled=False
         ).order_by('start_datetime')
         

@@ -8,7 +8,7 @@ from rest_framework.decorators import action
 from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Count
-
+from accounts.permissions import IsHRAdmin, IsOwnerOrHRAdmin
 from .models import Company
 from .serializers import CompanySerializer
 
@@ -17,9 +17,9 @@ class CompanyViewSet(viewsets.ModelViewSet):
     """Full CRUD operations for companies (HR Admin only)"""
     queryset = Company.objects.all()
     serializer_class = CompanySerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsHRAdmin]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['status']  # Fixed: Use 'status' field from your model
+    filterset_fields = ['field']  
     search_fields = ['name', 'email', 'website']
     ordering_fields = ['name', 'created_at']
     ordering = ['name']
@@ -57,8 +57,7 @@ class CompanyViewSet(viewsets.ModelViewSet):
     def statistics(self, request):
         """Enhanced statistics about companies for dashboard"""
         total_companies = Company.objects.count()
-        active_companies = Company.objects.filter(status='active').count()
-        inactive_companies = Company.objects.filter(status='inactive').count()
+        
 
         # Companies with most participants (if you have participants app)
         try:
@@ -77,29 +76,16 @@ class CompanyViewSet(viewsets.ModelViewSet):
         except ImportError:
             top_companies = []
 
-        # Recent companies (last 30 days)
-        thirty_days_ago = timezone.now() - timedelta(days=30)
-        recent_companies = Company.objects.filter(
-            created_at__gte=thirty_days_ago
-        ).count()
-
-        # Companies with hiring positions
-        hiring_companies = Company.objects.exclude(
-            hiring_positions__isnull=True
-        ).exclude(hiring_positions__exact='').count()
+        
 
         return Response({
             'total_companies': total_companies,
-            'status_breakdown': {
-                'active': active_companies,
-                'inactive': inactive_companies
-            },
             'top_companies_by_participants': top_companies,
-            'recent_companies_30_days': recent_companies,
-            'companies_with_hiring_positions': hiring_companies,
+            
+            
             'completion_rate': {
                 'with_website': Company.objects.exclude(website__isnull=True).exclude(website__exact='').count(),
-                'with_hiring_positions': hiring_companies
+                
             }
         }, status=status.HTTP_200_OK)
 
@@ -110,7 +96,7 @@ class CompanyListView(APIView):
     
     def get(self, request, format=None):
         """Return only active companies with minimal data for dropdowns"""
-        companies = Company.objects.filter(status='active').values('id', 'name')
+        companies = Company.objects.values('id', 'name')
         return Response(list(companies), status=status.HTTP_200_OK)
 
 
@@ -121,13 +107,13 @@ class CompanyDetailPublicView(APIView):
     def get(self, request, pk, format=None):
         """Get specific company details for registration form"""
         try:
-            company = Company.objects.get(pk=pk, status='active')
+            company = Company.objects.get(pk=pk)
             data = {
                 'id': company.id,
                 'name': company.name,
                 'description': company.description,
                 'website': company.website,
-                'hiring_positions': company.hiring_positions
+                
             }
             return Response(data, status=status.HTTP_200_OK)
         except Company.DoesNotExist:

@@ -7,6 +7,6 @@ router.register(r'agenda', AgendaViewSet, basename='agenda')
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('public/', AgendaPublicView.as_view(), name='agenda-public'),
-    path('today/', AgendaTodayView.as_view(), name='agenda-today'),
+    path('agenda/public/', AgendaPublicView.as_view(), name='agenda-public'),
+    path('agenda/today/', AgendaTodayView.as_view(), name='agenda-today'),
 ]

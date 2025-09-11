@@ -9,8 +9,8 @@ class CompanySerializer(serializers.ModelSerializer):
         model = Company
         fields = [
             'id', 'name', 'description', 'email', 'website', 
-            'hiring_positions', 'contact_person', 'phone', 'address',
-            'status', 'logo', 'participants_count', 'created_at', 'updated_at'
+            'field', 'contact_person', 'phone', 'address',
+            'logo', 'participants_count', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'participants_count', 'created_at', 'updated_at']
     
@@ -32,7 +32,7 @@ class CompanyListSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Company
-        fields = ['id', 'name', 'status']
+        fields = ['id', 'name', 'logo']
 
 class CompanyCreateUpdateSerializer(serializers.ModelSerializer):
     """Serializer for creating/updating companies"""
@@ -41,8 +41,8 @@ class CompanyCreateUpdateSerializer(serializers.ModelSerializer):
         model = Company
         fields = [
             'name', 'description', 'email', 'website', 
-            'hiring_positions', 'contact_person', 'phone', 'address',
-            'status', 'logo'
+            'field', 'contact_person', 'phone', 'address',
+            'logo'
         ]
     
     def validate_name(self, value):

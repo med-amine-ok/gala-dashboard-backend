@@ -79,8 +79,8 @@ class AgendaCreateUpdateSerializer(serializers.ModelSerializer):
         model = Agenda
         fields = [
             'title', 'description','start_time', 
-            'end_time', 'place', 'speakers', 'capacity',
-            'is_active'
+            'end_time', 'place', 'speakers', 'capacity'
+            
         ]
     
     def validate_capacity(self, value):

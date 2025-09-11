@@ -93,28 +93,3 @@ class Participant(models.Model):
     class Meta:
         ordering = ['-registered_at']
 
-
-class Ticket(models.Model):
-    class PaymentStatus(models.TextChoices):
-        UNPAID = 'UNPAID', 'Unpaid'
-        PAID = 'PAID', 'Paid'
-        WAIVED = 'WAIVED', 'Waived'
-
-    class TicketStatus(models.TextChoices):
-        VALID = 'VALID', 'Valid'
-        USED = 'USED', 'Used'
-        CANCELED = 'CANCELED', 'Canceled'
-        CHECKED_IN = 'CHECKED_IN', 'Checked-In'
-
-    participant = models.OneToOneField(Participant, on_delete=models.CASCADE, related_name='event_ticket') # Changed related_name
-    ticket_code = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    qr_code = models.ImageField(upload_to='qr_codes/', blank=True, null=True)
-    
-    payment_status = models.CharField(max_length=10, choices=PaymentStatus.choices, default=PaymentStatus.UNPAID)
-    ticket_status = models.CharField(max_length=10, choices=TicketStatus.choices, default=TicketStatus.VALID)
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"Ticket for {self.participant.email}"
