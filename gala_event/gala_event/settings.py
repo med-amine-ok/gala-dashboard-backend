@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     "participants",
     "notifications",
     "dashboard",
+
 ]
 
 MIDDLEWARE = [
@@ -89,7 +90,7 @@ ROOT_URLCONF = "gala_event.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [os.path.join(BASE_DIR, 'templates')],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -177,6 +178,21 @@ REST_FRAMEWORK = {
     ],
 }
 
+# Add this to your settings.py
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header',
+            'description': 'JWT Authorization header using the Bearer scheme. Example: "Authorization: Bearer {token}"',
+        }
+    },
+    'USE_SESSION_AUTH': False,
+    'JSON_EDITOR': True,
+}
+
+
 # Simple JWT settings
 from datetime import timedelta
 SIMPLE_JWT = {
@@ -186,6 +202,7 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,
     'UPDATE_LAST_LOGIN': True,
 }
+
 
 # Celery settings
 CELERY_BROKER_URL = env('REDIS_URL', default='redis://localhost:6379/0')
@@ -203,6 +220,8 @@ EMAIL_USE_TLS = env('EMAIL_USE_TLS', default=True)
 EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default=EMAIL_HOST_USER)
+
+FRONTEND_URL = 'https://your-frontend-url.com'
 
 # Cache settings
 CACHES = {

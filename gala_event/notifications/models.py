@@ -9,6 +9,7 @@ class EmailTemplate(models.Model):
         ('ticket_delivery', 'Ticket Delivery'),
         ('event_reminder', 'Event Reminder'),
         ('event_update', 'Event Update'),
+        ('payment_confirmation', 'Payment Confirmation'),
     ]
     
     name = models.CharField(max_length=100)
@@ -60,9 +61,6 @@ class EmailLog(models.Model):
     participant = models.ForeignKey('participants.Participant', on_delete=models.CASCADE, null=True, blank=True, related_name='emails')
     sent_by = models.ForeignKey('accounts.CustomUser', on_delete=models.SET_NULL, null=True, blank=True, related_name='sent_emails')
     
-    # Tracking
-    opened_at = models.DateTimeField(null=True, blank=True)  # If tracking is enabled
-    clicked_at = models.DateTimeField(null=True, blank=True)  # If tracking is enabled
     
     # System Fields
     created_at = models.DateTimeField(auto_now_add=True)

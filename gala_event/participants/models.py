@@ -3,22 +3,6 @@ from django.conf import settings
 import uuid
 
 
-class Company(models.Model):
-    name = models.CharField(max_length=255, unique=True)
-    description = models.TextField(blank=True)
-    email = models.EmailField(blank=True)
-    website = models.URLField(blank=True)
-    # For array-like fields, JSONField is a good, flexible choice.
-    hiring_positions = models.JSONField(default=list, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        verbose_name_plural = "Companies"
-        ordering = ['name']
 
 class Participant(models.Model):
     class ParticipantType(models.TextChoices):

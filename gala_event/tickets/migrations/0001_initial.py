@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
                 (
                     "ticket_number",
                     models.CharField(
-                        default=tickets.models.generate_ticket_number,
+                        default=tickets.models.generate_serial_number,
                         max_length=20,
                         unique=True,
                     ),

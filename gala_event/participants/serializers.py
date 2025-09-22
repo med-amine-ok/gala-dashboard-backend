@@ -10,10 +10,8 @@ class ParticipantRegistrationSerializer(serializers.Serializer):
     """
     # User account fields
     email = serializers.EmailField()
-    password = serializers.CharField(write_only=True, style={'input_type': 'password'})
     first_name = serializers.CharField()
     last_name = serializers.CharField()
-    phone = serializers.CharField(required=False)
 
     participant_type = serializers.ChoiceField(
         choices=Participant.ParticipantType.choices
@@ -40,22 +38,26 @@ class ParticipantRegistrationSerializer(serializers.Serializer):
         # Extract user data
         user_data = {
             'email': validated_data.pop('email'),
-            'password': validated_data.pop('password'),
             'first_name': validated_data.pop('first_name'),
             'last_name': validated_data.pop('last_name'),
-            'phone': validated_data.pop('phone', ''),
             'is_active': False,  # Always set to False initially - requires HR approval
             'role': 'P'  
         }
 
-        # Set username as email
+        # Set username as email and generate a random temporary password
+        import secrets
+        import string
+        temp_password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(12))
         user_data['username'] = user_data['email']
+        user_data['password'] = temp_password
+        
         # Create user account
         user = User.objects.create_user(**user_data)
 
         # Create participant profile
         participant = Participant.objects.create(user=user, **validated_data)
         return participant
+
 
 
 class ParticipantSerializer(serializers.ModelSerializer):

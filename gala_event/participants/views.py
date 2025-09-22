@@ -22,6 +22,9 @@ from .serializers import (
     ParticipantApprovalSerializer
 )
 from drf_yasg.utils import swagger_auto_schema
+import qrcode
+from io import BytesIO
+import base64
 
 class ParticipantProfileView(APIView):
     """
@@ -36,7 +39,59 @@ class ParticipantProfileView(APIView):
             # Get participant profile for current user
             participant = request.user.participant_profile
             serializer = ParticipantSerializer(participant)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            
+            # Get ticket information if available
+            ticket_data = None
+            if hasattr(participant, 'ticket'):
+                ticket = participant.ticket
+                
+                # Generate QR code for ticket
+                qr = qrcode.QRCode(
+                    version=1,
+                    error_correction=qrcode.constants.ERROR_CORRECT_L,
+                    box_size=10,
+                    border=4,
+                )
+                qr.add_data(f"TICKET:{ticket.serial_number}")
+                qr.make(fit=True)
+                
+                # Create QR code image
+                img = qr.make_image(fill_color="black", back_color="white")
+                
+                # Convert to base64
+                buffer = BytesIO()
+                img.save(buffer, format='PNG')
+                img_str = base64.b64encode(buffer.getvalue()).decode()
+                
+                ticket_data = {
+                    'serial_number': ticket.serial_number,
+                    'status': ticket.status,
+                    'issued_at': ticket.issued_at,
+                    'qr_code': f'data:image/png;base64,{img_str}',
+                }
+            
+            # Get event schedule from agenda 
+            event_schedule = []
+            try:
+                from agenda.models import AgendaItem
+                agenda_items = AgendaItem.objects.filter(is_published=True).order_by('start_time')
+                for item in agenda_items:
+                    event_schedule.append({
+                        'title': item.title,
+                        'description': item.description,
+                        'start_time': item.start_time,
+                        'end_time': item.end_time,
+                        'location': item.location,
+                    })
+            except:
+                pass
+                
+            # Combine all data
+            response_data = serializer.data
+            response_data['ticket'] = ticket_data
+            response_data['event_schedule'] = event_schedule
+            
+            return Response(response_data, status=status.HTTP_200_OK)
         except AttributeError:
             return Response(
                 {"error": "Participant profile not found."}, 
@@ -47,6 +102,7 @@ class ParticipantProfileView(APIView):
                 {"error": f"An error occurred: {str(e)}"}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
 
 
 class ParticipantProfileUpdateView(APIView):
@@ -182,8 +238,8 @@ class ParticipantViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_fields = ['status', 'payment_status', 'participant_type']
     
     # Updated search fields to use User model fields through the relationship
-    search_fields = ['user__first_name', 'user__last_name', 'user__email', 'job_title', 'university']
-    ordering_fields = ['registered_at', 'status', 'user__first_name']
+    search_fields = ['user__full_name', 'user__email', 'job_title', 'university']
+    ordering_fields = ['registered_at', 'status', 'user__full_name']
     ordering = ['-registered_at']  # Default ordering
 
     def get_serializer_class(self):

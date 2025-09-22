@@ -11,11 +11,13 @@ from datetime import timedelta
 import qrcode
 from io import BytesIO
 import base64
-
+from .payment_handlers import handle_payment_success
 from .models import Ticket, TicketScan
 from .serializers import TicketSerializer
 from participants.models import Participant
-
+from accounts.permissions import IsHRAdmin
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 class TicketViewSet(viewsets.ModelViewSet):
     """Full CRUD operations for tickets (HR Admin only)"""
@@ -23,8 +25,8 @@ class TicketViewSet(viewsets.ModelViewSet):
     serializer_class = TicketSerializer
     permission_classes = [IsAuthenticated]
     filterset_fields = ['status', 'participant__status']
-    search_fields = ['ticket_number', 'participant__first_name', 'participant__last_name', 'participant__email']
-    ordering_fields = ['created_at', 'issued_date', 'ticket_number']
+    search_fields = ['serial_number', 'participant__full_name', 'participant__email']
+    ordering_fields = ['created_at', 'issued_date', 'serial_number']
     ordering = ['-created_at']
 
     def get_queryset(self):
@@ -57,12 +59,11 @@ class TicketViewSet(viewsets.ModelViewSet):
         
         for participant in approved_participants:
             ticket = Ticket.objects.create(
-                participant=participant,
-                issued_by=request.user
+                participant=participant
             )
             tickets_created.append({
-                'participant': f"{participant.first_name} {participant.last_name}",
-                'ticket_number': ticket.ticket_number,
+                'participant': f"{participant.full_name} ",
+                'serial_number': ticket.serial_number,
                 'participant_id': participant.id
             })
         
@@ -92,12 +93,11 @@ class TicketViewSet(viewsets.ModelViewSet):
         
         for participant in participants:
             ticket = Ticket.objects.create(
-                participant=participant,
-                issued_by=request.user
+                participant=participant
             )
             tickets_created.append({
-                'participant': f"{participant.first_name} {participant.last_name}",
-                'ticket_number': ticket.ticket_number,
+                'participant': f"{participant.full_name}  ",
+                'serial_number': ticket.serial_number,
                 'participant_id': participant.id
             })
         
@@ -114,7 +114,7 @@ class TicketViewSet(viewsets.ModelViewSet):
         ticket.save()
         
         return Response({
-            'message': f'Ticket {ticket.ticket_number} has been cancelled'
+            'message': f'Ticket {ticket.serial_number} has been cancelled'
         }, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post'])
@@ -125,7 +125,7 @@ class TicketViewSet(viewsets.ModelViewSet):
             ticket.status = 'active'
             ticket.save()
             return Response({
-                'message': f'Ticket {ticket.ticket_number} has been reactivated'
+                'message': f'Ticket {ticket.serial_number} has been reactivated'
             }, status=status.HTTP_200_OK)
         else:
             return Response({
@@ -139,7 +139,7 @@ class TicketViewSet(viewsets.ModelViewSet):
         
         # Create QR code data
         qr_data = {
-            'ticket_number': ticket.ticket_number,
+            'serial_number': ticket.serial_number,
             'participant_id': ticket.participant.id,
             'event': 'Gala Event 2025'
         }
@@ -151,7 +151,7 @@ class TicketViewSet(viewsets.ModelViewSet):
             box_size=10,
             border=4,
         )
-        qr.add_data(f"TICKET:{ticket.ticket_number}")
+        qr.add_data(f"TICKET:{ticket.serial_number}")
         qr.make(fit=True)
         
         # Create QR code image
@@ -163,9 +163,9 @@ class TicketViewSet(viewsets.ModelViewSet):
         img_str = base64.b64encode(buffer.getvalue()).decode()
         
         return Response({
-            'ticket_number': ticket.ticket_number,
-            'qr_code': f'data:image/png;base64,{img_str}',
-            'participant': f"{ticket.participant.first_name} {ticket.participant.last_name}"
+            'serial_number': ticket.serial_number,
+            # 'qr_code': f'data:image/png;base64,{img_str}',
+            'participant': f"{ticket.participant.full_name}  "
         }, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'])
@@ -185,8 +185,8 @@ class TicketViewSet(viewsets.ModelViewSet):
         # Recent check-ins (last 24 hours)
         twenty_four_hours_ago = timezone.now() - timedelta(hours=24)
         recent_checkins = TicketScan.objects.filter(
-            scanned_at__gte=twenty_four_hours_ago,
-            scan_type='check_in'
+            scan_datetime__gte=twenty_four_hours_ago,
+            scan_result='valid'
         ).count()
         
         # Tickets issued today
@@ -223,17 +223,17 @@ class TicketCheckInView(APIView):
     
     def post(self, request):
         """Check-in a ticket using ticket number or QR scan"""
-        ticket_number = request.data.get('ticket_number')
-        scan_type = request.data.get('scan_type', 'check_in')  # check_in or check_out
+        serial_number = request.data.get('serial_number')
+        action = request.data.get('action', 'check_in')  # 'check_in' or 'check_out'
         
-        if not ticket_number:
+        if not serial_number:
             return Response(
-                {'error': 'ticket_number is required'},
+                {'error': 'serial_number is required'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
         try:
-            ticket = Ticket.objects.get(ticket_number=ticket_number)
+            ticket = Ticket.objects.get(serial_number=serial_number)
         except Ticket.DoesNotExist:
             return Response(
                 {'error': 'Invalid ticket number'},
@@ -247,19 +247,21 @@ class TicketCheckInView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        if ticket.status == 'used' and scan_type == 'check_in':
+        if ticket.status == 'used' and action == 'check_in':
             return Response(
                 {'error': 'This ticket has already been used'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Update ticket status
-        if scan_type == 'check_in':
+        # Update ticket status and determine scan_result
+        if action == 'check_in':
             ticket.status = 'checked_in'
             message = 'Successfully checked in'
+            scan_result = 'valid'
         else:
             ticket.status = 'used'
             message = 'Successfully checked out'
+            scan_result = 'valid'
             
         ticket.save()
         
@@ -267,14 +269,13 @@ class TicketCheckInView(APIView):
         TicketScan.objects.create(
             ticket=ticket,
             scanned_by=request.user,
-            scan_type=scan_type,
-            scanned_at=timezone.now()
+            scan_result=scan_result,
         )
         
         return Response({
             'message': message,
-            'ticket_number': ticket.ticket_number,
-            'participant': f"{ticket.participant.first_name} {ticket.participant.last_name}",
+            'serial_number': ticket.serial_number,
+            'participant': f"{ticket.participant.full_name}  ",
             'participant_email': ticket.participant.email,
             'scan_time': timezone.now(),
             'status': ticket.status
@@ -285,18 +286,18 @@ class TicketVerificationView(APIView):
     """Public ticket verification (no authentication required)"""
     permission_classes = [AllowAny]
     
-    def get(self, request, ticket_number):
+    def get(self, request, serial_number):
         """Verify ticket validity without sensitive information"""
         try:
             ticket = Ticket.objects.select_related('participant').get(
-                ticket_number=ticket_number
+                serial_number=serial_number
             )
             
             return Response({
                 'valid': True,
                 'status': ticket.status,
-                'participant_name': f"{ticket.participant.first_name} {ticket.participant.last_name}",
-                'issued_date': ticket.issued_date,
+                'participant_name': f"{ticket.participant.full_name}  ",
+                'issued_date': ticket.issued_at,
                 'can_checkin': ticket.status in ['active', 'used']
             }, status=status.HTTP_200_OK)
             
@@ -316,24 +317,134 @@ class TicketScanHistoryView(APIView):
         if ticket_id:
             scans = TicketScan.objects.filter(
                 ticket_id=ticket_id
-            ).select_related('ticket', 'scanned_by').order_by('-scanned_at')
+            ).select_related('ticket', 'scanned_by').order_by('-scan_datetime')
         else:
             scans = TicketScan.objects.select_related(
                 'ticket', 'scanned_by'
-            ).order_by('-scanned_at')[:50]  # Limit to recent 50 scans
+            ).order_by('-scan_datetime')[:50]  # Limit to recent 50 scans
         
         scan_data = []
         for scan in scans:
             scan_data.append({
                 'id': scan.id,
-                'ticket_number': scan.ticket.ticket_number,
-                'participant': f"{scan.ticket.participant.first_name} {scan.ticket.participant.last_name}",
-                'scan_type': scan.scan_type,
+                'serial_number': scan.ticket.serial_number,
+                'participant': f"{scan.ticket.participant.full_name}",
+                'scan_result': scan.scan_result,
                 'scanned_by': scan.scanned_by.username,
-                'scanned_at': scan.scanned_at
+                'scan_datetime': scan.scan_datetime
             })
         
         return Response({
             'scans': scan_data,
             'total_scans': len(scan_data)
         }, status=status.HTTP_200_OK)
+
+
+# class PaymentWebhookView(APIView):
+#     """Handle payment webhooks from payment provider"""
+#     permission_classes = [AllowAny]  
+    
+#     def post(self, request):
+#         """Process payment webhook"""
+#         # Extract data from webhook
+#         payment_data = request.data
+        
+        
+#         if 'participant_id' not in payment_data:
+#             return Response(
+#                 {"error": "Missing participant_id"}, 
+#                 status=status.HTTP_400_BAD_REQUEST
+#             )
+            
+#         # Check payment status
+#         payment_status = payment_data.get('status', '').lower()
+#         if payment_status == 'success' or payment_status == 'completed':
+#             # Process successful payment
+#             result = handle_payment_success(
+#                 participant_id=payment_data['participant_id'],
+#                 payment_reference=payment_data.get('reference')
+#             )
+            
+#             if result['success']:
+#                 return Response(result, status=status.HTTP_200_OK)
+#             else:
+#                 return Response(result, status=status.HTTP_400_BAD_REQUEST)
+#         else:
+#             # Handle failed payment if needed
+#             return Response(
+#                 {"message": f"Payment status '{payment_status}' not processed"}, 
+#                 status=status.HTTP_200_OK
+#             )
+
+
+# class PaymentConfirmationView(APIView):
+#     """Allow HR Admins to manually confirm payments"""
+#     permission_classes = [IsAuthenticated, IsHRAdmin]
+    
+#     def post(self, request):
+#         """Manually confirm payment for a participant"""
+#         participant_id = request.data.get('participant_id')
+        
+#         if not participant_id:
+#             return Response(
+#                 {"error": "participant_id is required"}, 
+#                 status=status.HTTP_400_BAD_REQUEST
+#             )
+            
+#         result = handle_payment_success(
+#             participant_id=participant_id,
+#             payment_reference=request.data.get('reference', 'Manual confirmation')
+#         )
+        
+#         if result['success']:
+#             return Response(result, status=status.HTTP_200_OK)
+#         else:
+#             return Response(result, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ManualPaymentView(APIView):
+    """Test endpoint for payment success flow (Swagger testing)"""
+    permission_classes = [IsHRAdmin]  
+    
+    @swagger_auto_schema(
+        operation_summary="Test payment success flow",
+        operation_description="Simulates a successful payment and triggers the set password email flow",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['participant_id'],
+            properties={
+                'participant_id': openapi.Schema(
+                    type=openapi.TYPE_INTEGER,
+                    description="ID of the participant to process payment for"
+                ),
+                'reference': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description="Optional payment reference"
+                )
+            }
+        ),
+        responses={
+            200: "Payment processed successfully",
+            400: "Invalid request or processing error",
+            404: "Participant not found"
+        }
+    )
+    def post(self, request):
+        """Test payment success flow"""
+        participant_id = request.data.get('participant_id')
+        
+        if not participant_id:
+            return Response(
+                {"error": "participant_id is required"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        result = handle_payment_success(
+            participant_id=participant_id,
+            payment_reference=request.data.get('reference', 'Test payment')
+        )
+        
+        if result['success']:
+            return Response(result, status=status.HTTP_200_OK)
+        else:
+            return Response(result, status=status.HTTP_400_BAD_REQUEST)

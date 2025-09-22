@@ -28,7 +28,7 @@ urlpatterns = [
     path('api-auth/', include('rest_framework.urls')),
     path("api/accounts/", include("accounts.urls")),
     path("api/participants/", include("participants.urls")),
-    path("api/tickets/", include("tickets.urls")),
+    path("api/", include("tickets.urls")),
     path("api/dashboard/", include("dashboard.urls")),
     path("api/", include("companies.urls")),
     path("api/", include("agenda.urls")),

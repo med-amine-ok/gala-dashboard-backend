@@ -42,12 +42,11 @@ class EmailLogSerializer(serializers.ModelSerializer):
             'template_used', 'template_name', 'body_html', 'body_text',
             'status', 'sent_at', 'delivery_status', 'error_message',
             'participant', 'participant_name', 'sent_by', 'sent_by_name',
-            'opened_at', 'clicked_at', 'is_delivered', 'created_at', 'updated_at'
+            'is_delivered', 'created_at', 'updated_at'
         ]
         read_only_fields = [
             'id', 'participant_name', 'sent_by_name', 'template_name',
-            'is_delivered', 'sent_at', 'opened_at', 'clicked_at',
-            'created_at', 'updated_at'
+            'is_delivered', 'sent_at', 'created_at', 'updated_at'
         ]
 
 class EmailLogListSerializer(serializers.ModelSerializer):

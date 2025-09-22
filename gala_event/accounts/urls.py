@@ -4,7 +4,8 @@ from .views import (
     LoginView, 
     LogoutView, 
     CurrentUserView, 
-    CheckAuthView, 
+    CheckAuthView,
+    SetPasswordView,
     CSRFTokenView
 )
 
@@ -13,7 +14,6 @@ urlpatterns = [
     path('logout/', LogoutView.as_view(), name='logout'),
     path('current_user/', CurrentUserView.as_view(), name='current_user'),
     path('csrf_token/', CSRFTokenView.as_view(), name='csrf_token'),
-    # Participant profile management moved to participants app
     path('check_auth/', CheckAuthView.as_view(), name='check_auth'),
-    
+    path('set-password/', SetPasswordView.as_view(), name='set_password'), 
 ]

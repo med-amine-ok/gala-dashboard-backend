@@ -4,7 +4,7 @@ import uuid
 import secrets
 import string
 
-def generate_ticket_number():
+def generate_serial_number():
     """Generate a unique ticket number"""
     return f"GT{timezone.now().year}{secrets.token_hex(4).upper()}"
 
@@ -17,13 +17,13 @@ class Ticket(models.Model):
     ]
     
     # Ticket Identity
-    ticket_number = models.CharField(max_length=20, unique=True, default=generate_ticket_number)
+    serial_number = models.CharField(max_length=20, unique=True, default=generate_serial_number)
     participant = models.OneToOneField('participants.Participant', on_delete=models.CASCADE, related_name='ticket')
     
-    # QR Code and Security
-    qr_code_data = models.TextField()  # JSON data encoded in QR
-    qr_code_image = models.ImageField(upload_to='qr_codes/', blank=True, null=True)
-    security_hash = models.CharField(max_length=64)  # For verification
+    # # QR Code and Security
+    # qr_code_data = models.TextField()  # JSON data encoded in QR
+    # qr_code_image = models.ImageField(upload_to='qr_codes/', blank=True, null=True)
+    # security_hash = models.CharField(max_length=64)  # For verification
     
     # Status and Usage
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
@@ -32,10 +32,6 @@ class Ticket(models.Model):
     checked_in_at = models.DateTimeField(null=True, blank=True)
     checked_in_by = models.ForeignKey('accounts.CustomUser', on_delete=models.SET_NULL, null=True, blank=True, related_name='checked_in_tickets')
     
-    # Additional Information
-    table_number = models.CharField(max_length=10, blank=True, null=True)  # For seating
-    special_access = models.JSONField(default=list, blank=True)  # Array of special access areas
-    notes = models.TextField(blank=True, null=True)
     
     # Email Delivery
     email_sent = models.BooleanField(default=False)
@@ -46,7 +42,7 @@ class Ticket(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     def __str__(self):
-        return f"Ticket {self.ticket_number} - {self.participant.full_name}"
+        return f"Ticket {self.serial_number} - {self.participant.full_name}"
     
     @property
     def is_valid(self):
@@ -96,10 +92,10 @@ class TicketScan(models.Model):
         ('already_used', 'Already Used'),
         ('cancelled', 'Cancelled'),
     ])
-    notes = models.TextField(blank=True, null=True)
+    
     
     def __str__(self):
-        return f"Scan {self.ticket.ticket_number} - {self.scan_result}"
+        return f"Scan {self.ticket.serial_number} - {self.scan_result}"
     
     class Meta:
         verbose_name = "Ticket Scan"
