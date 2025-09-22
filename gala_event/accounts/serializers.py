@@ -44,14 +44,10 @@ class LoginSerializer(serializers.Serializer):
         user = instance.get('user')
         if user:
             return {
-                'user_id': user.id,
-                'email': user.email,
                 'first_name': user.first_name,
                 'last_name': user.last_name,
                 'role': user.role,
                 'role_display': user.get_role_display(),
-                'is_participant': user.role == CustomUser.Role.PARTICIPANT,
-                'is_hr_admin': user.role == CustomUser.Role.HR_ADMIN,
             }
         return super().to_representation(instance)
 
