@@ -391,3 +391,34 @@ class ParticipantDetailView(APIView):
                 {"error": "Unable to retrieve participant data."}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+        
+
+class ParticipantManualyRegistrationView(APIView):
+    """Allow HR Admins to manually register participants"""
+    permission_classes = [IsHRAdmin]
+
+    @swagger_auto_schema(
+        request_body=ParticipantRegistrationSerializer,
+        operation_summary="Register a new participant (public)",
+        operation_description="Creates a user account (username=email) and a linked participant profile."
+    )
+    
+    def post(self, request, participant_id=None):
+        serializer = ParticipantRegistrationSerializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                with transaction.atomic():
+                    participant = serializer.save()
+                    participant.status = Participant.Status.APPROVED
+                    participant.save()
+                    return Response({
+                        "message": "Participant registered successfully.",
+                        "participant_id": participant.id,
+                        "email": participant.user.email
+                    }, status=status.HTTP_201_CREATED)
+            except Exception as e:
+                return Response({
+                    "error": "Registration failed. Please try again.",
+                    "details": str(e)
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
