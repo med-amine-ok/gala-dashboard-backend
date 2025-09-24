@@ -54,10 +54,28 @@ class LoginView(APIView):
             response_data['access_token'] = access_token
             response_data['refresh_token'] = refresh_token
 
-            return Response({
+            response = Response({
                 "message": "Login successful",
                 "data": response_data
             }, status=status.HTTP_200_OK)
+        
+            response.set_cookie(
+                key="access_token",
+                value=access_token,
+                httponly=True,
+                secure=True,        
+                samesite="Strict",  
+                max_age=60 * 15    
+            )
+            response.set_cookie(
+                key="refresh_token",
+                value=refresh_token,
+                httponly=True,
+                secure=True,
+                samesite="Strict",
+                max_age=60 * 60 * 24 * 7  
+            )
+            return response
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
