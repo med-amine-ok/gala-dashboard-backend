@@ -352,6 +352,7 @@ class ParticipantViewSet(viewsets.ReadOnlyModelViewSet):
             'results': serializer.data
         }, status=status.HTTP_200_OK)
 
+
 class ParticipantDetailView(APIView):
     """Allow participants to view their own profile, HR to view any"""
     permission_classes = [IsOwnerOrHRAdmin]

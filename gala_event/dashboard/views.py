@@ -29,7 +29,7 @@ class DashboardOverviewView(APIView):
         total_participants = Participant.objects.count()
         pending_participants = Participant.objects.filter(status='pending').count()
         approved_participants = Participant.objects.filter(status='approved').count()
-        total_companies = Company.objects.filter(status='active').count()
+        total_companies = Company.objects.count()
         total_events = Agenda.objects.filter(created_at__date=today).count()
         total_tickets = Ticket.objects.count()
         checked_in_count = Ticket.objects.filter(status='checked_in').count()
@@ -83,74 +83,6 @@ class DashboardOverviewView(APIView):
             'last_updated': now
         }, status=status.HTTP_200_OK)
 
-
-class DashboardAnalyticsView(APIView):
-    """Detailed analytics for dashboard charts and graphs"""
-    permission_classes = [IsHRAdmin]
-    
-    def get(self, request):
-        """Get analytics data for dashboard visualization"""
-        now = timezone.now()
-    
-        # Status breakdown
-        status_breakdown = Participant.objects.values('status').annotate(
-            count=Count('status')
-        )
-        
-        # Payment status breakdown
-        payment_breakdown = Participant.objects.values('status').annotate(
-            count=Count('status')
-        )
-        
-        # Top companies by participants
-        top_companies = Company.objects.annotate(
-            participant_count=Count('status')
-        ).filter(participant_count__gt=0).order_by('-participant_count')[:10]
-        
-        company_stats = [
-            {
-                'company_name': company.name,
-                'participant_count': company.participant_count
-            }
-            for company in top_companies
-        ]
-        
-        # Event attendance prediction
-        upcoming_events = Agenda.objects.filter(
-            start_time__gte=now,
-            start_time__lte=now + timedelta(days=7),
-        ).order_by('start_time')
-        
-        event_data = []
-        for event in upcoming_events:
-            event_data.append({
-                'title': event.title,
-                'start_time': event.start_time,
-                'place': event.place,
-                'event_type': event.event_type
-            })
-        
-        # Check-in patterns (hourly for today)
-        today_scans = TicketScan.objects.filter(
-            scan_datetime__date=now.date(),
-            scan_result='check_in'
-        )
-        
-        hourly_checkins = {}
-        for hour in range(24):
-            hourly_checkins[f"{hour:02d}:00"] = 0
-            
-        for scan in today_scans:
-            hour_key = f"{scan.scan_datetime.hour:02d}:00"
-            hourly_checkins[hour_key] += 1
-        
-        return Response({
-            'status_breakdown': list(status_breakdown),
-            'payment_breakdown': list(payment_breakdown),
-            'top_companies': company_stats,
-            'upcoming_events': event_data,
-            'hourly_checkins_today': hourly_checkins
-        }, status=status.HTTP_200_OK)
 
 
 class DashboardRecentActivityView(APIView):
@@ -224,91 +156,6 @@ class DashboardRecentActivityView(APIView):
             'total_activities': len(activities)
         }, status=status.HTTP_200_OK)
 
-
-class DashboardAlertsView(APIView):
-    """Dashboard alerts and notifications"""
-    permission_classes = [IsHRAdmin]
-    
-    def get(self, request):
-        """Get alerts and important notifications"""
-        alerts = []
-        
-        # Pending approvals alert
-        pending_count = Participant.objects.filter(status='pending').count()
-        if pending_count > 0:
-            alerts.append({
-                'type': 'warning',
-                'title': 'Pending Approvals',
-                'message': f'{pending_count} participants waiting for approval',
-                'action_url': '/participants/?status=pending',
-                'priority': 'high' if pending_count > 10 else 'medium'
-            })
-        
-        # Approved without tickets
-        approved_no_tickets = Participant.objects.filter(
-            status='approved',
-            ticket__isnull=True
-        ).count()
-        
-        if approved_no_tickets > 0:
-            alerts.append({
-                'type': 'info',
-                'title': 'Missing Tickets',
-                'message': f'{approved_no_tickets} approved participants need tickets generated',
-                'action_url': '/tickets/generate',
-                'priority': 'medium'
-            })
-        
-        # Today's events
-        today_events = Agenda.objects.filter(
-            start_time__date=timezone.now().date()
-        ).count()
-        
-        if today_events > 0:
-            alerts.append({
-                'type': 'success',
-                'title': "Today's Events",
-                'message': f'{today_events} events scheduled for today',
-                'action_url': '/agenda/?date=today',
-                'priority': 'low'
-            })
-        
-        # Low check-in rate alert
-        total_tickets = Ticket.objects.filter(status__in=['active', 'checked_in', 'used']).count()
-        checked_in = Ticket.objects.filter(status='checked_in').count()
-        
-        if total_tickets > 0:
-            checkin_rate = (checked_in / total_tickets) * 100
-            if checkin_rate < 50 and total_tickets > 10:
-                alerts.append({
-                    'type': 'warning',
-                    'title': 'Low Check-in Rate',
-                    'message': f'Only {checkin_rate:.1f}% of participants have checked in',
-                    'priority': 'medium'
-                })
-        
-        # System health check
-        try:
-            # Check if email system is working (if you have email logs)
-            recent_emails = EmailLog.objects.filter(
-                created_at__gte=timezone.now() - timedelta(hours=24)
-            ).count()
-            
-            if recent_emails == 0:
-                alerts.append({
-                    'type': 'error',
-                    'title': 'Email System',
-                    'message': 'No emails sent in the last 24 hours',
-                    'priority': 'high'
-                })
-        except:
-            pass  # EmailLog model might not exist yet
-        
-        return Response({
-            'alerts': alerts,
-            'alert_count': len(alerts),
-            'high_priority_count': len([a for a in alerts if a.get('priority') == 'high'])
-        }, status=status.HTTP_200_OK)
 
 
 class DashboardExportView(APIView):

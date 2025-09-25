@@ -64,7 +64,7 @@ class LoginView(APIView):
                 value=access_token,
                 httponly=True,
                 secure=True,        
-                samesite="Strict",  
+                samesite="lax",  
                 max_age=60 * 15    
             )
             response.set_cookie(
@@ -72,10 +72,12 @@ class LoginView(APIView):
                 value=refresh_token,
                 httponly=True,
                 secure=True,
-                samesite="Strict",
+                samesite="lax",
                 max_age=60 * 60 * 24 * 7  
             )
             return response
+        else:
+            print("Errors:", serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -129,7 +131,12 @@ class CurrentUserView(APIView):
         try:
             user = request.user
             serializer = CustomUserSerializer(user)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response({
+                    "user": serializer.data,
+                    "role": user.role,
+                    "is_participant": user.role == CustomUser.Role.PARTICIPANT,
+                    "is_hr_admin": user.role == CustomUser.Role.HR_ADMIN,
+            }, status=status.HTTP_200_OK)
         except Exception as e:
             return Response(
                 {"error": "Unable to retrieve user data"}, 
@@ -215,9 +222,6 @@ class CheckAuthView(APIView):
         return Response({
             "isAuthenticated": True,
             "user": user_data,
-            "role": request.user.role,
-            "is_participant": request.user.role == CustomUser.Role.PARTICIPANT,
-            "is_hr_admin": request.user.role == CustomUser.Role.HR_ADMIN,
         }, status=status.HTTP_200_OK)
 
 

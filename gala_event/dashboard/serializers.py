@@ -26,7 +26,7 @@ class DashboardParticipantSerializer(serializers.ModelSerializer):
             'status',
             'approved_by_name',
             'approval_date',
-            'rejection_reason',
+
         ]
 
     def get_full_name(self, obj):

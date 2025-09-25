@@ -11,7 +11,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
         model = CustomUser
         fields = [
             'id', 'username', 'email', 'first_name', 'last_name', 
-            'role', 'role_display',
+            'role_display',
             'is_active', 'date_joined', 'last_login', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'date_joined', 'last_login', 'created_at', 'updated_at']
@@ -22,22 +22,30 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
     
     def validate(self, data):
-        email = data.get('email')
+        email = (data.get('email') or '').strip().lower()
         password = data.get('password')
         
-        if email and password:
-            # We set username=email at registration, so authenticate using username
-            user = authenticate(username=email, password=password)
-            if user:
-                if user.is_active:
-                    data['user'] = user
-                    return data
-                else:
-                    raise serializers.ValidationError('User account is disabled.')
-            else:
-                raise serializers.ValidationError('Your account is not yet approved and is not active until you are approved. We will inform you via email once your account is activated.')
-        else:
+        if not email or not password:
             raise serializers.ValidationError('Must include email and password.')
+
+        # Find user by email first (case-insensitive)
+        user_obj = CustomUser.objects.filter(email__iexact=email).first()
+        if not user_obj:
+            raise serializers.ValidationError('Invalid email or password.')
+
+        # Authenticate using the actual username tied to that email
+        user = authenticate(
+            request=self.context.get('request') if hasattr(self, 'context') else None,
+            username=user_obj.username,
+            password=password,
+        )
+        if not user:
+            raise serializers.ValidationError('Invalid email or password.')
+        if not user.is_active:
+            raise serializers.ValidationError('User account is disabled.')
+
+        data['user'] = user
+        return data
     
     def to_representation(self, instance):
         """Add role information to login response"""
@@ -128,12 +136,10 @@ class ParticipantRegistrationSerializer(serializers.ModelSerializer):
 
         # Build user data, using email as username
         user = CustomUser.objects.create_user(
-            username=email,
             email=email,
             password=password,
             first_name=first_name,
             last_name=last_name,
-            
             role=CustomUser.Role.PARTICIPANT,
         )
 
