@@ -5,7 +5,7 @@ class Speaker(models.Model):
     bio = models.TextField(blank=True)
     company_name = models.CharField(max_length=255, blank=True)
     photo = models.ImageField(upload_to='speakers/', blank=True, null=True)
-
+    
     def __str__(self):
         return self.name
 
@@ -15,8 +15,7 @@ class Agenda(models.Model):
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     place = models.CharField(max_length=255)
-    speakers = models.ManyToManyField(Speaker, blank=True, related_name='agenda_items')
-
+    speakers = models.ManyToManyField(Speaker, related_name='agenda_items' , null=True , blank=True )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

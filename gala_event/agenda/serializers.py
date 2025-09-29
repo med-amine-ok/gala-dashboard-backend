@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Agenda, AgendaRegistration
+from .models import Agenda, AgendaRegistration , Speaker
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 
@@ -125,3 +125,18 @@ class MarkAttendanceSerializer(serializers.Serializer):
         min_length=1
     )
     attended = serializers.BooleanField()
+
+
+class SpeakerRegistrationSerializer(serializers.ModelSerializer):
+    """Serializer for speaker registration"""
+    class Meta:
+        model = Speaker  
+        fields = ['id', 'name', 'bio', 'company_name']
+        read_only_fields = ['id']
+
+class SpeakerSerializer(serializers.ModelSerializer):
+    """Serializer for speaker"""
+    class Meta:
+        model = Speaker
+        fields = ['id', 'name', 'bio', 'company_name']
+        read_only_fields = ['id']

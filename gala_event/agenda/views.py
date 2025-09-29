@@ -10,12 +10,30 @@ from datetime import timedelta
 from django.db.models import Count, Q
 from rest_framework import serializers
 from accounts.permissions import IsHRAdmin, IsParticipant
-from .models import Agenda 
-from .serializers import AgendaSerializer
-
+from .models import Agenda , Speaker
+from .serializers import AgendaSerializer , SpeakerSerializer, SpeakerRegistrationSerializer
+from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication
+from django.middleware.csrf import get_token
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 class AgendaViewSet(viewsets.ModelViewSet):
     """Full CRUD operations for agenda (HR Admin only)"""
+
+    permission_classes = [IsHRAdmin]
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
+    
+    @swagger_auto_schema(
+        request_body=AgendaSerializer,
+        responses={201: AgendaSerializer},
+        operation_description="Create an agenda item",
+        operation_id="create_agenda_item"
+    )
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
+
     queryset = Agenda.objects.all().order_by('start_time')
     serializer_class = AgendaSerializer
     permission_classes = [IsHRAdmin]
@@ -186,33 +204,33 @@ class AgendaPublicView(APIView):
         
         return Response(agenda_data, status=status.HTTP_200_OK)
 
-
-class AgendaTodayView(APIView):
-    """Quick endpoint to get today's events"""
-    permission_classes = [AllowAny]
+class SpeakerRegistrationView(APIView):
     
+    """Speaker registration endpoint"""
+    permission_classes = [IsHRAdmin]
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
+    
+    @swagger_auto_schema(
+        request_body=SpeakerRegistrationSerializer,
+        responses={201: SpeakerRegistrationSerializer},
+        operation_description="Register a speaker",
+        operation_id="register_speaker"
+    )
+
+    def post(self, request):
+        """Register a speaker"""
+        serializer = SpeakerRegistrationSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {'message': 'Speaker registered successfully', 'data': serializer.data}, 
+                status=status.HTTP_201_CREATED
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     def get(self, request):
-        """Get today's agenda"""
-        today = timezone.now().date()
-        today_events = Agenda.objects.filter(
-            start_datetime__date=today,
-            
-            is_cancelled=False
-        ).order_by('start_datetime')
-        
-        events_data = []
-        for event in today_events:
-            events_data.append({
-                'id': event.id,
-                'title': event.title,
-                'start_datetime': event.start_datetime,
-                'end_datetime': event.end_datetime,
-                'place': event.place,
-                'event_type': event.event_type
-            })
-            
-        return Response({
-            'date': today,
-            'events_count': len(events_data),
-            'events': events_data
-        }, status=status.HTTP_200_OK)
+        """Get all registered speakers"""
+        speakers = Speaker.objects.all()
+        serializer = SpeakerSerializer(speakers, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)

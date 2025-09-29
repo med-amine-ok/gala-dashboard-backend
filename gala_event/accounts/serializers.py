@@ -22,28 +22,46 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
     
     def validate(self, data):
-        email = (data.get('email') or '').strip().lower()
+        email = data.get('email')
         password = data.get('password')
         
         if not email or not password:
             raise serializers.ValidationError('Must include email and password.')
-
-        # Find user by email first (case-insensitive)
-        user_obj = CustomUser.objects.filter(email__iexact=email).first()
-        if not user_obj:
+        
+        # Normalize email
+        email = email.strip().lower()
+        
+        # First check if user exists
+        try:
+            user_exists = CustomUser.objects.get(email__iexact=email)
+        except CustomUser.DoesNotExist:
             raise serializers.ValidationError('Invalid email or password.')
-
-        # Authenticate using the actual username tied to that email
-        user = authenticate(
-            request=self.context.get('request') if hasattr(self, 'context') else None,
-            username=user_obj.username,
-            password=password,
-        )
+        
+        # Try to authenticate
+        user = authenticate(username=email, password=password)
+        
         if not user:
+            # User exists but wrong password
             raise serializers.ValidationError('Invalid email or password.')
+        
         if not user.is_active:
-            raise serializers.ValidationError('User account is disabled.')
-
+            # Check if it's a participant who needs approval
+            if user.role == CustomUser.Role.PARTICIPANT:
+                if hasattr(user, 'participant_profile'):
+                    if user.participant_profile.status == Participant.Status.PENDING:
+                        raise serializers.ValidationError(
+                            'Your account is pending approval. We will notify you via email once approved.'
+                        )
+                    elif user.participant_profile.status == Participant.Status.REJECTED:
+                        raise serializers.ValidationError(
+                            'Your account has been rejected.'
+                        )
+                raise serializers.ValidationError(
+                    'Your account is not yet approved. We will notify you via email once activated.'
+                )
+            else:
+                raise serializers.ValidationError('User account is disabled.')
+        
         data['user'] = user
         return data
     
@@ -52,13 +70,14 @@ class LoginSerializer(serializers.Serializer):
         user = instance.get('user')
         if user:
             return {
+                'id': user.id,
+                'email': user.email,
                 'first_name': user.first_name,
                 'last_name': user.last_name,
                 'role': user.role,
                 'role_display': user.get_role_display(),
             }
         return super().to_representation(instance)
-
 class ParticipantProfileSerializer(serializers.ModelSerializer):
     """Serializer for participants to view/edit their own profile"""
     # Include user fields
@@ -136,6 +155,7 @@ class ParticipantRegistrationSerializer(serializers.ModelSerializer):
 
         # Build user data, using email as username
         user = CustomUser.objects.create_user(
+            username=email,
             email=email,
             password=password,
             first_name=first_name,

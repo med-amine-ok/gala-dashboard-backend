@@ -7,6 +7,9 @@ from django.utils.translation import gettext_lazy as _
 class CustomUser(AbstractUser):
     """Custom user model for HR Admins and Participants with additional fields"""
 
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['first_name', 'last_name']
+
     class Role(models.TextChoices):
         HR_ADMIN = 'HR', _('HR Admin')
         PARTICIPANT = 'P', _('Participant')

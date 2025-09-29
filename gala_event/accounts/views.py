@@ -25,7 +25,9 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
 
+import logging
 
+logger = logging.getLogger(__name__)
 
 class LoginView(APIView):
     permission_classes = [AllowAny]
@@ -34,52 +36,112 @@ class LoginView(APIView):
     @swagger_auto_schema(
         request_body=LoginSerializer,
         operation_summary="Login",
-        operation_description="Authenticate with email (as username) and password."
+        operation_description="Authenticate with email (as username) and password.",
+        responses={
+            200: openapi.Response(
+                description="Login successful",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'message': openapi.Schema(type=openapi.TYPE_STRING),
+                        'data': openapi.Schema(
+                            type=openapi.TYPE_OBJECT,
+                            properties={
+                                'id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                                'email': openapi.Schema(type=openapi.TYPE_STRING),
+                                'first_name': openapi.Schema(type=openapi.TYPE_STRING),
+                                'last_name': openapi.Schema(type=openapi.TYPE_STRING),
+                                'role': openapi.Schema(type=openapi.TYPE_STRING),
+                                'role_display': openapi.Schema(type=openapi.TYPE_STRING),
+                                'access_token': openapi.Schema(type=openapi.TYPE_STRING),
+                                'refresh_token': openapi.Schema(type=openapi.TYPE_STRING),
+                            }
+                        )
+                    }
+                )
+            ),
+            400: openapi.Response(description="Bad request - validation errors"),
+            401: openapi.Response(description="Authentication failed"),
+        }
     )
     def post(self, request):
-        serializer = LoginSerializer(data=request.data)
-        if serializer.is_valid():
-            # serializer.validate() stores the authenticated user under 'user'
+        try:
+            # Log the incoming request data (remove passwords from logs)
+            safe_data = {k: v for k, v in request.data.items() if k != 'password'}
+            logger.info(f"Login attempt for: {safe_data}")
+            
+            serializer = LoginSerializer(data=request.data)
+            
+            if not serializer.is_valid():
+                logger.warning(f"Login validation failed: {serializer.errors}")
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Get the authenticated user from serializer
             user = serializer.validated_data.get('user')
             if user is None:
-                return Response({'error': 'Authentication failed.'}, status=status.HTTP_400_BAD_REQUEST)
+                logger.error("User is None after successful validation - this shouldn't happen")
+                return Response(
+                    {'error': 'Authentication failed.'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
+            logger.info(f"User authenticated successfully: {user.email} (ID: {user.id})")
             
-            refresh = RefreshToken.for_user(user)
-            access_token = str(refresh.access_token)
-            refresh_token = str(refresh)
+            # Generate JWT tokens
+            try:
+                refresh = RefreshToken.for_user(user)
+                access_token = str(refresh.access_token)
+                refresh_token = str(refresh)
+                logger.info(f"JWT tokens generated for user: {user.email}")
+            except Exception as e:
+                logger.error(f"Failed to generate JWT tokens: {str(e)}")
+                return Response(
+                    {'error': 'Failed to generate authentication tokens.'}, 
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
 
-            # Use the serializer's to_representation to get role info
+            # Prepare response data
             response_data = serializer.to_representation({'user': user})
             response_data['access_token'] = access_token
             response_data['refresh_token'] = refresh_token
 
+            # Create response
             response = Response({
                 "message": "Login successful",
                 "data": response_data
             }, status=status.HTTP_200_OK)
         
-            response.set_cookie(
-                key="access_token",
-                value=access_token,
-                httponly=True,
-                secure=True,        
-                samesite="lax",  
-                max_age=60 * 15    
-            )
-            response.set_cookie(
-                key="refresh_token",
-                value=refresh_token,
-                httponly=True,
-                secure=True,
-                samesite="lax",
-                max_age=60 * 60 * 24 * 7  
-            )
+            # Set HTTP-only cookies
+            try:
+                response.set_cookie(
+                    key="access_token",
+                    value=access_token,
+                    httponly=True,
+                    secure=request.is_secure(),  # Use secure cookies in production
+                    samesite="lax",  
+                    max_age=60 * 15  # 15 minutes
+                )
+                response.set_cookie(
+                    key="refresh_token",
+                    value=refresh_token,
+                    httponly=True,
+                    secure=request.is_secure(),
+                    samesite="lax",
+                    max_age=60 * 60 * 24 * 7  # 7 days
+                )
+                logger.info(f"Cookies set for user: {user.email}")
+            except Exception as e:
+                logger.warning(f"Failed to set cookies: {str(e)}")
+                # Don't fail the login just because cookies couldn't be set
+            
             return response
-        else:
-            print("Errors:", serializer.errors)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+            
+        except Exception as e:
+            logger.error(f"Unexpected error in login: {str(e)}", exc_info=True)
+            return Response(
+                {'error': 'An unexpected error occurred during login.'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
@@ -124,8 +186,7 @@ class LogoutView(APIView):
                 "message": "Logout successful"
             }, status=status.HTTP_200_OK)
 class CurrentUserView(APIView):
-    # HR-only endpoint
-    permission_classes = [IsAuthenticated, IsHRAdmin]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         try:
@@ -381,3 +442,4 @@ class CSRFTokenView(APIView):
     def get(self, request):
         csrf_token = get_token(request)
         return Response({'csrfToken': csrf_token}, status=status.HTTP_200_OK)
+    
