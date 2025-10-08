@@ -31,7 +31,7 @@ urlpatterns = [
     path("api/", include("tickets.urls")),
     path("api/dashboard/", include("dashboard.urls")),
     path("api/", include("companies.urls")),
-    path("api/", include("agenda.urls")),
+    # path("api/", include("agenda.urls")),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),

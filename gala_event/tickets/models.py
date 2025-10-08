@@ -18,8 +18,8 @@ class Ticket(models.Model):
     
     # Ticket Identity
     serial_number = models.CharField(max_length=20, unique=True, default=generate_serial_number)
-    participant = models.OneToOneField('participants.Participant', on_delete=models.CASCADE, related_name='ticket')
-    
+    participant = models.OneToOneField('participants.Participant', on_delete=models.CASCADE, related_name='ticket', null=True, blank=True)
+
     # # QR Code and Security
     # qr_code_data = models.TextField()  # JSON data encoded in QR
     # qr_code_image = models.ImageField(upload_to='qr_codes/', blank=True, null=True)

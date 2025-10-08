@@ -122,3 +122,24 @@ class TicketGenerationSerializer(serializers.Serializer):
                 "Either provide participant_ids or set generate_for_all_approved to True."
             )
         return data
+
+
+class GenerateUnassignedTicketsSerializer(serializers.Serializer):
+    """Serializer for generating unassigned tickets"""
+    count = serializers.IntegerField(
+        min_value=1,
+        max_value=200,
+        help_text="Number of unassigned tickets to create (max 200)"
+    )
+
+
+class AssignTicketSerializer(serializers.Serializer):
+    """Serializer for assigning an unassigned ticket to a participant"""
+    participant_id = serializers.IntegerField(help_text="ID of the participant receiving the ticket")
+    ticket_serial = serializers.CharField(help_text="Serial number of the unassigned ticket")
+    reference = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        help_text="Payment reference or description",
+        default="Manual payment"
+    )

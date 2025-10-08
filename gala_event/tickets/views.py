@@ -13,7 +13,11 @@ from io import BytesIO
 import base64
 from .payment_handlers import handle_payment_success
 from .models import Ticket, TicketScan
-from .serializers import TicketSerializer
+from .serializers import (
+    TicketSerializer,
+    GenerateUnassignedTicketsSerializer,
+    AssignTicketSerializer,
+)
 from participants.models import Participant
 from accounts.permissions import IsHRAdmin
 from drf_yasg.utils import swagger_auto_schema
@@ -23,7 +27,7 @@ class TicketViewSet(viewsets.ModelViewSet):
     """Full CRUD operations for tickets (HR Admin only)"""
     queryset = Ticket.objects.all().order_by('-created_at')
     serializer_class = TicketSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsHRAdmin]
     filterset_fields = ['status', 'participant__status']
     search_fields = ['serial_number', 'participant__full_name', 'participant__email']
     ordering_fields = ['created_at', 'issued_date', 'serial_number']
@@ -47,64 +51,30 @@ class TicketViewSet(viewsets.ModelViewSet):
             
         return queryset
 
-    @action(detail=False, methods=['post'])
-    def generate_tickets(self, request):
-        """Generate tickets for all approved participants without tickets"""
-        approved_participants = Participant.objects.filter(
-            status='approved',
-            ticket__isnull=True
-        )
+    # @action(detail=False, methods=['post'])
+    # def generate_tickets(self, request):
+    #     """Generate tickets for all approved participants without tickets"""
+    #     approved_participants = Participant.objects.filter(
+    #         status='approved',
+    #         ticket__isnull=True
+    #     )
         
-        tickets_created = []
+    #     tickets_created = []
         
-        for participant in approved_participants:
-            ticket = Ticket.objects.create(
-                participant=participant
-            )
-            tickets_created.append({
-                'participant': f"{participant.full_name} ",
-                'serial_number': ticket.serial_number,
-                'participant_id': participant.id
-            })
+    #     for participant in approved_participants:
+    #         ticket = Ticket.objects.create(
+    #             participant=participant
+    #         )
+    #         tickets_created.append({
+    #             'participant': f"{participant.full_name} ",
+    #             'serial_number': ticket.serial_number,
+    #             'participant_id': participant.id
+    #         })
         
-        return Response({
-            'message': f'Generated {len(tickets_created)} tickets',
-            'tickets_created': tickets_created
-        }, status=status.HTTP_201_CREATED)
-
-    @action(detail=False, methods=['post'])
-    def bulk_generate(self, request):
-        """Generate tickets for specific participants"""
-        participant_ids = request.data.get('participant_ids', [])
-        
-        if not participant_ids:
-            return Response(
-                {'error': 'participant_ids is required'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        participants = Participant.objects.filter(
-            id__in=participant_ids,
-            status='approved',
-            ticket__isnull=True
-        )
-        
-        tickets_created = []
-        
-        for participant in participants:
-            ticket = Ticket.objects.create(
-                participant=participant
-            )
-            tickets_created.append({
-                'participant': f"{participant.full_name}  ",
-                'serial_number': ticket.serial_number,
-                'participant_id': participant.id
-            })
-        
-        return Response({
-            'message': f'Generated {len(tickets_created)} tickets',
-            'tickets_created': tickets_created
-        }, status=status.HTTP_201_CREATED)
+    #     return Response({
+    #         'message': f'Generated {len(tickets_created)} tickets',
+    #         'tickets_created': tickets_created
+    #     }, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['post'])
     def cancel_ticket(self, request, pk=None):
@@ -117,56 +87,56 @@ class TicketViewSet(viewsets.ModelViewSet):
             'message': f'Ticket {ticket.serial_number} has been cancelled'
         }, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['post'])
-    def reactivate_ticket(self, request, pk=None):
-        """Reactivate a cancelled ticket"""
-        ticket = self.get_object()
-        if ticket.status == 'cancelled':
-            ticket.status = 'active'
-            ticket.save()
-            return Response({
-                'message': f'Ticket {ticket.serial_number} has been reactivated'
-            }, status=status.HTTP_200_OK)
-        else:
-            return Response({
-                'error': 'Only cancelled tickets can be reactivated'
-            }, status=status.HTTP_400_BAD_REQUEST)
+    # @action(detail=True, methods=['post'])
+    # def reactivate_ticket(self, request, pk=None):
+    #     """Reactivate a cancelled ticket"""
+    #     ticket = self.get_object()
+    #     if ticket.status == 'cancelled':
+    #         ticket.status = 'active'
+    #         ticket.save()
+    #         return Response({
+    #             'message': f'Ticket {ticket.serial_number} has been reactivated'
+    #         }, status=status.HTTP_200_OK)
+    #     else:
+    #         return Response({
+    #             'error': 'Only cancelled tickets can be reactivated'
+    #         }, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=True, methods=['get'])
-    def generate_qr(self, request, pk=None):
-        """Generate QR code for a specific ticket"""
-        ticket = self.get_object()
+    # @action(detail=True, methods=['get'])
+    # def generate_qr(self, request, pk=None):
+    #     """Generate QR code for a specific ticket"""
+    #     ticket = self.get_object()
         
-        # Create QR code data
-        qr_data = {
-            'serial_number': ticket.serial_number,
-            'participant_id': ticket.participant.id,
-            'event': 'Gala Event 2025'
-        }
+    #     # Create QR code data
+    #     qr_data = {
+    #         'serial_number': ticket.serial_number,
+    #         'participant_id': ticket.participant.id,
+    #         'event': 'Gala Event 2025'
+    #     }
         
-        # Generate QR code
-        qr = qrcode.QRCode(
-            version=1,
-            error_correction=qrcode.constants.ERROR_CORRECT_L,
-            box_size=10,
-            border=4,
-        )
-        qr.add_data(f"TICKET:{ticket.serial_number}")
-        qr.make(fit=True)
+    #     # Generate QR code
+    #     qr = qrcode.QRCode(
+    #         version=1,
+    #         error_correction=qrcode.constants.ERROR_CORRECT_L,
+    #         box_size=10,
+    #         border=4,
+    #     )
+    #     qr.add_data(f"TICKET:{ticket.serial_number}")
+    #     qr.make(fit=True)
         
-        # Create QR code image
-        img = qr.make_image(fill_color="black", back_color="white")
+    #     # Create QR code image
+    #     img = qr.make_image(fill_color="black", back_color="white")
         
-        # Convert to base64
-        buffer = BytesIO()
-        img.save(buffer, format='PNG')
-        img_str = base64.b64encode(buffer.getvalue()).decode()
+    #     # Convert to base64
+    #     buffer = BytesIO()
+    #     img.save(buffer, format='PNG')
+    #     img_str = base64.b64encode(buffer.getvalue()).decode()
         
-        return Response({
-            'serial_number': ticket.serial_number,
-            # 'qr_code': f'data:image/png;base64,{img_str}',
-            'participant': f"{ticket.participant.full_name}  "
-        }, status=status.HTTP_200_OK)
+    #     return Response({
+    #         'serial_number': ticket.serial_number,
+    #         # 'qr_code': f'data:image/png;base64,{img_str}',
+    #         'participant': f"{ticket.participant.full_name}  "
+    #     }, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'])
     def statistics(self, request):
@@ -214,6 +184,172 @@ class TicketViewSet(viewsets.ModelViewSet):
             'tickets_issued_today': tickets_today,
             'approved_participants_without_tickets': approved_without_tickets,
             'total_scans': TicketScan.objects.count()
+        }, status=status.HTTP_200_OK)
+    
+    @swagger_auto_schema(
+        method='post',
+        request_body=GenerateUnassignedTicketsSerializer,
+        responses={status.HTTP_201_CREATED: TicketSerializer(many=True)}
+    )
+    @action(detail=False, methods=['post'])
+    def generate_unassigned_tickets(self, request):
+        """Generate a specified number of tickets without assigning to participants"""
+        serializer = GenerateUnassignedTicketsSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        count = serializer.validated_data['count']
+        
+        tickets_created = []
+        
+        # Create tickets without participants
+        for i in range(count):
+            try:
+                # Create ticket without participant
+                ticket = Ticket.objects.create(
+                    participant=None,
+                    status='active'  # Explicitly set status
+                )
+                tickets_created.append({
+                    'serial_number': ticket.serial_number,
+                    'id': ticket.id,
+                    'status': ticket.status
+                })
+            except Exception as e:
+                # If any ticket fails, log it but continue
+                print(f"Error creating ticket {i+1}: {str(e)}")
+                continue
+        
+        return Response({
+            'success': True,
+            'message': f'Generated {len(tickets_created)} unassigned tickets',
+            'count': len(tickets_created),
+            'tickets': tickets_created
+        }, status=status.HTTP_201_CREATED)
+    
+    
+    @swagger_auto_schema(
+        method='post',
+        request_body=AssignTicketSerializer,
+        responses={
+            status.HTTP_200_OK: openapi.Response(description="Ticket assigned successfully"),
+            status.HTTP_400_BAD_REQUEST: openapi.Response(description="Invalid request"),
+            status.HTTP_404_NOT_FOUND: openapi.Response(description="Ticket or participant not found"),
+        },
+    )
+    @action(detail=False, methods=['post'])
+    def assign_ticket(self, request):
+        """Assign an unassigned ticket to a participant and process payment"""
+        serializer = AssignTicketSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        participant_id = serializer.validated_data['participant_id']
+        ticket_serial = serializer.validated_data['ticket_serial']
+        payment_reference = serializer.validated_data.get('reference')
+        
+        try:
+            # Get the participant
+            participant = Participant.objects.get(id=participant_id)
+            
+            # Check if participant already has a ticket
+            existing_ticket = Ticket.objects.filter(participant=participant).first()
+            if existing_ticket:
+                return Response(
+                    {
+                        "error": f"Participant already has ticket {existing_ticket.serial_number}",
+                        "existing_ticket": existing_ticket.serial_number
+                    }, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Get the unassigned ticket
+            try:
+                ticket = Ticket.objects.get(
+                    serial_number=ticket_serial,
+                    participant__isnull=True  # Ensure it's unassigned
+                )
+            except Ticket.DoesNotExist:
+                # Check if ticket exists but is assigned
+                if Ticket.objects.filter(serial_number=ticket_serial).exists():
+                    assigned_ticket = Ticket.objects.get(serial_number=ticket_serial)
+                    return Response(
+                        {
+                            "error": f"Ticket {ticket_serial} is already assigned to {assigned_ticket.participant.full_name}",
+                            "assigned_to": assigned_ticket.participant.id
+                        }, 
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                else:
+                    return Response(
+                        {"error": f"Ticket with serial number {ticket_serial} not found"}, 
+                        status=status.HTTP_404_NOT_FOUND
+                    )
+            
+            # Assign ticket to participant
+            ticket.participant = participant
+            ticket.status = 'active'  # Ensure ticket is active
+            ticket.save()
+            
+            # Update payment status
+            participant.payment_status = "paid"
+            participant.status = "approved"  # Ensure participant is approved
+            participant.save()  
+            
+            # Ensure user account exists and is active
+            if participant.user:
+                if not participant.user.is_active:
+                    participant.user.is_active = True
+                    participant.user.save()
+            
+            return Response({
+                "success": True,
+                "message": "Ticket assigned and payment processed successfully",
+                "data": {
+                    "participant_id": participant.id,
+                    "participant_name": participant.full_name,
+                    "ticket_serial": ticket.serial_number,
+                    "ticket_status": ticket.status,
+                    "payment_status": participant.payment_status,
+                    "payment_reference": payment_reference
+                }
+            }, status=status.HTTP_200_OK)
+            
+        except Participant.DoesNotExist:
+            return Response(
+                {"error": f"Participant with ID {participant_id} not found"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {
+                    "error": f"Error assigning ticket: {str(e)}",
+                    "details": str(e)
+                }, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    
+    @action(detail=False, methods=['get'])
+    def unassigned_tickets(self, request):
+        """List all unassigned tickets"""
+        unassigned = Ticket.objects.filter(
+            participant__isnull=True
+        ).order_by('-created_at')
+        
+        # Optional pagination
+        page = request.query_params.get('page')
+        page_size = request.query_params.get('page_size', 50)
+        
+        tickets_data = []
+        for ticket in unassigned:
+            tickets_data.append({
+                'id': ticket.id,
+                'serial_number': ticket.serial_number,
+                'status': ticket.status,
+                'created_at': ticket.created_at.isoformat() if hasattr(ticket, 'created_at') else None
+            })
+        
+        return Response({
+            'success': True,
+            'count': len(tickets_data),
+            'tickets': tickets_data
         }, status=status.HTTP_200_OK)
 
 
@@ -339,6 +475,53 @@ class TicketScanHistoryView(APIView):
             'total_scans': len(scan_data)
         }, status=status.HTTP_200_OK)
 
+class ManualPaymentView(APIView):
+    """Test endpoint for payment success flow (Swagger testing)"""
+    permission_classes = [IsHRAdmin]  
+    
+    @swagger_auto_schema(
+        operation_summary="Test payment success flow",
+        operation_description="Simulates a successful payment and triggers the set password email flow",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['participant_id'],
+            properties={
+                'participant_id': openapi.Schema(
+                    type=openapi.TYPE_INTEGER,
+                    description="ID of the participant to process payment for"
+                ),
+                'reference': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description="Optional payment reference"
+                )
+            }
+        ),
+        responses={
+            200: "Payment processed successfully",
+            400: "Invalid request or processing error",
+            404: "Participant not found"
+        }
+    )
+    def post(self, request):
+        """Test payment success flow"""
+        participant_id = request.data.get('participant_id')
+        
+        if not participant_id:
+            return Response(
+                {"error": "participant_id is required"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        result = handle_payment_success(
+            participant_id=participant_id,
+            payment_reference=request.data.get('reference', 'Test payment')
+        )
+        
+        if result['success']:
+            return Response(result, status=status.HTTP_200_OK)
+        else:
+            return Response(result, status=status.HTTP_400_BAD_REQUEST)
+
 
 # class PaymentWebhookView(APIView):
 #     """Handle payment webhooks from payment provider"""
@@ -402,49 +585,3 @@ class TicketScanHistoryView(APIView):
 #             return Response(result, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ManualPaymentView(APIView):
-    """Test endpoint for payment success flow (Swagger testing)"""
-    permission_classes = [IsHRAdmin]  
-    
-    @swagger_auto_schema(
-        operation_summary="Test payment success flow",
-        operation_description="Simulates a successful payment and triggers the set password email flow",
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            required=['participant_id'],
-            properties={
-                'participant_id': openapi.Schema(
-                    type=openapi.TYPE_INTEGER,
-                    description="ID of the participant to process payment for"
-                ),
-                'reference': openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    description="Optional payment reference"
-                )
-            }
-        ),
-        responses={
-            200: "Payment processed successfully",
-            400: "Invalid request or processing error",
-            404: "Participant not found"
-        }
-    )
-    def post(self, request):
-        """Test payment success flow"""
-        participant_id = request.data.get('participant_id')
-        
-        if not participant_id:
-            return Response(
-                {"error": "participant_id is required"}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-            
-        result = handle_payment_success(
-            participant_id=participant_id,
-            payment_reference=request.data.get('reference', 'Test payment')
-        )
-        
-        if result['success']:
-            return Response(result, status=status.HTTP_200_OK)
-        else:
-            return Response(result, status=status.HTTP_400_BAD_REQUEST)
