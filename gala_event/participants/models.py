@@ -7,8 +7,7 @@ import uuid
 class Participant(models.Model):
     class ParticipantType(models.TextChoices):
         STUDENT = 'ST', 'Student'
-        PROFESSIONAL = 'PR', 'Professional'
-        
+        GUEST = 'G', 'Guest'
     class Status(models.TextChoices):
         PENDING = 'PENDING', 'Pending'
         APPROVED = 'APPROVED', 'Approved'
@@ -21,15 +20,30 @@ class Participant(models.Model):
         null=True, 
         blank=True
     )
+    phone = models.CharField(max_length=20, blank=True)
     job_title = models.CharField(max_length=100, blank=True)
     university = models.CharField(max_length=255, blank=True)
-    graduation_year = models.PositiveIntegerField(null=True, blank=True)
+    university_other = models.CharField(max_length=255, blank=True)
+    field_of_study = models.CharField(max_length=255, blank=True)
+    field_of_study_other = models.CharField(max_length=255, blank=True)
+    academic_level = models.CharField(max_length=255, blank=True)
+    academic_level_other = models.CharField(max_length=255, blank=True)
+    graduation_year = models.CharField(max_length=50, blank=True)
+    graduation_year_other = models.CharField(max_length=50, blank=True)
+    plans_next_year = models.TextField(blank=True)
+    personal_description = models.TextField(blank=True)
+    perspective_gala = models.TextField(blank=True)
+    benefit_from_event = models.TextField(blank=True)
+    attended_before = models.BooleanField(default=False)
+    heard_about = models.CharField(max_length=255, blank=True)
+    heard_about_other = models.CharField(max_length=255, blank=True)
+    additional_comments = models.TextField(blank=True)
     linkedin_url = models.URLField(blank=True)
     cv_file = models.FileField(upload_to='cvs/', blank=True, null=True)
     participant_type = models.CharField(
         max_length=2, 
         choices=ParticipantType.choices, 
-        default=ParticipantType.PROFESSIONAL
+        default=ParticipantType.GUEST
     )
     status = models.CharField(
         max_length=10, 

@@ -256,7 +256,7 @@ class ParticipantViewSet(viewsets.ReadOnlyModelViewSet):
         if serializer.is_valid():
             action_type = serializer.validated_data['action']
             
-            if action_type == 'approve':
+            if action_type == 'approved':
                 participant.status = Participant.Status.APPROVED  # Use the correct enum value
                 participant.approved_by = request.user
                 participant.user.is_active = True
@@ -264,14 +264,19 @@ class ParticipantViewSet(viewsets.ReadOnlyModelViewSet):
                 participant.rejection_reason = ''  
                 participant.user.save()
                 
-            elif action_type == 'reject':
+            elif action_type == 'rejected':
                 participant.status = Participant.Status.REJECTED  # Use the correct enum value
                 participant.rejection_reason = serializer.validated_data.get('rejection_reason', '')
                 participant.user.is_active = False
                 participant.approved_by = None
                 participant.approved_at = None
                 participant.user.save()
-                
+
+            elif action_type == 'pending':
+                participant.status = Participant.Status.PENDING  
+                participant.user.is_active = True
+                participant.user.save()
+
             participant.save()
             
             return Response({

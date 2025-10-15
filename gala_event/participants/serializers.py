@@ -12,13 +12,79 @@ class ParticipantRegistrationSerializer(serializers.Serializer):
     email = serializers.EmailField()
     first_name = serializers.CharField()
     last_name = serializers.CharField()
+    phone = serializers.CharField()
 
     participant_type = serializers.ChoiceField(
         choices=Participant.ParticipantType.choices
     )
     job_title = serializers.CharField(required=False, allow_blank=True)
-    university = serializers.CharField(required=False, allow_blank=True)
-    graduation_year = serializers.IntegerField(required=False, allow_null=True)
+
+    university = serializers.ChoiceField(choices=[
+        ('ENP', 'ENP'),
+        ('ENSTA', 'ENSTA'),
+        ('USTHB', 'USTHB'),
+        ('ESAA', 'ESAA'),
+        ('ENSTP', 'ENSTP'),
+        ('OTHER', 'Other')
+    ])
+    university_other = serializers.CharField(required=False, allow_blank=True)
+
+    field_of_study = serializers.ChoiceField(choices=[
+        ('Electrical Engineering', 'Electrical Engineering'),
+        ('Electronics Engineering', 'Electronics Engineering'),
+        ('Automation & Control', 'Automation & Control'),
+        ('Industrial Engineering', 'Industrial Engineering'),
+        ('Data Science & Artificial Intelligence', 'Data Science & Artificial Intelligence'),
+        ('Mechanical Engineering', 'Mechanical Engineering'),
+        ('Chemical Engineering', 'Chemical Engineering'),
+        ('Materials Engineering', 'Materials Engineering'),
+        ('Civil Engineering', 'Civil Engineering'),
+        ('QHSE (Quality, Health, Safety & Environment)', 'QHSE (Quality, Health, Safety & Environment)'),
+        ('Environmental & Process Engineering', 'Environmental & Process Engineering'),
+        ('Mining Engineering', 'Mining Engineering'),
+        ('Hydraulic Engineering', 'Hydraulic Engineering'),
+        ('OTHER', 'Other')
+    ])
+    field_of_study_other = serializers.CharField(required=False, allow_blank=True)
+
+    academic_level = serializers.ChoiceField(choices=[
+        ('Bachelor’s Degree', 'Bachelor’s Degree'),
+        ('Master’s Degree', 'Master’s Degree'),
+        ('Engineering Degree', 'Engineering Degree'),
+        ('PhD', 'PhD'),
+        ('Postgraduate Studies (PGS)', 'Postgraduate Studies (PGS)'),
+        ('OTHER', 'Other')
+    ])
+    academic_level_other = serializers.CharField(required=False, allow_blank=True)
+
+    graduation_year = serializers.ChoiceField(choices=[
+        ('2023', '2023'),
+        ('2024', '2024'),
+        ('2025', '2025'),
+        ('2026', '2026'),
+        ('2027', '2027'),
+        ('2028', '2028'),
+        ('OTHER', 'Other')
+    ])
+    graduation_year_other = serializers.CharField(required=False, allow_blank=True)
+
+    plans_next_year = serializers.CharField(required=True)
+    personal_description = serializers.CharField(required=False, allow_blank=True)
+    perspective_gala = serializers.CharField(required=True)
+    benefit_from_event = serializers.CharField(required=True)
+    attended_before = serializers.BooleanField(required=True)
+
+    heard_about = serializers.ChoiceField(choices=[
+        ('Facebook', 'Facebook'),
+        ('Instagram', 'Instagram'),
+        ('Through a Friend', 'Through a Friend'),
+        ('LinkedIn', 'LinkedIn'),
+        ('OTHER', 'Other')
+    ])
+    heard_about_other = serializers.CharField(required=False, allow_blank=True)
+
+    additional_comments = serializers.CharField(required=False, allow_blank=True)
+
     linkedin_url = serializers.URLField(required=False, allow_blank=True)
     cv_file = serializers.FileField(required=False, allow_null=True)
     
@@ -102,11 +168,11 @@ class ParticipantSerializer(serializers.ModelSerializer):
 
 class ParticipantApprovalSerializer(serializers.Serializer):
     """Serializer for approving/rejecting participants"""
-    action = serializers.ChoiceField(choices=['approve', 'reject'])
+    action = serializers.ChoiceField(choices=['approved', 'rejected', 'pending'])
     rejection_reason = serializers.CharField(required=False, allow_blank=True)
 
     def validate(self, data):
-        if data['action'] == 'reject' and not data.get('rejection_reason'):
+        if data['action'] == 'rejected' and not data.get('rejection_reason'):
             raise serializers.ValidationError({
                 'rejection_reason': 'Rejection reason is required when rejecting a participant.'
             })
@@ -127,7 +193,7 @@ class ParticipantCreateSerializer(serializers.ModelSerializer):
         model = Participant
         fields = [
             'first_name', 'last_name', 'email', 'phone',
-             'participant_type', 'job_title', 'university',
+            'participant_type', 'job_title', 'university',
             'graduation_year', 'status', 'payment_status', 'linkedin_url'
         ]
         read_only_fields = ['first_name', 'last_name', 'email', 'phone']
