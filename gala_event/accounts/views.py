@@ -109,31 +109,7 @@ class LoginView(APIView):
             response = Response({
                 "message": "Login successful",
                 "data": response_data
-            }, status=status.HTTP_200_OK)
-        
-            # Set HTTP-only cookies
-            try:
-                response.set_cookie(
-                    key="access_token",
-                    value=access_token,
-                    httponly=True,
-                    secure=request.is_secure(),  # Use secure cookies in production
-                    samesite="lax",  
-                    max_age=60 * 15  # 15 minutes
-                )
-                response.set_cookie(
-                    key="refresh_token",
-                    value=refresh_token,
-                    httponly=True,
-                    secure=request.is_secure(),
-                    samesite="lax",
-                    max_age=60 * 60 * 24 * 7  # 7 days
-                )
-                logger.info(f"Cookies set for user: {user.email}")
-            except Exception as e:
-                logger.warning(f"Failed to set cookies: {str(e)}")
-                # Don't fail the login just because cookies couldn't be set
-            
+            }, status=status.HTTP_200_OK)            
             return response
             
         except Exception as e:

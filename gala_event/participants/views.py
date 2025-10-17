@@ -31,7 +31,7 @@ class ParticipantProfileView(APIView):
     View for participants to view their own profile.
     Only accessible by authenticated participants.
     """
-    permission_classes = [IsAuthenticated, IsParticipant]
+    permission_classes = [IsAuthenticated, IsParticipant, IsHRAdmin]
     parser_classes = [JSONParser, MultiPartParser, FormParser]
 
     def get(self, request):

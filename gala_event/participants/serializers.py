@@ -102,26 +102,36 @@ class ParticipantRegistrationSerializer(serializers.Serializer):
         Create new User and Participant profile
         """
         # Extract user data
+        email = validated_data.pop('email')
+        first_name = validated_data.pop('first_name')
+        last_name = validated_data.pop('last_name')
+
         user_data = {
-            'email': validated_data.pop('email'),
-            'first_name': validated_data.pop('first_name'),
-            'last_name': validated_data.pop('last_name'),
+            'email': email,
+            'first_name': first_name,
+            'last_name': last_name,
             'is_active': False,  # Always set to False initially - requires HR approval
-            'role': 'P'  
+            'role': 'P'
         }
 
         # Set username as email and generate a random temporary password
         import secrets
         import string
         temp_password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(12))
-        user_data['username'] = user_data['email']
+        user_data['username'] = email
         user_data['password'] = temp_password
         
         # Create user account
         user = User.objects.create_user(**user_data)
 
         # Create participant profile
-        participant = Participant.objects.create(user=user, **validated_data)
+        participant = Participant.objects.create(
+            user=user,
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+            **validated_data
+        )
         return participant
 
 

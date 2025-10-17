@@ -20,6 +20,9 @@ class Participant(models.Model):
         null=True, 
         blank=True
     )
+    first_name = models.CharField(max_length=150, blank=True, null=True)
+    last_name = models.CharField(max_length=150, blank=True, null=True)
+    email = models.EmailField(blank=True, null=True)
     phone = models.CharField(max_length=20, blank=True)
     job_title = models.CharField(max_length=100, blank=True)
     university = models.CharField(max_length=255, blank=True)
@@ -43,7 +46,7 @@ class Participant(models.Model):
     participant_type = models.CharField(
         max_length=2, 
         choices=ParticipantType.choices, 
-        default=ParticipantType.GUEST
+        default=ParticipantType.STUDENT
     )
     status = models.CharField(
         max_length=10, 
@@ -78,15 +81,12 @@ class Participant(models.Model):
 
     @property
     def full_name(self):
-        """Convenience property for participant's full name from linked user."""
+        """Convenience property for participant's full name."""
         if self.user:
             return f"{self.user.first_name} {self.user.last_name}".strip()
+        if self.first_name or self.last_name:
+            return f"{self.first_name or ''} {self.last_name or ''}".strip()
         return ""
-
-    @property
-    def email(self):
-        """Convenience property for participant's email from linked user."""
-        return self.user.email if self.user else ""
 
     class Meta:
         ordering = ['-registered_at']
