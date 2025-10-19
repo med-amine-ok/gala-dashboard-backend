@@ -343,6 +343,9 @@ class SetPasswordView(APIView):
             if user.participant_profile.status != Participant.Status.APPROVED:
                 return Response({"error": "Your account is not approved yet."}, status=status.HTTP_400_BAD_REQUEST)
 
+            if user.password_set:
+                return Response({"error": "Password has already been set."}, status=status.HTTP_403_FORBIDDEN)
+
             # Optionally enforce a minimal password rule
             if len(password) < 8:
                 return Response({"error": "Password must be at least 8 characters."}, status=status.HTTP_400_BAD_REQUEST)
@@ -351,6 +354,7 @@ class SetPasswordView(APIView):
             user.set_password(password)
             if not user.is_active:
                 user.is_active = True
+            user.password_set = True
             user.save()
 
             # Issue JWT tokens so the user is logged in immediately
@@ -383,9 +387,13 @@ class SetPasswordView(APIView):
 
             # Check if the token is valid
             if default_token_generator.check_token(user, token):
+                if user.password_set:
+                    return Response({"error": "Password has already been set."}, status=status.HTTP_403_FORBIDDEN)
+
                 user.set_password(password)
                 if not user.is_active:
                     user.is_active = True
+                user.password_set = True
                 user.save()
 
                 # Issue tokens here as well for consistency

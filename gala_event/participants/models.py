@@ -91,3 +91,19 @@ class Participant(models.Model):
     class Meta:
         ordering = ['-registered_at']
 
+
+class Feedback(models.Model):
+    participant = models.ForeignKey(
+        Participant,
+        on_delete=models.CASCADE,
+        related_name="feedback_entries"
+    )
+
+    feedback = models.TextField(blank=True)
+    submitted_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        participant_name = getattr(self.participant, "full_name", "") or "Unknown participant"
+
+        return f"Feedback by {participant_name}"
+

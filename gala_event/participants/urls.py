@@ -6,7 +6,8 @@ from .views import (
     ParticipantProfileView,
     ParticipantProfileUpdateView,
     ParticipantListView,
-    ParticipantManualyRegistrationView
+    ParticipantManualyRegistrationView,
+    FeedbackView
 )
 
 router = DefaultRouter()
@@ -19,4 +20,5 @@ urlpatterns = [
     path('profile/', ParticipantProfileView.as_view(), name='participant-profile'),
     path('profile/update/', ParticipantProfileUpdateView.as_view(), name='participant-profile-update'),
     path('manual-register/', ParticipantManualyRegistrationView.as_view(), name='participant-manual-register'),
+    path('feedback/', FeedbackView.as_view(), name='participant-feedback'),
 ]

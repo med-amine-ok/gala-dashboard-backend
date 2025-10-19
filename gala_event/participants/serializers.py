@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Participant
+from .models import Participant , Feedback
 
 User = get_user_model()
 
@@ -221,3 +221,10 @@ class ParticipantListSerializer(serializers.ModelSerializer):
             'id', 'first_name', 'last_name', 'email', 
             'status', 'payment_status', 'registered_at'
         ]
+
+
+class FeedbackSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Feedback
+        fields = ["participant","feedback", "submitted_at"]
+        read_only_fields = ["submitted_at"]

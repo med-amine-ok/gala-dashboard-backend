@@ -14,9 +14,9 @@ from datetime import timedelta
 from django.db.models import Count 
 from django.db import transaction
 from accounts.models import CustomUser
-from .serializers import ParticipantRegistrationSerializer
+from .serializers import FeedbackSerializer, ParticipantRegistrationSerializer
 from accounts.permissions import IsOwnerOrHRAdmin, IsParticipant, IsHRAdmin
-from .models import Participant
+from .models import Feedback, Participant
 from .serializers import (
     ParticipantSerializer,
     ParticipantApprovalSerializer
@@ -428,3 +428,30 @@ class ParticipantManualyRegistrationView(APIView):
                     "details": str(e)
                 }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class FeedbackView(APIView):
+
+    
+
+
+    queryset = Feedback.objects.all().select_related('participant')
+    serializer_class = FeedbackSerializer
+    permission_classes = [AllowAny]
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
+    @swagger_auto_schema(
+        request_body=FeedbackSerializer,
+        operation_summary="Submit feedback",
+        operation_description="Allows participants to submit feedback for the event."
+    )
+    def post(self, request):
+        serializer = FeedbackSerializer(data=request.data)
+        if serializer.is_valid():
+            feedback = serializer.save()
+            return Response({
+                "message": "Feedback submitted successfully.",
+                "feedback_id": feedback.id
+            }, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
