@@ -1,6 +1,8 @@
-from rest_framework import permissions 
+from rest_framework import permissions
 from .models import CustomUser
 from rest_framework.permissions import BasePermission
+from rest_framework.exceptions import PermissionDenied
+from companies.models import Company
 
 class IsHRAdmin(permissions.BasePermission):
     """
@@ -234,3 +236,27 @@ class IsCompany(BasePermission):
             request.user.is_authenticated and
             request.user.role == CustomUser.Role.COMPANY
         )
+
+
+class IsCompanyWithProfile(BasePermission):
+    """
+    Allows access only to company users who have a company profile.
+    If profile is missing, creates a basic one automatically.
+    """
+    def has_permission(self, request, view):
+        if not (request.user and request.user.is_authenticated):
+            return False
+        if request.user.role != CustomUser.Role.COMPANY:
+            raise PermissionDenied("Only companies can access this endpoint.")
+        if not hasattr(request.user, 'company_profile'):
+            # Auto-create a basic company profile
+            name = f"{request.user.first_name} {request.user.last_name}".strip() or request.user.email
+            try:
+                Company.objects.create(
+                    user=request.user,
+                    name=name,
+                    email=request.user.email
+                )
+            except Exception as e:
+                raise PermissionDenied(f"Failed to create company profile: {str(e)}. Please contact HR Admin.")
+        return True

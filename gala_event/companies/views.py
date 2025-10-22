@@ -9,7 +9,7 @@ from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Count
 from django.contrib.auth.hashers import make_password
-from accounts.permissions import IsHRAdmin 
+from accounts.permissions import IsHRAdmin , IsCompany, IsCompanyWithProfile
 from accounts.models import CustomUser
 from .models import Company
 from .serializers import CompanySerializer
@@ -78,6 +78,13 @@ class CompanyViewSet(viewsets.ModelViewSet):
                 user.password_set = True
                 user.save()
             
+            # Check if user already has a company profile
+            if hasattr(user, 'company_profile'):
+                return Response(
+                    {"error": "This user already has a company profile."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
             # Add user to request data for serializer - handle both QueryDict and regular dict
             if hasattr(request.data, '_mutable'):
                 request.data._mutable = True
@@ -85,14 +92,29 @@ class CompanyViewSet(viewsets.ModelViewSet):
                 request.data._mutable = False
             else:
                 request.data['user'] = user.id
-            
+
         except Exception as e:
             return Response(
                 {"error": f"Failed to create user: {str(e)}"},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
-        return super().create(request, *args, **kwargs)
+
+        # Try to create the company
+        try:
+            response = super().create(request, *args, **kwargs)
+            # Ensure the user's role is set to COMPANY (for newly created users or updates)
+            if user.role != CustomUser.Role.COMPANY:
+                user.role = CustomUser.Role.COMPANY
+                user.save()
+            return response
+        except Exception as e:
+            # If company creation failed and user was newly created, delete the user
+            if created:
+                user.delete()
+            return Response(
+                {"error": f"Failed to create company: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
     def update(self, request, *args, **kwargs):
         """Override update to handle name uniqueness"""
@@ -178,46 +200,27 @@ class CompanyDetailPublicView(APIView):
         
 
 class CompanyProfileView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsCompanyWithProfile]
 
     def get(self, request):
         try:
-            # Check if user is a company
-            if request.user.role != CustomUser.Role.COMPANY:
-                return Response(
-                    {"error": "Only companies can access this endpoint."}, 
-                    status=status.HTTP_403_FORBIDDEN
-                )
-            
-            # Check if company profile exists
-            if not hasattr(request.user, 'company_profile'):
-                return Response(
-                    {"error": "Company profile not found."}, 
-                    status=status.HTTP_404_NOT_FOUND
-                )
-            
             company = request.user.company_profile
             serializer = CompanyProfileSerializer(company)
             return Response(serializer.data, status=status.HTTP_200_OK)
-            
+
         except Exception as e:
             return Response(
-                {"error": "Unable to retrieve company profile."}, 
+                {"error": "Unable to retrieve company profile."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
         
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsCompanyWithProfile])
 def link_participant(request, participant_id):
     """
     Allows a company to link a participant to their company.
     """
-    # Check if user is a company
-    if not hasattr(request.user, 'company_profile'):
-        return Response({'error': 'Only companies can link participants.'}, 
-                       status=status.HTTP_403_FORBIDDEN)
-    
     company = request.user.company_profile
     participant = get_object_or_404(Participant, id=participant_id)
     
@@ -236,16 +239,11 @@ def link_participant(request, participant_id):
     }, status=status.HTTP_201_CREATED)
 
 @api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsCompanyWithProfile])
 def unlink_participant(request, participant_id):
     """
     Allows a company to unlink a participant from their company.
     """
-    # Check if user is a company
-    if not hasattr(request.user, 'company_profile'):
-        return Response({'error': 'Only companies can unlink participants.'}, 
-                       status=status.HTTP_403_FORBIDDEN)
-    
     company = request.user.company_profile
     participant = get_object_or_404(Participant, id=participant_id)
     
@@ -263,16 +261,11 @@ def unlink_participant(request, participant_id):
     }, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsCompanyWithProfile])
 def list_linked_participants(request):
     """
     Returns a list of participants linked to the company.
     """
-    # Check if user is a company
-    if not hasattr(request.user, 'company_profile'):
-        return Response({'error': 'Only companies can view linked participants.'}, 
-                       status=status.HTTP_403_FORBIDDEN)
-    
     company = request.user.company_profile
     
     # Get all links for this company
