@@ -9,12 +9,15 @@ from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Count
 from django.contrib.auth.hashers import make_password
-from accounts.permissions import IsHRAdmin, IsOwnerOrHRAdmin
+from accounts.permissions import IsHRAdmin 
 from accounts.models import CustomUser
 from .models import Company
 from .serializers import CompanySerializer
 from accounts.serializers import CompanyProfileSerializer
-
+from django.shortcuts import get_object_or_404
+from participants.models import Participant
+from .models import CompanyParticipantLink
+from rest_framework.decorators import api_view, permission_classes
 class CompanyViewSet(viewsets.ModelViewSet):
     """Full CRUD operations for companies (HR Admin only)"""
     queryset = Company.objects.all()
@@ -202,3 +205,94 @@ class CompanyProfileView(APIView):
                 {"error": "Unable to retrieve company profile."}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+        
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def link_participant(request, participant_id):
+    """
+    Allows a company to link a participant to their company.
+    """
+    # Check if user is a company
+    if not hasattr(request.user, 'company_profile'):
+        return Response({'error': 'Only companies can link participants.'}, 
+                       status=status.HTTP_403_FORBIDDEN)
+    
+    company = request.user.company_profile
+    participant = get_object_or_404(Participant, id=participant_id)
+    
+    # Check if link already exists
+    if CompanyParticipantLink.objects.filter(company=company, participant=participant).exists():
+        return Response({'message': 'This participant is already linked to your company.'}, 
+                       status=status.HTTP_200_OK)
+    
+    # Create the link
+    link = CompanyParticipantLink.objects.create(company=company, participant=participant)
+    
+    return Response({
+        'message': f'Successfully linked participant {participant.full_name} to {company.name}',
+        'link_id': link.id,
+        'created_at': link.created_at
+    }, status=status.HTTP_201_CREATED)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def unlink_participant(request, participant_id):
+    """
+    Allows a company to unlink a participant from their company.
+    """
+    # Check if user is a company
+    if not hasattr(request.user, 'company_profile'):
+        return Response({'error': 'Only companies can unlink participants.'}, 
+                       status=status.HTTP_403_FORBIDDEN)
+    
+    company = request.user.company_profile
+    participant = get_object_or_404(Participant, id=participant_id)
+    
+    # Find and delete the link
+    link = CompanyParticipantLink.objects.filter(company=company, participant=participant).first()
+    
+    if not link:
+        return Response({'error': 'This participant is not linked to your company.'}, 
+                       status=status.HTTP_404_NOT_FOUND)
+    
+    link.delete()
+    
+    return Response({
+        'message': f'Successfully unlinked participant {participant.full_name} from {company.name}'
+    }, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_linked_participants(request):
+    """
+    Returns a list of participants linked to the company.
+    """
+    # Check if user is a company
+    if not hasattr(request.user, 'company_profile'):
+        return Response({'error': 'Only companies can view linked participants.'}, 
+                       status=status.HTTP_403_FORBIDDEN)
+    
+    company = request.user.company_profile
+    
+    # Get all links for this company
+    links = CompanyParticipantLink.objects.filter(company=company).select_related('participant')
+    
+    participants = []
+    for link in links:
+        participant = link.participant
+        participants.append({
+            'id': participant.id,
+            'name': participant.full_name,
+            'email': participant.email,
+            'job_title': participant.job_title,
+            'university': participant.university,
+            'has_cv': bool(participant.cv_file),
+            'linked_at': link.created_at
+        })
+    
+    return Response({
+        'company': company.name,
+        'linked_participants_count': len(participants),
+        'linked_participants': participants
+    }, status=status.HTTP_200_OK)

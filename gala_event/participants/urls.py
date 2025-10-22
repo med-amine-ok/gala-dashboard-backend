@@ -7,7 +7,10 @@ from .views import (
     ParticipantProfileUpdateView,
     ParticipantListView,
     ParticipantManualyRegistrationView,
-    FeedbackView
+    FeedbackView,
+    upload_cv,
+    get_participant_cv,
+    delete_cv
 )
 
 router = DefaultRouter()
@@ -21,4 +24,7 @@ urlpatterns = [
     path('profile/update/', ParticipantProfileUpdateView.as_view(), name='participant-profile-update'),
     path('manual-register/', ParticipantManualyRegistrationView.as_view(), name='participant-manual-register'),
     path('feedback/', FeedbackView.as_view(), name='participant-feedback'),
+    path('upload-cv/', upload_cv, name='upload-cv'),
+    path('<int:participant_id>/cv/', get_participant_cv, name='get-participant-cv'),
+    path('delete-cv/', delete_cv, name='delete-cv'),
 ]

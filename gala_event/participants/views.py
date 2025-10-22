@@ -6,14 +6,17 @@ from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.decorators import api_view, permission_classes
 from django.utils import timezone
 from accounts.permissions import IsParticipant
 from accounts.models import CustomUser
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Count 
 from django.db import transaction
 from accounts.models import CustomUser
+from companies.models import CompanyParticipantLink
 from .serializers import FeedbackSerializer, ParticipantRegistrationSerializer
 from accounts.permissions import IsOwnerOrHRAdmin, IsParticipant, IsHRAdmin
 from .models import Feedback, Participant
@@ -455,3 +458,104 @@ class FeedbackView(APIView):
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated, IsParticipant])
+def upload_cv(request):
+    """
+    Allows an authenticated participant to upload or update their CV.
+    """
+    try:
+        participant = request.user.participant_profile
+        
+        file = request.FILES.get('file')
+        if not file:
+            return Response({'error': 'No file uploaded.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validate file type (PDF only)
+        if not file.name.lower().endswith('.pdf'):
+            return Response({'error': 'Only PDF files are allowed.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validate file size (max 5MB)
+        if file.size > 5 * 1024 * 1024:  
+            return Response({'error': 'File size exceeds 5MB limit.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Update participant's CV
+        participant.cv_file = file
+        participant.save()
+        
+        return Response({
+            'message': 'CV uploaded successfully',
+            'file_name': file.name,
+
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_participant_cv(request, participant_id):
+    """
+    Allows participants to view their own CV or companies to view CVs of linked participants.
+    """
+    user = request.user
+    participant = get_object_or_404(Participant, id=participant_id)
+    
+    # If user is a participant, can only access own CV
+    if hasattr(user, 'participant_profile') and user.participant_profile.id == participant_id:
+        if not participant.cv_file:
+            return Response({'error': 'No CV uploaded yet.'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'cv_link': request.build_absolute_uri(participant.cv_file.url)})
+    
+    # If user is a company, verify link
+    if hasattr(user, 'company_profile'):
+        company = user.company_profile
+        is_linked = CompanyParticipantLink.objects.filter(
+            company=company,
+            participant=participant
+        ).exists()
+        
+        if not is_linked:
+            return Response({'error': 'Access denied. This participant is not linked to your company.'}, 
+                           status=status.HTTP_403_FORBIDDEN)
+        
+        if not participant.cv_file:
+            return Response({'error': 'This participant has not uploaded a CV yet.'}, 
+                           status=status.HTTP_404_NOT_FOUND)
+        
+        return Response({
+            'participant_id': participant.id,
+            'participant_name': participant.full_name,
+            'cv_link': request.build_absolute_uri(participant.cv_file.url)
+        })
+    
+    return Response({'error': 'Unauthorized access.'}, status=status.HTTP_403_FORBIDDEN)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated, IsParticipant])
+def delete_cv(request):
+    """
+    Allows participants to delete their own CV.
+    """
+    try:
+        participant = request.user.participant_profile
+        
+        if not participant.cv_file:
+            return Response({'error': 'No CV to delete.'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Store the filename for the response
+        filename = participant.cv_file.name
+        
+        # Delete the CV file
+        participant.cv_file.delete(save=False)
+        participant.cv_file = None
+        participant.save()
+        
+        return Response({
+            'message': 'CV deleted successfully',
+            'deleted_file': filename
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

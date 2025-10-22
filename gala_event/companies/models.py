@@ -1,7 +1,8 @@
 from django.db import models
 from django.core.validators import EmailValidator, URLValidator
 from accounts.models import CustomUser
-    
+from participants.models import Participant
+
 class Company(models.Model):
 
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='company_profile', null=True, blank=True)
@@ -26,3 +27,25 @@ class Company(models.Model):
         verbose_name = "Company"
         verbose_name_plural = "Companies"
         ordering = ['name']
+
+
+class CompanyParticipantLink(models.Model):
+    company = models.ForeignKey(
+        Company, 
+        on_delete=models.CASCADE,
+        related_name='participant_links'
+    )
+    participant = models.ForeignKey(
+        Participant, 
+        on_delete=models.CASCADE,
+        related_name='company_links'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('company', 'participant')
+        verbose_name = "Company-Participant Link"
+        verbose_name_plural = "Company-Participant Links"
+        
+    def __str__(self):
+        return f"{self.company.name} - {self.participant.full_name}"
