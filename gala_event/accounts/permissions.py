@@ -1,6 +1,6 @@
 from rest_framework import permissions 
 from .models import CustomUser
-
+from rest_framework.permissions import BasePermission
 
 class IsHRAdmin(permissions.BasePermission):
     """
@@ -27,15 +27,7 @@ class IsHRAdmin(permissions.BasePermission):
 
 
 class IsParticipant(permissions.BasePermission):
-    """
-    Permission class that only allows Participant users to access the view.
-    
-    Use this for views that should only be accessible by Participants like:
-    - Viewing their own profile
-    - Updating their own information
-    - Uploading CV files
-    """
-    
+
     def has_permission(self, request, view):
         # Check if user is authenticated
         if not request.user.is_authenticated:
@@ -226,3 +218,19 @@ class ParticipantProfilePermissions(permissions.BasePermission):
             return obj.user == request.user
         
         return False
+    
+
+
+
+
+
+class IsCompany(BasePermission):
+    """
+    Allows access only to company users.
+    """
+    def has_permission(self, request, view):
+        return bool(
+            request.user and
+            request.user.is_authenticated and
+            request.user.role == CustomUser.Role.COMPANY
+        )

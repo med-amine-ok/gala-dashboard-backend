@@ -30,19 +30,21 @@ class ParticipantRegistrationSerializer(serializers.Serializer):
     university_other = serializers.CharField(required=False, allow_blank=True)
 
     field_of_study = serializers.ChoiceField(choices=[
-        ('Electrical Engineering', 'Electrical Engineering'),
-        ('Electronics Engineering', 'Electronics Engineering'),
-        ('Automation & Control', 'Automation & Control'),
-        ('Industrial Engineering', 'Industrial Engineering'),
-        ('Data Science & Artificial Intelligence', 'Data Science & Artificial Intelligence'),
-        ('Mechanical Engineering', 'Mechanical Engineering'),
-        ('Chemical Engineering', 'Chemical Engineering'),
-        ('Materials Engineering', 'Materials Engineering'),
-        ('Civil Engineering', 'Civil Engineering'),
-        ('QHSE (Quality, Health, Safety & Environment)', 'QHSE (Quality, Health, Safety & Environment)'),
-        ('Environmental & Process Engineering', 'Environmental & Process Engineering'),
-        ('Mining Engineering', 'Mining Engineering'),
-        ('Hydraulic Engineering', 'Hydraulic Engineering'),
+        ('electrical', 'electrical'),
+        ('electronics', 'electronics'),
+        ('automotive', 'automotive'),
+        ('automation', 'automation'),
+        ('industrial', 'industrial'),
+        ('datascience_ai', 'datascience_ai'),
+        ('mechanical', 'mechanical'),
+        ('chemical', 'chemical'),
+        ('materials', 'materials'),
+        ('civil', 'civil'),
+        ('qhse', 'qhse'),
+        ('environmental', 'environmental'),
+        ('mining', 'mining'),
+        ('hydraulics', 'hydraulics'),
+        ('green_hydrogen', 'green_hydrogen'),
         ('OTHER', 'Other')
     ])
     field_of_study_other = serializers.CharField(required=False, allow_blank=True)

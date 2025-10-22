@@ -13,6 +13,7 @@ class CustomUser(AbstractUser):
     class Role(models.TextChoices):
         HR_ADMIN = 'HR', _('HR Admin')
         PARTICIPANT = 'P', _('Participant')
+        COMPANY = 'C', _('Company')
 
     email = models.EmailField(_('email address'), unique=True)
     role = models.CharField(max_length=2, choices=Role.choices, default=Role.PARTICIPANT)

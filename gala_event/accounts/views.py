@@ -173,6 +173,7 @@ class CurrentUserView(APIView):
                     "role": user.role,
                     "is_participant": user.role == CustomUser.Role.PARTICIPANT,
                     "is_hr_admin": user.role == CustomUser.Role.HR_ADMIN,
+                    "is_company": user.role == CustomUser.Role.COMPANY
             }, status=status.HTTP_200_OK)
         except Exception as e:
             return Response(

@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
+
+from companies.models import Company
 from .models import CustomUser
 from participants.models import Participant
 
@@ -115,54 +117,20 @@ class ParticipantProfileSerializer(serializers.ModelSerializer):
         
         return instance
 
-class ParticipantRegistrationSerializer(serializers.ModelSerializer):
-    """Serializer for participant registration (creates both User and Participant)"""
-    # User fields
-    email = serializers.EmailField()
-    password = serializers.CharField(write_only=True, min_length=8)
-    first_name = serializers.CharField()
-    last_name = serializers.CharField()
-    
-    # Participant fields
-    job_title = serializers.CharField()
-    university = serializers.CharField(required=False, allow_blank=True)
-    graduation_year = serializers.IntegerField(required=False, allow_null=True)
-    linkedin_url = serializers.URLField(required=False, allow_blank=True)
-    cv_file = serializers.FileField(required=False)
+
+
+class CompanyProfileSerializer(serializers.ModelSerializer):
+    """Serializer for companies to view/edit their own profile"""
+    # Include user fields
+    name = serializers.CharField(source='user.name')
+    email = serializers.EmailField(source='user.email', read_only=True)
     
     class Meta:
-        model = Participant
+        model = Company
         fields = [
-            'email', 'password', 'first_name', 'last_name', 'job_title', 'university', 'graduation_year', 'linkedin_url',
-            'cv_file', 'participant_type'
+            'id', 'email', 'name', 'description', 
+            'website', 'field', 'contact_person', 'phone', 'address', 'logo',
+            'created_at', 'updated_at'
         ]
-
-    def validate_email(self, value):
-        # Normalize and ensure uniqueness
-        email = value.strip().lower()
-        if CustomUser.objects.filter(email__iexact=email).exists():
-            raise serializers.ValidationError('A user with this email already exists.')
-        return email
+        read_only_fields = ['id', 'email', 'created_at', 'updated_at']
     
-    def create(self, validated_data):
-        """Create both User and Participant records"""
-        # Extract user data
-        email = validated_data.pop('email')
-        password = validated_data.pop('password')
-        first_name = validated_data.pop('first_name')
-        last_name = validated_data.pop('last_name')
-        
-
-        # Build user data, using email as username
-        user = CustomUser.objects.create_user(
-            username=email,
-            email=email,
-            password=password,
-            first_name=first_name,
-            last_name=last_name,
-            role=CustomUser.Role.PARTICIPANT,
-        )
-
-        # Remaining validated_data are Participant fields
-        participant = Participant.objects.create(user=user, **validated_data)
-        return participant

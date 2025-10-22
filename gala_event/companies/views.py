@@ -8,10 +8,12 @@ from rest_framework.decorators import action
 from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Count
+from django.contrib.auth.hashers import make_password
 from accounts.permissions import IsHRAdmin, IsOwnerOrHRAdmin
+from accounts.models import CustomUser
 from .models import Company
 from .serializers import CompanySerializer
-
+from accounts.serializers import CompanyProfileSerializer
 
 class CompanyViewSet(viewsets.ModelViewSet):
     """Full CRUD operations for companies (HR Admin only)"""
@@ -25,8 +27,11 @@ class CompanyViewSet(viewsets.ModelViewSet):
     ordering = ['name']
 
     def create(self, request, *args, **kwargs):
-        """Override create to handle duplicate company names gracefully"""
+        """Override create to handle duplicate company names and set password"""
         name = request.data.get('name', '').strip()
+        email = request.data.get('email', '').strip()
+        password = request.data.get('password', '').strip()
+        
         if not name:
             return Response(
                 {"error": "Company name is required."},
@@ -38,6 +43,52 @@ class CompanyViewSet(viewsets.ModelViewSet):
                 {"error": "Company with this name already exists."},
                 status=status.HTTP_400_BAD_REQUEST
             )
+        
+        # Validate password if provided
+        if password:
+            if len(password) < 8:
+                return Response(
+                    {"error": "Password must be at least 8 characters long."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        
+        # Create or get the user for this company
+        try:
+            user, created = CustomUser.objects.get_or_create(
+                email__iexact=email,
+                defaults={
+                    'email': email,
+                    'username': email,  
+                    'role': CustomUser.Role.COMPANY,
+                    'is_active': True,
+                }
+            )
+            
+            # If user was just created and password provided, set it
+            if created and password:
+                user.set_password(password)
+                user.password_set = True
+                user.save()
+            elif not created and password:
+                # If user exists and new password provided, update it
+                user.set_password(password)
+                user.password_set = True
+                user.save()
+            
+            # Add user to request data for serializer - handle both QueryDict and regular dict
+            if hasattr(request.data, '_mutable'):
+                request.data._mutable = True
+                request.data['user'] = user.id
+                request.data._mutable = False
+            else:
+                request.data['user'] = user.id
+            
+        except Exception as e:
+            return Response(
+                {"error": f"Failed to create user: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
         return super().create(request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
@@ -120,4 +171,34 @@ class CompanyDetailPublicView(APIView):
             return Response(
                 {"error": "Company not found or inactive"},
                 status=status.HTTP_404_NOT_FOUND
+            )
+        
+
+class CompanyProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            # Check if user is a company
+            if request.user.role != CustomUser.Role.COMPANY:
+                return Response(
+                    {"error": "Only companies can access this endpoint."}, 
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            # Check if company profile exists
+            if not hasattr(request.user, 'company_profile'):
+                return Response(
+                    {"error": "Company profile not found."}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            company = request.user.company_profile
+            serializer = CompanyProfileSerializer(company)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response(
+                {"error": "Unable to retrieve company profile."}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )

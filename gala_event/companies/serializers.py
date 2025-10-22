@@ -1,31 +1,34 @@
 from rest_framework import serializers
+from django.contrib.auth.hashers import make_password
 from .models import Company
+from accounts.models import CustomUser
 
 class CompanySerializer(serializers.ModelSerializer):
     """Full serializer for Company CRUD operations"""
-    participants_count = serializers.ReadOnlyField()
+    
+    password = serializers.CharField(write_only=True, required=False, allow_blank=True, min_length=8)
+   
     
     class Meta:
         model = Company
         fields = [
-            'id', 'name', 'description', 'email', 'website', 
+            'id',  'name', 'description', 'email', 'website', 
             'field', 'contact_person', 'phone', 'address',
-            'logo', 'participants_count', 'created_at', 'updated_at'
+            'logo', 'created_at', 'updated_at', 'password'
         ]
-        read_only_fields = ['id', 'participants_count', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
     
-    # def validate_hiring_positions(self, value):
-    #     """Validate that hiring_positions is a list of strings"""
-    #     if not isinstance(value, list):
-    #         raise serializers.ValidationError("Hiring positions must be a list.")
-        
-    #     for position in value:
-    #         if not isinstance(position, str):
-    #             raise serializers.ValidationError("Each hiring position must be a string.")
-    #         if len(position.strip()) == 0:
-    #             raise serializers.ValidationError("Hiring position cannot be empty.")
-        
-    #     return value
+    def create(self, validated_data):
+        """Remove password from validated data before creating Company"""
+        # Remove password as it's not a Company model field
+        validated_data.pop('password', None)
+        return super().create(validated_data)
+    
+    def update(self, instance, validated_data):
+        """Remove password from validated data before updating Company"""
+        # Remove password as it's not a Company model field
+        validated_data.pop('password', None)
+        return super().update(instance, validated_data)
 
 class CompanyListSerializer(serializers.ModelSerializer):
     """Simplified serializer for company lists (for dropdowns, etc.)"""

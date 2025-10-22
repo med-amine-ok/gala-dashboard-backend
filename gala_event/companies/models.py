@@ -1,9 +1,10 @@
 from django.db import models
 from django.core.validators import EmailValidator, URLValidator
-
+from accounts.models import CustomUser
+    
 class Company(models.Model):
-    
-    
+
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='company_profile', null=True, blank=True)
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True, null=True)
     email = models.EmailField(validators=[EmailValidator()])
@@ -19,9 +20,7 @@ class Company(models.Model):
     def __str__(self):
         return self.name
     
-    @property
-    def participants_count(self):
-        return self.participants.count()
+    
     
     class Meta:
         verbose_name = "Company"
