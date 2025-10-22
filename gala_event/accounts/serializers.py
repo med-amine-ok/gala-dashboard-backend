@@ -91,7 +91,7 @@ class ParticipantProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Participant
         fields = [
-            'id', 'first_name', 'last_name', 'email','job_title', 'university', 'graduation_year', 'linkedin_url', 
+            'id', 'first_name', 'last_name', 'email','field_of_study', 'university', 'graduation_year', 'linkedin_url', 
             'cv_file', 'participant_type', 
             'registered_at'
         ]

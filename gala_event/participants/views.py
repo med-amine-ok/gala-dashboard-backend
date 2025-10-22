@@ -226,7 +226,7 @@ class ParticipantListView(generics.ListAPIView):
     permission_classes = [IsHRAdmin]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['participant_type']
-    search_fields = ['job_title', 'university']
+    search_fields = ['field_of_study', 'university']
     ordering_fields = ['registered_at']
     ordering = ['-registered_at']
 
@@ -241,7 +241,7 @@ class ParticipantViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_fields = ['status', 'payment_status', 'participant_type']
     
     # Updated search fields to use User model fields through the relationship
-    search_fields = ['user__full_name', 'user__email', 'job_title', 'university']
+    search_fields = ['user__full_name', 'user__email', 'field_of_study', 'university']
     ordering_fields = ['registered_at', 'status', 'user__full_name']
     ordering = ['-registered_at']  # Default ordering
 

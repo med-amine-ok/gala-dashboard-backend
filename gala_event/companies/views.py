@@ -278,7 +278,7 @@ def list_linked_participants(request):
             'id': participant.id,
             'name': participant.full_name,
             'email': participant.email,
-            'job_title': participant.job_title,
+            'field_of_study': participant.field_of_study,
             'university': participant.university,
             'has_cv': bool(participant.cv_file),
             'linked_at': link.created_at

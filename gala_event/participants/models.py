@@ -24,7 +24,7 @@ class Participant(models.Model):
     last_name = models.CharField(max_length=150, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
     phone = models.CharField(max_length=20, blank=True)
-    job_title = models.CharField(max_length=100, blank=True)
+    field_of_study = models.CharField(max_length=100, blank=True)
     university = models.CharField(max_length=255, blank=True)
     university_other = models.CharField(max_length=255, blank=True)
     field_of_study = models.CharField(max_length=255, blank=True)
@@ -77,7 +77,7 @@ class Participant(models.Model):
         if self.user:
             return f"{self.user.first_name} {self.user.last_name} ({self.user.email})"
         else:
-            return f"Participant {self.id} - {self.job_title or 'No title'}"
+            return f"Participant {self.id} - {self.field_of_study or 'No title'}"
 
     @property
     def full_name(self):

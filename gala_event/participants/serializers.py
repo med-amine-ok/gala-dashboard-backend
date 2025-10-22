@@ -17,7 +17,7 @@ class ParticipantRegistrationSerializer(serializers.Serializer):
     participant_type = serializers.ChoiceField(
         choices=Participant.ParticipantType.choices
     )
-    job_title = serializers.CharField(required=False, allow_blank=True)
+    field_of_study = serializers.CharField(required=False, allow_blank=True)
 
     university = serializers.ChoiceField(choices=[
         ('ENP', 'ENP'),
@@ -163,7 +163,7 @@ class ParticipantSerializer(serializers.ModelSerializer):
             
             'first_name', 'last_name', 'email', 'phone',
             
-             'participant_type', 'job_title', 'university', 'graduation_year',
+             'participant_type', 'field_of_study', 'university', 'graduation_year',
             'status', 'payment_status', 'cv_file', 'linkedin_url',
             
             'approved_by', 'approved_by_name', 'approved_at', 'rejection_reason',
@@ -205,7 +205,7 @@ class ParticipantCreateSerializer(serializers.ModelSerializer):
         model = Participant
         fields = [
             'first_name', 'last_name', 'email', 'phone',
-            'participant_type', 'job_title', 'university',
+            'participant_type', 'field_of_study', 'university',
             'graduation_year', 'status', 'payment_status', 'linkedin_url'
         ]
         read_only_fields = ['first_name', 'last_name', 'email', 'phone']
