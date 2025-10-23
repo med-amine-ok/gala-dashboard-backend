@@ -7,11 +7,12 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
-from django.utils import timezone
+
 from accounts.permissions import IsParticipant
 from accounts.models import CustomUser
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from datetime import time, timedelta
 from datetime import timedelta
 from django.db.models import Count 
 from django.db import transaction
@@ -502,14 +503,26 @@ def upload_cv(request):
         if file.size > 5 * 1024 * 1024:  
             return Response({'error': 'File size exceeds 5MB limit.'}, status=status.HTTP_400_BAD_REQUEST)
         
-        # Update participant's CV
-        participant.cv_file = file
+        # Import cloudinary for direct upload
+        import cloudinary.uploader
+        
+        # Upload to Cloudinary
+        upload_result = cloudinary.uploader.upload(
+            file,
+            folder="cvs",  # Store in a 'cvs' folder in Cloudinary
+            resource_type="auto",
+            public_id=f"cv_{participant.id}_{int(time.time())}",  
+            overwrite=True
+        )
+        
+        # Save the Cloudinary URL to the participant's profile
+        participant.cv_file = upload_result['secure_url']
         participant.save()
         
         return Response({
             'message': 'CV uploaded successfully',
             'file_name': file.name,
-
+            'file_url': upload_result['secure_url']
         }, status=status.HTTP_200_OK)
         
     except Exception as e:

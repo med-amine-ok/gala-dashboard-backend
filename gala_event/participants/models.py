@@ -42,7 +42,9 @@ class Participant(models.Model):
     heard_about_other = models.CharField(max_length=255, blank=True)
     additional_comments = models.TextField(blank=True)
     linkedin_url = models.URLField(blank=True)
-    cv_file = models.FileField(upload_to='cvs/', blank=True, null=True)
+
+    cv_file = models.URLField(max_length=500, blank=True, null=True)  
+
     participant_type = models.CharField(
         max_length=2, 
         choices=ParticipantType.choices, 

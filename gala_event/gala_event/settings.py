@@ -64,8 +64,17 @@ INSTALLED_APPS = [
     "participants",
     "notifications",
     "dashboard",
-
+    "cloudinary",
+    "cloudinary_storage",
 ]
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': env('CLOUDINARY_CLOUD_NAME', default='your-cloud-name'),
+    'API_KEY': env('CLOUDINARY_API_KEY', default='your-api-key'),
+    'API_SECRET': env('CLOUDINARY_API_SECRET', default='your-api-secret'),
+}
+
+
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
