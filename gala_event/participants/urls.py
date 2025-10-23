@@ -15,7 +15,7 @@ from .views import (
 
 router = DefaultRouter()
 # Only using ViewSet for read-only admin operations
-router.register(r'admin/view', ParticipantViewSet, basename='participant-admin')
+router.register(r'view', ParticipantViewSet, basename='participant-admin')
 
 urlpatterns = [
     path('', include(router.urls)),
