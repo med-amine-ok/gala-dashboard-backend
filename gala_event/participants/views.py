@@ -510,8 +510,7 @@ def upload_cv(request):
         upload_result = cloudinary.uploader.upload(
             file,
             folder="cvs",  # Store in a 'cvs' folder in Cloudinary
-            resource_type="auto",
-            public_id=f"cv_{participant.id}_{int(time.time())}",  
+            resource_type="auto", 
             overwrite=True
         )
         
