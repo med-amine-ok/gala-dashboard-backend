@@ -1,5 +1,5 @@
 from rest_framework import viewsets, status, permissions, generics
-from rest_framework.decorators import action
+from rest_framework.decorators import action, parser_classes
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
@@ -7,7 +7,10 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
-
+from cloudinary.uploader import upload as cloudinary_upload
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from django.conf import settings
 from accounts.permissions import IsParticipant
 from accounts.models import CustomUser
 from django.shortcuts import get_object_or_404
@@ -457,10 +460,6 @@ class ParticipantManualyRegistrationView(APIView):
 
 
 class FeedbackView(APIView):
-
-    
-
-
     queryset = Feedback.objects.all().select_related('participant')
     serializer_class = FeedbackSerializer
     permission_classes = [AllowAny]
@@ -517,6 +516,14 @@ def upload_cv(request):
         # Get the URL of the uploaded file
         file_url = default_storage.url(path)
         
+        cloudinary_upload(
+            file_url,
+            public_id=file_path.replace('.pdf', ''),
+            resource_type='raw',
+            type='upload',
+            overwrite=True,
+            access_mode='public',  # make sure this is non-authenticated
+        )
         # Save the Cloudinary URL to the participant's profile
         participant.cv_file = file_url
         participant.save()

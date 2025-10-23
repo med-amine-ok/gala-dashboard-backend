@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 import environ
 import os
+import cloudinary
 from datetime import timedelta
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -67,10 +68,11 @@ INSTALLED_APPS = [
     "cloudinary",
     "cloudinary_storage",
 ]
+
 CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': env('CLOUDINARY_CLOUD_NAME', default='your-cloud-name'),
-    'API_KEY': env('CLOUDINARY_API_KEY', default='your-api-key'),
-    'API_SECRET': env('CLOUDINARY_API_SECRET', default='your-api-secret'),
+    'CLOUD_NAME': env('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': env('CLOUDINARY_API_KEY'),
+    'API_SECRET': env('CLOUDINARY_API_SECRET'),
 }
 
 
