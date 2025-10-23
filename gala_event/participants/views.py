@@ -25,6 +25,7 @@ from .serializers import (
     ParticipantApprovalSerializer
 )
 from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 import qrcode
 from io import BytesIO
 import base64
@@ -359,6 +360,26 @@ class ParticipantViewSet(viewsets.ReadOnlyModelViewSet):
             'count': pending_participants.count(),
             'results': serializer.data
         }, status=status.HTTP_200_OK)
+    
+    @action(detail=False, methods=['get'])
+    def approved(self, request):
+        """Get only approved participants"""
+        approved_participants = self.queryset.filter(status=Participant.Status.APPROVED)
+        serializer = self.get_serializer(approved_participants, many=True)
+        return Response({
+            'count': approved_participants.count(),
+            'results': serializer.data
+        }, status=status.HTTP_200_OK)
+    
+    @action(detail=False, methods=['get'])
+    def rejected(self, request):
+        """Get only rejected participants"""
+        rejected_participants = self.queryset.filter(status=Participant.Status.REJECTED)
+        serializer = self.get_serializer(rejected_participants, many=True)
+        return Response({
+            'count': rejected_participants.count(),
+            'results': serializer.data
+        }, status=status.HTTP_200_OK)
 
 
 class ParticipantDetailView(APIView):
@@ -458,6 +479,7 @@ class FeedbackView(APIView):
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated, IsParticipant])
