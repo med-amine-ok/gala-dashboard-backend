@@ -541,17 +541,37 @@ def upload_cv(request):
 @permission_classes([IsAuthenticated])
 def get_participant_cv(request, participant_id):
     """
-    Allows participants to view their own CV or companies to view CVs of linked participants.
+    Allows participants to view their own CV or companies/HR admins to view CVs of linked participants.
     """
     user = request.user
     participant = get_object_or_404(Participant, id=participant_id)
-    
+
+    def build_cv_response():
+        cv_link = participant.cv_file
+        if not cv_link:
+            return None
+        if cv_link.startswith('http'):
+            return cv_link
+        return request.build_absolute_uri(cv_link)
+
+    cv_link = build_cv_response()
+
     # If user is a participant, can only access own CV
     if hasattr(user, 'participant_profile') and user.participant_profile.id == participant_id:
-        if not participant.cv_file:
+        if not cv_link:
             return Response({'error': 'No CV uploaded yet.'}, status=status.HTTP_404_NOT_FOUND)
-        return Response({'cv_link': request.build_absolute_uri(participant.cv_file.url)})
-    
+        return Response({'cv_link': cv_link})
+
+    # HR admins can access any participant's CV
+    if getattr(user, 'role', None) == CustomUser.Role.HR_ADMIN:
+        if not cv_link:
+            return Response({'error': 'This participant has not uploaded a CV yet.'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({
+            'participant_id': participant.id,
+            'participant_name': participant.full_name,
+            'cv_link': cv_link
+        })
+
     # If user is a company, verify link
     if hasattr(user, 'company_profile'):
         company = user.company_profile
@@ -559,21 +579,21 @@ def get_participant_cv(request, participant_id):
             company=company,
             participant=participant
         ).exists()
-        
+
         if not is_linked:
-            return Response({'error': 'Access denied. This participant is not linked to your company.'}, 
+            return Response({'error': 'Access denied. This participant is not linked to your company.'},
                            status=status.HTTP_403_FORBIDDEN)
-        
-        if not participant.cv_file:
-            return Response({'error': 'This participant has not uploaded a CV yet.'}, 
+
+        if not cv_link:
+            return Response({'error': 'This participant has not uploaded a CV yet.'},
                            status=status.HTTP_404_NOT_FOUND)
-        
+
         return Response({
             'participant_id': participant.id,
             'participant_name': participant.full_name,
-            'cv_link': request.build_absolute_uri(participant.cv_file.url)
+            'cv_link': cv_link
         })
-    
+
     return Response({'error': 'Unauthorized access.'}, status=status.HTTP_403_FORBIDDEN)
 
 @api_view(['DELETE'])

@@ -146,7 +146,7 @@ class ParticipantSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source='user.first_name', read_only=True)
     last_name = serializers.CharField(source='user.last_name', read_only=True)
     email = serializers.EmailField(source='user.email', read_only=True)
-    phone = serializers.CharField(source='user.phone', read_only=True)
+    phone = serializers.CharField( read_only=True)
 
     # Extra display helpers (these may be None if not defined as properties)
     full_name = serializers.ReadOnlyField()
@@ -160,16 +160,21 @@ class ParticipantSerializer(serializers.ModelSerializer):
         model = Participant
         fields = [
             'id',
-            
+            'user',
             'first_name', 'last_name', 'email', 'phone',
-            
-             'participant_type', 'field_of_study', 'university', 'graduation_year',
-            'status', 'payment_status', 'cv_file', 'linkedin_url',
-            
-            'approved_by', 'approved_by_name', 'approved_at', 'rejection_reason',
-            
-            'full_name', 'is_approved', 'is_paid',
-            'registered_at', 'updated_at'
+            'field_of_study', 'field_of_study_other',
+            'university', 'university_other',
+            'academic_level', 'academic_level_other',
+            'graduation_year', 'graduation_year_other',
+            'participant_type',
+            'plans_next_year', 'personal_description',
+            'perspective_gala', 'benefit_from_event',
+            'attended_before', 'heard_about', 'heard_about_other',
+            'additional_comments', 'linkedin_url', 'cv_file',
+            'status', 'payment_status',
+            'approved_by', 'approved_by_name', 'approved_at',
+            'rejection_reason', 'registered_at', 'updated_at',
+            'full_name', 'is_approved', 'is_paid'
         ]
         read_only_fields = [
             'id', 'first_name', 'last_name', 'email', 'phone',
