@@ -184,7 +184,7 @@ class ParticipantSerializer(serializers.ModelSerializer):
 
 
 class ParticipantApprovalSerializer(serializers.Serializer):
-    """Serializer for approving/rejecting participants"""
+    """Serializer for approving/rejecting a single participant"""
     action = serializers.ChoiceField(choices=['approved', 'rejected', 'pending'])
     rejection_reason = serializers.CharField(required=False, allow_blank=True)
 
@@ -193,6 +193,25 @@ class ParticipantApprovalSerializer(serializers.Serializer):
             raise serializers.ValidationError({
                 'rejection_reason': 'Rejection reason is required when rejecting a participant.'
             })
+        return data
+
+
+class ParticipantBulkApprovalSerializer(serializers.Serializer):
+    """Serializer for bulk approval/rejection operations"""
+    participant_ids = serializers.ListField(
+        child=serializers.IntegerField(min_value=1),
+        allow_empty=False
+    )
+    action = serializers.ChoiceField(choices=['approved', 'rejected', 'pending'])
+    rejection_reason = serializers.CharField(required=False, allow_blank=True)
+
+    def validate(self, data):
+        if data['action'] == 'rejected':
+            rejection_reason = data.get('rejection_reason', '').strip()
+            if not rejection_reason:
+                raise serializers.ValidationError({
+                    'rejection_reason': "Rejection reason is required when rejecting participants."
+                })
         return data
 
 

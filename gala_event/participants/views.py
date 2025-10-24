@@ -26,7 +26,8 @@ from accounts.permissions import IsOwnerOrHRAdmin, IsParticipant, IsHRAdmin
 from .models import Feedback, Participant
 from .serializers import (
     ParticipantSerializer,
-    ParticipantApprovalSerializer
+    ParticipantApprovalSerializer,
+    ParticipantBulkApprovalSerializer
 )
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
@@ -111,8 +112,6 @@ class ParticipantProfileView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-
-
 class ParticipantProfileUpdateView(APIView):
     """
     View for participants to update their own profile.
@@ -150,7 +149,6 @@ class ParticipantProfileUpdateView(APIView):
     def patch(self, request):
         """Handle PATCH requests same as PUT"""
         return self.put(request)
-
 
 class ParticipantRegistrationView(APIView):
     # Public endpoint, no authentication required
@@ -295,6 +293,123 @@ class ParticipantViewSet(viewsets.ReadOnlyModelViewSet):
             }, status=status.HTTP_200_OK)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @swagger_auto_schema(
+        method='post',
+        request_body=ParticipantBulkApprovalSerializer,
+        responses={
+            200: openapi.Response(
+                description="Successful bulk status update",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        "message": openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description="Summary of the operation"
+                        ),
+                        "affected_count": openapi.Schema(
+                            type=openapi.TYPE_INTEGER,
+                            description="Number of participants updated"
+                        ),
+                    },
+                ),
+            ),
+            400: openapi.Response(
+                description="Validation error",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        "participant_ids": openapi.Schema(
+                            type=openapi.TYPE_ARRAY,
+                            items=openapi.Schema(type=openapi.TYPE_STRING),
+                            description="Validation errors related to the participant_ids field"
+                        ),
+                        "action": openapi.Schema(
+                            type=openapi.TYPE_ARRAY,
+                            items=openapi.Schema(type=openapi.TYPE_STRING),
+                            description="Validation errors related to the action field"
+                        ),
+                        "rejection_reason": openapi.Schema(
+                            type=openapi.TYPE_ARRAY,
+                            items=openapi.Schema(type=openapi.TYPE_STRING),
+                            description="Validation errors related to the rejection_reason field"
+                        ),
+                        "error": openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description="Human-readable error message in case of missing IDs"
+                        ),
+                        "missing_ids": openapi.Schema(
+                            type=openapi.TYPE_ARRAY,
+                            items=openapi.Schema(type=openapi.TYPE_INTEGER),
+                            description="List of participant IDs that were not found"
+                        ),
+                    },
+                ),
+            ),
+        },
+    )
+    @action(detail=False, methods=['post'])
+    def bulk_approve_reject(self, request):
+        """Bulk approve or reject participants"""
+        serializer = ParticipantBulkApprovalSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        participant_ids = serializer.validated_data['participant_ids']
+        action_type = serializer.validated_data['action']
+        rejection_reason = serializer.validated_data.get('rejection_reason', '')
+
+        participants_qs = Participant.objects.filter(id__in=participant_ids)
+        found_ids = set(participants_qs.values_list('id', flat=True))
+        missing_ids = [participant_id for participant_id in participant_ids if participant_id not in found_ids]
+
+        if missing_ids:
+            return Response({
+                "error": "Some participant IDs were not found.",
+                "missing_ids": missing_ids
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        updated_count = 0
+        now = timezone.now()
+
+        with transaction.atomic():
+            participants_to_update = participants_qs.select_for_update().prefetch_related('user')
+            for participant in participants_to_update:
+                user = participant.user
+
+                if action_type == 'approved':
+                    participant.status = Participant.Status.APPROVED
+                    participant.approved_by = request.user
+                    participant.approved_at = now
+                    participant.rejection_reason = ''
+                    if user:
+                        user.is_active = True
+                        user.save(update_fields=['is_active'])
+
+                elif action_type == 'rejected':
+                    participant.status = Participant.Status.REJECTED
+                    participant.rejection_reason = rejection_reason
+                    participant.approved_by = None
+                    participant.approved_at = None
+                    if user:
+                        user.is_active = False
+                        user.save(update_fields=['is_active'])
+
+                else:  # pending
+                    participant.status = Participant.Status.PENDING
+                    participant.approved_by = None
+                    participant.approved_at = None
+                    participant.rejection_reason = ''
+                    if user:
+                        user.is_active = True
+                        user.save(update_fields=['is_active'])
+
+                participant.save()
+                updated_count += 1
+
+        return Response({
+            "message": f"Bulk {action_type} operation completed successfully",
+            "affected_count": updated_count
+        }, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'])
     def statistics(self, request):
