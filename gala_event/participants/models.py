@@ -1,13 +1,32 @@
 from django.db import models
 from django.conf import settings
-import uuid
+import random
 
+
+_RANDOM_ID_GENERATOR = random.SystemRandom()
+MIN_PARTICIPANT_ID = 10 ** 17
+MAX_PARTICIPANT_ID = (10 ** 18) - 1
+
+
+def generate_participant_id():
+    """Generate a unique 18-digit random participant identifier."""
+    while True:
+        candidate = _RANDOM_ID_GENERATOR.randint(MIN_PARTICIPANT_ID, MAX_PARTICIPANT_ID)
+        if not Participant.objects.filter(pk=candidate).exists():
+            return candidate
 
 
 class Participant(models.Model):
+    id = models.BigIntegerField(
+        primary_key=True,
+        default=generate_participant_id,
+        editable=False,
+    )
+
     class ParticipantType(models.TextChoices):
         STUDENT = 'ST', 'Student'
         GUEST = 'G', 'Guest'
+
     class Status(models.TextChoices):
         PENDING = 'PENDING', 'Pending'
         APPROVED = 'APPROVED', 'Approved'
