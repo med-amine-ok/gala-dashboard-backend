@@ -31,7 +31,10 @@ from drf_yasg import openapi
 import qrcode
 from io import BytesIO
 import base64
-
+import cloudinary
+import cloudinary.uploader
+import time
+import os
 class ParticipantProfileView(APIView):
     """
     View for participants to view their own profile.
@@ -593,6 +596,14 @@ class FeedbackView(APIView):
     
 
 
+# Configure Cloudinary (make sure these env vars are set)
+cloudinary.config(
+    cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    api_key=os.environ.get('CLOUDINARY_API_KEY'),
+    api_secret=os.environ.get('CLOUDINARY_API_SECRET'),
+    secure=True
+)
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated, IsParticipant])
 def upload_cv(request):
@@ -611,27 +622,34 @@ def upload_cv(request):
             return Response({'error': 'Only PDF files are allowed.'}, status=status.HTTP_400_BAD_REQUEST)
 
         # Validate file size (max 5MB)
-        if file.size > 5 * 1024 * 1024:  
+        if file.size > 5 * 1024 * 1024:
             return Response({'error': 'File size exceeds 5MB limit.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        import time
+        # Generate unique public_id to overwrite previous CV
+        file_path = f"cvs/cv_{participant.id}"
+        public_id = file_path  # we omit timestamp to always overwrite
 
-        file_path = f"cvs/cv_{participant.id}_{int(time.time())}.pdf"
-        public_id = file_path.replace('.pdf', '')
-
+        # Reset file pointer
         file.seek(0)
-        upload_result = cloudinary_upload(
-            file,
-            public_id=public_id,
-            resource_type='raw',
-            overwrite=True,
-            access_mode='public',
-        )
 
+        # Upload to Cloudinary
+        try:
+            upload_result = cloudinary.uploader.upload(
+                file,
+                public_id=public_id,
+                resource_type='raw',
+                overwrite=True,
+                access_mode='public',
+            )
+        except Exception as e:
+            return Response({'error': f"Cloudinary upload failed: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # Retrieve secure URL
         secure_url = upload_result.get('secure_url') or upload_result.get('url')
         if not secure_url:
-            return Response({'error': 'Unable to retrieve CV URL.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({'error': 'Unable to retrieve CV URL from Cloudinary.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+        # Save URL in participant profile
         participant.cv_file = secure_url
         participant.save()
 
@@ -643,7 +661,7 @@ def upload_cv(request):
 
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
+    
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_participant_cv(request, participant_id):
