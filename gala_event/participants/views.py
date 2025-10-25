@@ -617,15 +617,23 @@ def upload_cv(request):
     if not file_obj:
         return Response({'error': 'No CV file provided.'}, status=status.HTTP_400_BAD_REQUEST)
 
+    filename_root, filename_ext = os.path.splitext(file_obj.name or '')
+    timestamp_suffix = str(int(time.time()))
+    sanitized_root = ''.join(ch for ch in filename_root if ch.isalnum() or ch in ('-', '_')) or 'cv'
+    public_id = f"cv/{participant.id}-{timestamp_suffix}"
+    upload_options = {
+        'resource_type': 'raw',
+        'public_id': public_id,
+        'overwrite': True,
+        'access_mode': 'public'
+    }
+    if filename_ext:
+        upload_options['format'] = filename_ext.lstrip('.')
+
     try:
         upload_response = cloudinary_upload(
             file_obj,
-            resource_type='auto',
-            folder='participants/cv',
-            use_filename=True,
-            unique_filename=False,
-            overwrite=True,
-            access_mode='public'
+            **upload_options
         )
     except Exception as exc:
         return Response({'error': 'Failed to upload CV.', 'details': str(exc)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
