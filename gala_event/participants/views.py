@@ -604,48 +604,45 @@ def upload_cv(request):
     """
     try:
         participant = request.user.participant_profile
-        
+
         file = request.FILES.get('file')
         if not file:
             return Response({'error': 'No file uploaded.'}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         # Validate file type (PDF only)
         if not file.name.lower().endswith('.pdf'):
             return Response({'error': 'Only PDF files are allowed.'}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         # Validate file size (max 5MB)
-        if file.size > 5 * 1024 * 1024:  
+        if file.size > 5 * 1024 * 1024:
             return Response({'error': 'File size exceeds 5MB limit.'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        import time
-        from cloudinary.uploader import upload as cloudinary_upload
-        
+
         # Generate a unique public_id
-        public_id = f"cvs/cv_{participant.id}_{int(time.time())}"
-        
-        # Upload directly to Cloudinary with public access
+        public_id = f"participants/cv/cv_{participant.id}_{int(time())}"
+
+        # ✅ Upload to Cloudinary (auto-detects PDFs and stores as raw)
         upload_result = cloudinary_upload(
             file,
             public_id=public_id,
-            resource_type='raw',
-            type='upload',
+            resource_type='auto',  # Detects file type automatically
             overwrite=True,
-            access_mode='public',
+            folder="participants/cv",
+            access_mode='public'
         )
-        
-        # Get the secure URL from the upload result
-        file_url = upload_result.get('secure_url')
-        
+
+        # ✅ Use the public URL (not secure_url)
+        file_url = upload_result.get('url')
+
         # Save the Cloudinary URL to the participant's profile
         participant.cv_file = file_url
         participant.save()
-        
+
         return Response({
             'message': 'CV uploaded successfully',
             'file_name': file.name,
             'file_url': file_url
         }, status=status.HTTP_200_OK)
-        
+
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 @api_view(['GET'])
