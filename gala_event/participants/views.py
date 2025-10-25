@@ -617,28 +617,25 @@ def upload_cv(request):
         if file.size > 5 * 1024 * 1024:  
             return Response({'error': 'File size exceeds 5MB limit.'}, status=status.HTTP_400_BAD_REQUEST)
         
-        # Use Django's default storage (which is configured to use Cloudinary)
-        from django.core.files.storage import default_storage
-        from django.core.files.base import ContentFile
         import time
+        from cloudinary.uploader import upload as cloudinary_upload
         
-        # Generate a unique path for the file
-        file_path = f"cvs/cv_{participant.id}_{int(time.time())}.pdf"
+        # Generate a unique public_id
+        public_id = f"cvs/cv_{participant.id}_{int(time.time())}"
         
-        # Save the file using the default storage (Cloudinary)
-        path = default_storage.save(file_path, ContentFile(file.read()))
-        
-        # Get the URL of the uploaded file
-        file_url = default_storage.url(path)
-        
-        cloudinary_upload(
-            file_url,
-            public_id=file_path.replace('.pdf', ''),
+        # Upload directly to Cloudinary with public access
+        upload_result = cloudinary_upload(
+            file,
+            public_id=public_id,
             resource_type='raw',
             type='upload',
             overwrite=True,
-            access_mode='public',  # make sure this is non-authenticated
+            access_mode='public',
         )
+        
+        # Get the secure URL from the upload result
+        file_url = upload_result.get('secure_url')
+        
         # Save the Cloudinary URL to the participant's profile
         participant.cv_file = file_url
         participant.save()
@@ -651,7 +648,6 @@ def upload_cv(request):
         
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_participant_cv(request, participant_id):
