@@ -606,62 +606,39 @@ cloudinary.config(
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated, IsParticipant])
+@parser_classes([MultiPartParser, FormParser])
 def upload_cv(request):
-    """
-    Allows an authenticated participant to upload or update their CV.
-    """
     try:
         participant = request.user.participant_profile
+    except AttributeError:
+        return Response({'error': 'Participant profile not found.'}, status=status.HTTP_404_NOT_FOUND)
 
-        file = request.FILES.get('file')
-        if not file:
-            return Response({'error': 'No file uploaded.'}, status=status.HTTP_400_BAD_REQUEST)
+    file_obj = request.FILES.get('cv_file') or request.FILES.get('cv') or request.FILES.get('file')
+    if not file_obj:
+        return Response({'error': 'No CV file provided.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Validate file type (PDF only)
-        if not file.name.lower().endswith('.pdf'):
-            return Response({'error': 'Only PDF files are allowed.'}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        upload_response = cloudinary_upload(
+            file_obj,
+            resource_type='auto',
+            folder='participants/cv',
+            use_filename=True,
+            unique_filename=False,
+            overwrite=True,
+            access_mode='public'
+        )
+    except Exception as exc:
+        return Response({'error': 'Failed to upload CV.', 'details': str(exc)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        # Validate file size (max 5MB)
-        if file.size > 5 * 1024 * 1024:
-            return Response({'error': 'File size exceeds 5MB limit.'}, status=status.HTTP_400_BAD_REQUEST)
+    cv_url = upload_response.get('secure_url') or upload_response.get('url')
+    if not cv_url:
+        return Response({'error': 'CV upload did not return a URL.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        # Reset file pointer
-        file.seek(0)
+    participant.cv_file = cv_url
+    participant.save(update_fields=['cv_file'])
 
-        public_id = f"cvs/cv_{participant.id}"
+    return Response({'cv_url': cv_url}, status=status.HTTP_200_OK)
 
-        # Upload to Cloudinary
-        try:
-            upload_result = cloudinary.uploader.upload(
-                file,
-                public_id=public_id,
-                resource_type='auto',
-                format='pdf',
-                overwrite=True,
-                access_mode='public',
-                invalidate=True,
-            )
-        except Exception as e:
-            return Response({'error': f"Cloudinary upload failed: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-        # Retrieve secure URL
-        secure_url = upload_result.get('secure_url') or upload_result.get('url')
-        if not secure_url:
-            return Response({'error': 'Unable to retrieve CV URL from Cloudinary.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-        # Save URL in participant profile
-        participant.cv_file = secure_url
-        participant.save()
-
-        return Response({
-            'message': 'CV uploaded successfully',
-            'file_name': file.name,
-            'file_url': secure_url
-        }, status=status.HTTP_200_OK)
-
-    except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_participant_cv(request, participant_id):
