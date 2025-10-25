@@ -8,6 +8,7 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from cloudinary.uploader import upload as cloudinary_upload
+from cloudinary.utils import cloudinary_url
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.conf import settings
@@ -604,53 +605,56 @@ def upload_cv(request):
     """
     try:
         participant = request.user.participant_profile
-        
+
         file = request.FILES.get('file')
         if not file:
             return Response({'error': 'No file uploaded.'}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         # Validate file type (PDF only)
         if not file.name.lower().endswith('.pdf'):
             return Response({'error': 'Only PDF files are allowed.'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Validate file size (max 3MB)
-        if file.size > 3 * 1024 * 1024:  
-            return Response({'error': 'File size exceeds 3MB limit.'}, status=status.HTTP_400_BAD_REQUEST)
-        
+
+        # Validate file size (max 5MB)
+        if file.size > 5 * 1024 * 1024:  
+            return Response({'error': 'File size exceeds 5MB limit.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Use Django's default storage (which is configured to use Cloudinary)
         import time
-        from cloudinary.uploader import upload as cloudinary_upload
-        from cloudinary.utils import cloudinary_url
-        
-        # Generate a unique public_id
-        public_id = f"cvs/cv_{participant.id}_{int(time.time())}"
-        
-        # Upload directly to Cloudinary with public access
+
+        # Generate a unique path for the file
+        file_path = f"cvs/cv_{participant.id}_{int(time.time())}.pdf"
+        public_id = file_path.replace('.pdf', '')
+
+        # Save the file using the default storage (Cloudinary)
+        stored_path = default_storage.save(file_path, ContentFile(file.read()))
+
+        # Get the URL of the uploaded file
+        storage_url = default_storage.url(stored_path)
+
         cloudinary_upload(
-            file,
+            storage_url,
             public_id=public_id,
             resource_type='raw',
             type='upload',
             overwrite=True,
-            access_mode='public',
+            access_mode='public',  # make sure this is non-authenticated
         )
-        
+
         signed_url, _ = cloudinary_url(
             public_id,
             resource_type='raw',
             sign_url=True,
         )
-        file_url = signed_url
-        
         # Save the Cloudinary URL to the participant's profile
-        participant.cv_file = file_url
+        participant.cv_file = signed_url
         participant.save()
-        
+
         return Response({
             'message': 'CV uploaded successfully',
             'file_name': file.name,
-            'file_url': file_url
+            'file_url': signed_url
         }, status=status.HTTP_200_OK)
-        
+
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
