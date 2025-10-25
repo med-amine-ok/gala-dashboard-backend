@@ -12,6 +12,7 @@ from cloudinary.utils import cloudinary_url
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.conf import settings
+from urllib.parse import urlparse
 from accounts.permissions import IsParticipant
 from accounts.models import CustomUser
 from django.shortcuts import get_object_or_404
@@ -605,58 +606,51 @@ def upload_cv(request):
     """
     try:
         participant = request.user.participant_profile
-
+        
         file = request.FILES.get('file')
         if not file:
             return Response({'error': 'No file uploaded.'}, status=status.HTTP_400_BAD_REQUEST)
-
+        
         # Validate file type (PDF only)
         if not file.name.lower().endswith('.pdf'):
             return Response({'error': 'Only PDF files are allowed.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Validate file size (max 5MB)
-        if file.size > 5 * 1024 * 1024:  
-            return Response({'error': 'File size exceeds 5MB limit.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Use Django's default storage (which is configured to use Cloudinary)
+        
+        # Validate file size (max 3MB)
+        if file.size > 3 * 1024 * 1024:  
+            return Response({'error': 'File size exceeds 3MB limit.'}, status=status.HTTP_400_BAD_REQUEST)
+        
         import time
-
-        # Generate a unique path for the file
-        file_path = f"cvs/cv_{participant.id}_{int(time.time())}.pdf"
-        public_id = file_path.replace('.pdf', '')
-
-        # Save the file using the default storage (Cloudinary)
-        stored_path = default_storage.save(file_path, ContentFile(file.read()))
-
-        # Get the URL of the uploaded file
-        storage_url = default_storage.url(stored_path)
-
-        cloudinary_upload(
-            storage_url,
+        from cloudinary.uploader import upload as cloudinary_upload
+        
+        # Generate a unique public_id
+        public_id = f"cvs/cv_{participant.id}_{int(time.time())}"
+        
+        # Upload directly to Cloudinary with public access
+        upload_result = cloudinary_upload(
+            file,
             public_id=public_id,
             resource_type='raw',
             type='upload',
             overwrite=True,
-            access_mode='public',  # make sure this is non-authenticated
+            access_mode='public',
         )
-
-        signed_url, _ = cloudinary_url(
-            public_id,
-            resource_type='raw',
-            sign_url=True,
-        )
+        
+        # Get the secure URL from the upload result
+        file_url = upload_result.get('secure_url')
+        
         # Save the Cloudinary URL to the participant's profile
-        participant.cv_file = signed_url
+        participant.cv_file = file_url
         participant.save()
-
+        
         return Response({
             'message': 'CV uploaded successfully',
             'file_name': file.name,
-            'file_url': signed_url
+            'file_url': file_url
         }, status=status.HTTP_200_OK)
-
+        
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -668,12 +662,29 @@ def get_participant_cv(request, participant_id):
     participant = get_object_or_404(Participant, id=participant_id)
 
     def build_cv_response():
-        cv_link = participant.cv_file
-        if not cv_link:
+        stored_link = participant.cv_file
+        if not stored_link:
             return None
-        if cv_link.startswith('http'):
-            return cv_link
-        return request.build_absolute_uri(cv_link)
+        if stored_link.startswith('http'):
+            parsed = urlparse(stored_link)
+            path_parts = [part for part in parsed.path.split('/') if part]
+            if 'upload' in path_parts:
+                upload_index = path_parts.index('upload')
+                public_id_parts = path_parts[upload_index + 1:]
+                if public_id_parts and public_id_parts[0].startswith('s--'):
+                    public_id_parts = public_id_parts[1:]
+                if public_id_parts and public_id_parts[0].startswith('v') and public_id_parts[0][1:].isdigit():
+                    public_id_parts = public_id_parts[1:]
+                public_id = '/'.join(public_id_parts)
+                if public_id:
+                    signed_url, _ = cloudinary_url(
+                        public_id,
+                        resource_type='raw',
+                        sign_url=True,
+                    )
+                    return signed_url
+            return stored_link
+        return request.build_absolute_uri(stored_link)
 
     cv_link = build_cv_response()
 
