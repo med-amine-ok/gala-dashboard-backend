@@ -15,7 +15,6 @@ from accounts.permissions import IsParticipant
 from accounts.models import CustomUser
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from datetime import time, timedelta
 from datetime import timedelta
 from django.db.models import Count 
 from django.db import transaction
@@ -618,7 +617,7 @@ def upload_cv(request):
             return Response({'error': 'File size exceeds 5MB limit.'}, status=status.HTTP_400_BAD_REQUEST)
 
         # Generate a unique public_id
-        public_id = f"participants/cv/cv_{participant.id}_{int(time())}"
+        public_id = f"participants/cv/cv_{participant.id}_{int(timezone.now().timestamp())}"
 
         # ✅ Upload to Cloudinary (auto-detects PDFs and stores as raw)
         upload_result = cloudinary_upload(
@@ -645,6 +644,7 @@ def upload_cv(request):
 
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_participant_cv(request, participant_id):
