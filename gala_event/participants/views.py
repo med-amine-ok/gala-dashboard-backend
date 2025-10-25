@@ -613,18 +613,19 @@ def upload_cv(request):
         if not file.name.lower().endswith('.pdf'):
             return Response({'error': 'Only PDF files are allowed.'}, status=status.HTTP_400_BAD_REQUEST)
         
-        # Validate file size (max 5MB)
-        if file.size > 5 * 1024 * 1024:  
-            return Response({'error': 'File size exceeds 5MB limit.'}, status=status.HTTP_400_BAD_REQUEST)
+        # Validate file size (max 3MB)
+        if file.size > 3 * 1024 * 1024:  
+            return Response({'error': 'File size exceeds 3MB limit.'}, status=status.HTTP_400_BAD_REQUEST)
         
         import time
         from cloudinary.uploader import upload as cloudinary_upload
+        from cloudinary.utils import cloudinary_url
         
         # Generate a unique public_id
         public_id = f"cvs/cv_{participant.id}_{int(time.time())}"
         
         # Upload directly to Cloudinary with public access
-        upload_result = cloudinary_upload(
+        cloudinary_upload(
             file,
             public_id=public_id,
             resource_type='raw',
@@ -633,8 +634,12 @@ def upload_cv(request):
             access_mode='public',
         )
         
-        # Get the secure URL from the upload result
-        file_url = upload_result.get('secure_url')
+        signed_url, _ = cloudinary_url(
+            public_id,
+            resource_type='raw',
+            sign_url=True,
+        )
+        file_url = signed_url
         
         # Save the Cloudinary URL to the participant's profile
         participant.cv_file = file_url
@@ -648,6 +653,7 @@ def upload_cv(request):
         
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_participant_cv(request, participant_id):
