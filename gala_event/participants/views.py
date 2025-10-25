@@ -8,10 +8,6 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from cloudinary.uploader import upload as cloudinary_upload
-from django.core.files.storage import default_storage
-from django.core.files.base import ContentFile
-from django.conf import settings
-from urllib.parse import urlparse
 from accounts.permissions import IsParticipant
 from accounts.models import CustomUser
 from django.shortcuts import get_object_or_404
@@ -618,29 +614,23 @@ def upload_cv(request):
         if file.size > 5 * 1024 * 1024:  
             return Response({'error': 'File size exceeds 5MB limit.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Use Django's default storage (which is configured to use Cloudinary)
         import time
 
-        # Generate a unique path for the file
         file_path = f"cvs/cv_{participant.id}_{int(time.time())}.pdf"
         public_id = file_path.replace('.pdf', '')
 
-        # Save the file using the default storage (Cloudinary)
-        stored_path = default_storage.save(file_path, ContentFile(file.read()))
-
-        # Get the URL of the uploaded file
-        storage_url = default_storage.url(stored_path)
-
+        file.seek(0)
         upload_result = cloudinary_upload(
-            storage_url,
+            file,
             public_id=public_id,
             resource_type='raw',
-            type='upload',
             overwrite=True,
-            access_mode='public',  # make sure this is non-authenticated
+            access_mode='public',
         )
 
-        secure_url = upload_result.get('secure_url') or storage_url
+        secure_url = upload_result.get('secure_url') or upload_result.get('url')
+        if not secure_url:
+            return Response({'error': 'Unable to retrieve CV URL.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         participant.cv_file = secure_url
         participant.save()
