@@ -625,21 +625,21 @@ def upload_cv(request):
         if file.size > 5 * 1024 * 1024:
             return Response({'error': 'File size exceeds 5MB limit.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Generate unique public_id to overwrite previous CV
-        file_path = f"cvs/cv_{participant.id}"
-        public_id = file_path  # we omit timestamp to always overwrite
-
         # Reset file pointer
         file.seek(0)
+
+        public_id = f"cvs/cv_{participant.id}"
 
         # Upload to Cloudinary
         try:
             upload_result = cloudinary.uploader.upload(
                 file,
                 public_id=public_id,
-                resource_type='raw',
+                resource_type='auto',
+                format='pdf',
                 overwrite=True,
                 access_mode='public',
+                invalidate=True,
             )
         except Exception as e:
             return Response({'error': f"Cloudinary upload failed: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
