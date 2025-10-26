@@ -4,8 +4,8 @@ import random
 
 
 _RANDOM_ID_GENERATOR = random.SystemRandom()
-MIN_PARTICIPANT_ID = 10 ** 17
-MAX_PARTICIPANT_ID = (10 ** 18) - 1
+MIN_PARTICIPANT_ID = 10 ** 9
+MAX_PARTICIPANT_ID = (10 ** 10) - 1
 
 
 def generate_participant_id():
