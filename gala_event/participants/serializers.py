@@ -254,3 +254,42 @@ class FeedbackSerializer(serializers.ModelSerializer):
         model = Feedback
         fields = ["participant","feedback", "submitted_at"]
         read_only_fields = ["submitted_at"]
+
+
+class ParticipantWithTicketSerializer(ParticipantSerializer):
+    """Serializer that includes ticket information with participant data"""
+    ticket_serial_number = serializers.SerializerMethodField()
+    ticket_status = serializers.SerializerMethodField()
+    ticket_issued_at = serializers.SerializerMethodField()
+    
+    def get_ticket_serial_number(self, obj):
+        """Get the ticket serial number if available"""
+        try:
+            if hasattr(obj, 'ticket'):
+                return obj.ticket.serial_number
+            return None
+        except:
+            return None
+    
+    def get_ticket_status(self, obj):
+        """Get the ticket status if available"""
+        try:
+            if hasattr(obj, 'ticket'):
+                return obj.ticket.status
+            return None
+        except:
+            return None
+    
+    def get_ticket_issued_at(self, obj):
+        """Get the ticket issued date if available"""
+        try:
+            if hasattr(obj, 'ticket'):
+                return obj.ticket.issued_at
+            return None
+        except:
+            return None
+    
+    class Meta(ParticipantSerializer.Meta):
+        fields = ParticipantSerializer.Meta.fields + [
+            'ticket_serial_number', 'ticket_status', 'ticket_issued_at'
+        ]

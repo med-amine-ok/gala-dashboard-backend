@@ -5,7 +5,6 @@ from .views import (
     ParticipantViewSet, 
     ParticipantProfileView,
     ParticipantProfileUpdateView,
-    ParticipantListView,
     ParticipantManualyRegistrationView,
     FeedbackView,
     upload_cv,

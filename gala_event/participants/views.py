@@ -26,7 +26,8 @@ from .models import Feedback, Participant
 from .serializers import (
     ParticipantSerializer,
     ParticipantApprovalSerializer,
-    ParticipantBulkApprovalSerializer
+    ParticipantBulkApprovalSerializer,
+    ParticipantWithTicketSerializer
 )
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
@@ -39,7 +40,7 @@ class ParticipantProfileView(APIView):
     View for participants to view their own profile.
     Only accessible by authenticated participants.
     """
-    permission_classes = [IsAuthenticated, IsParticipant, IsHRAdmin]
+    permission_classes = [IsAuthenticated, IsParticipant]
     parser_classes = [JSONParser, MultiPartParser, FormParser]
 
     def get(self, request):
@@ -53,51 +54,36 @@ class ParticipantProfileView(APIView):
             if hasattr(participant, 'ticket'):
                 ticket = participant.ticket
                 
-                # Generate QR code for ticket
-                qr = qrcode.QRCode(
-                    version=1,
-                    error_correction=qrcode.constants.ERROR_CORRECT_L,
-                    box_size=10,
-                    border=4,
-                )
-                qr.add_data(f"TICKET:{ticket.serial_number}")
-                qr.make(fit=True)
+                # # Generate QR code for ticket
+                # qr = qrcode.QRCode(
+                #     version=1,
+                #     error_correction=qrcode.constants.ERROR_CORRECT_L,
+                #     box_size=10,
+                #     border=4,
+                # )
+                # qr.add_data(f"TICKET:{ticket.serial_number}")
+                # qr.make(fit=True)
                 
-                # Create QR code image
-                img = qr.make_image(fill_color="black", back_color="white")
+                # # Create QR code image
+                # img = qr.make_image(fill_color="black", back_color="white")
                 
-                # Convert to base64
-                buffer = BytesIO()
-                img.save(buffer, format='PNG')
-                img_str = base64.b64encode(buffer.getvalue()).decode()
+                # # Convert to base64
+                # buffer = BytesIO()
+                # img.save(buffer, format='PNG')
+                # img_str = base64.b64encode(buffer.getvalue()).decode()
                 
                 ticket_data = {
                     'serial_number': ticket.serial_number,
                     'status': ticket.status,
                     'issued_at': ticket.issued_at,
-                    'qr_code': f'data:image/png;base64,{img_str}',
+                    # 'qr_code': f'data:image/png;base64,{img_str}',
                 }
             
-            # Get event schedule from agenda 
-            event_schedule = []
-            try:
-                from agenda.models import AgendaItem
-                agenda_items = AgendaItem.objects.filter(is_published=True).order_by('start_time')
-                for item in agenda_items:
-                    event_schedule.append({
-                        'title': item.title,
-                        'description': item.description,
-                        'start_time': item.start_time,
-                        'end_time': item.end_time,
-                        'location': item.location,
-                    })
-            except:
-                pass
+          
                 
             # Combine all data
             response_data = serializer.data
             response_data['ticket'] = ticket_data
-            response_data['event_schedule'] = event_schedule
             
             return Response(response_data, status=status.HTTP_200_OK)
         except AttributeError:
@@ -219,25 +205,13 @@ class IsOwnerOrHRAdmin(permissions.BasePermission):
         
         return False
 
-class ParticipantListView(generics.ListAPIView):
-    """
-    HR Admin view for listing approved participants
-    """
-    queryset = Participant.objects.filter(status=Participant.Status.APPROVED).select_related('user')
-    serializer_class = ParticipantSerializer
-    permission_classes = [IsHRAdmin]
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['participant_type']
-    search_fields = ['field_of_study', 'university']
-    ordering_fields = ['registered_at']
-    ordering = ['-registered_at']
 
 class ParticipantViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Admin-only viewset for viewing participants (read-only)
     """
-    queryset = Participant.objects.all().select_related('user')
-    serializer_class = ParticipantSerializer
+    queryset = Participant.objects.all().select_related('user','ticket')
+    serializer_class = ParticipantWithTicketSerializer
     permission_classes = [IsHRAdmin]  # Only HR Admins can manage all participants
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['status', 'payment_status', 'participant_type']
@@ -250,7 +224,7 @@ class ParticipantViewSet(viewsets.ReadOnlyModelViewSet):
     def get_serializer_class(self):
         if self.action in ['approve_reject']:
             return ParticipantApprovalSerializer
-        return ParticipantSerializer
+        return ParticipantWithTicketSerializer
 
     @action(detail=True, methods=['post'])
     def approve_reject(self, request, pk=None):
