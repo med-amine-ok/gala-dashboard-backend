@@ -98,6 +98,7 @@ CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[
     "https://mellifluous-meerkat-6b4957.netlify.app",
     "https://gala-xady.vercel.app",
     "https://vitreous-sheree-devvv-team-7eaaa976.koyeb.app",
+    "https://gala.vic-enp.com",
 ])
 CORS_ALLOW_CREDENTIALS = True
 
