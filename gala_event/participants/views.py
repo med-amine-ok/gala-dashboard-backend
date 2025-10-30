@@ -3,6 +3,7 @@ from rest_framework.decorators import action, parser_classes
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
+from rest_framework.pagination import PageNumberPagination
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -206,6 +207,12 @@ class IsOwnerOrHRAdmin(permissions.BasePermission):
         return False
 
 
+class ParticipantPagination(PageNumberPagination):
+    page_size = 1000
+    page_size_query_param = 'page_size'
+    max_page_size = 1000
+
+
 class ParticipantViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Admin-only viewset for viewing participants (read-only)
@@ -213,6 +220,7 @@ class ParticipantViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Participant.objects.all().select_related('user','ticket')
     serializer_class = ParticipantWithTicketSerializer
     permission_classes = [IsHRAdmin]  # Only HR Admins can manage all participants
+    pagination_class = ParticipantPagination
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['status', 'payment_status', 'participant_type']
     
