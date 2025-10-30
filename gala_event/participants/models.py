@@ -128,3 +128,26 @@ class Feedback(models.Model):
 
         return f"Feedback by {participant_name}"
 
+
+class ParticipantParticipantLink(models.Model):
+    current_participant = models.ForeignKey(
+        Participant, 
+        on_delete=models.CASCADE,
+        related_name='participant_links'
+    )
+    participant = models.ForeignKey(
+        Participant, 
+        on_delete=models.CASCADE,
+        related_name='linked_by_current_participant'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('current_participant', 'participant')
+        verbose_name = "Participant-Participant Link"
+        verbose_name_plural = "Participant-Participant Links"
+
+    def __str__(self):
+        return f"{self.current_participant.full_name} -> {self.participant.full_name}"
+
+

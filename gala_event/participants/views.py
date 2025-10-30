@@ -20,10 +20,9 @@ from datetime import timedelta
 from django.db.models import Count 
 from django.db import transaction
 from accounts.models import CustomUser
-from companies.models import CompanyParticipantLink
 from .serializers import FeedbackSerializer, ParticipantRegistrationSerializer
 from accounts.permissions import IsOwnerOrHRAdmin, IsParticipant, IsHRAdmin
-from .models import Feedback, Participant
+from .models import Feedback, Participant , ParticipantParticipantLink
 from .serializers import (
     ParticipantSerializer,
     ParticipantApprovalSerializer,
@@ -665,7 +664,7 @@ def get_participant_cv(request, participant_id):
     # If user is a company, verify link
     if hasattr(user, 'company_profile'):
         company = user.company_profile
-        is_linked = CompanyParticipantLink.objects.filter(
+        is_linked = ParticipantParticipantLink.objects.filter(
             company=company,
             participant=participant
         ).exists()
@@ -713,3 +712,78 @@ def delete_cv(request):
         
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsParticipant])
+def link_participant(request, participant_id):
+    """
+    Allows a participant to link with a participant .
+    """
+    current_participant = request.user.participant_profile
+    participant = get_object_or_404(Participant, id=participant_id)
+    
+    # Check if link already exists
+    if ParticipantParticipantLink.objects.filter(current_participant=current_participant, participant=participant).exists():
+        return Response({'message': 'This participant is already linked to your profile.'}, 
+                       status=status.HTTP_200_OK)
+    
+    # Create the link
+    link = ParticipantParticipantLink.objects.create(current_participant=current_participant, participant=participant)
+    
+    return Response({
+        'message': f'Successfully linked participant {participant.full_name} to {current_participant.full_name}',
+        'link_id': link.id,
+        'created_at': link.created_at
+    }, status=status.HTTP_201_CREATED)
+
+@api_view(['DELETE'])
+@permission_classes([IsParticipant])
+def unlink_participant(request, participant_id):
+    """
+    Allows a participant to unlink with another participant.
+    """
+    current_participant = request.user.participant_profile
+    participant = get_object_or_404(Participant, id=participant_id)
+    
+    # Find and delete the link
+    link = ParticipantParticipantLink.objects.filter(current_participant=current_participant, participant=participant).first()
+
+    if not link:
+        return Response({'error': 'This participant is not linked to you.'}, 
+                       status=status.HTTP_404_NOT_FOUND)
+    
+    link.delete()
+    
+    return Response({
+        'message': f'Successfully unlinked participant {participant.full_name} from {current_participant.full_name}'
+    }, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes([IsParticipant])
+def list_linked_participants(request):
+    """
+    Returns a list of participants linked to the current participant.
+    """
+    current_participant = request.user.participant_profile
+
+    links = ParticipantParticipantLink.objects.filter(current_participant=current_participant).select_related('participant')
+    
+    participants = []
+    for link in links:
+        participant = link.participant
+        participants.append({
+            'id': participant.id,
+            'name': participant.full_name,
+            'email': participant.email,
+            'field_of_study': participant.field_of_study,
+            'university': participant.university,
+            'has_cv': bool(participant.cv_file),
+            'linked_at': link.created_at
+        })
+    
+    return Response({
+        'message': 'List of linked participants.',
+        'linked_participants_count': len(participants),
+        'linked_participants': participants
+    }, status=status.HTTP_200_OK)

@@ -9,7 +9,10 @@ from .views import (
     FeedbackView,
     upload_cv,
     get_participant_cv,
-    delete_cv
+    delete_cv,
+    link_participant,
+    unlink_participant,
+    list_linked_participants,
 )
 
 router = DefaultRouter()
@@ -26,4 +29,7 @@ urlpatterns = [
     path('upload-cv/', upload_cv, name='upload-cv'),
     path('<int:participant_id>/cv/', get_participant_cv, name='get-participant-cv'),
     path('delete-cv/', delete_cv, name='delete-cv'),
+    path('link-participant/<int:participant_id>/', link_participant, name='link-participant'),
+    path('unlink-participant/<int:participant_id>/', unlink_participant, name='unlink-participant'),
+    path('linked-participants/', list_linked_participants, name='list-linked-participants'),
 ]
