@@ -61,8 +61,7 @@ class Participant(models.Model):
     heard_about_other = models.CharField(max_length=255, blank=True)
     additional_comments = models.TextField(blank=True)
     linkedin_url = models.URLField(blank=True)
-
-    cv_file = models.URLField(max_length=500, blank=True, null=True)  
+ 
 
     participant_type = models.CharField(
         max_length=2, 
@@ -149,5 +148,22 @@ class ParticipantParticipantLink(models.Model):
 
     def __str__(self):
         return f"{self.current_participant.full_name} -> {self.participant.full_name}"
+
+
+class ParticipantImage(models.Model):
+    participant = models.ForeignKey(
+        Participant,
+        on_delete=models.CASCADE,
+        related_name='images'  # Access via participant.images.all()
+    )
+    image_url = models.URLField(max_length=500)
+    cloudinary_public_id = models.CharField(max_length=255, unique=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-uploaded_at']
+    
+    def __str__(self):
+        return f"Image for {self.participant.full_name} - {self.uploaded_at}"
 
 

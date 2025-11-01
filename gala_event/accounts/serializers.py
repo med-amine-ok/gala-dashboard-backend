@@ -92,7 +92,7 @@ class ParticipantProfileSerializer(serializers.ModelSerializer):
         model = Participant
         fields = [
             'id', 'first_name', 'last_name', 'email','field_of_study', 'university', 'graduation_year', 'linkedin_url', 
-            'cv_file', 'participant_type', 
+            'participant_type', 
             'registered_at'
         ]
         read_only_fields = ['id', 'email', 'registered_at']

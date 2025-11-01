@@ -20,9 +20,9 @@ from datetime import timedelta
 from django.db.models import Count 
 from django.db import transaction
 from accounts.models import CustomUser
-from .serializers import FeedbackSerializer, ParticipantRegistrationSerializer
+from .serializers import FeedbackSerializer, ParticipantRegistrationSerializer,ParticipantImageSerializer, ParticipantWithImagesSerializer
 from accounts.permissions import IsOwnerOrHRAdmin, IsParticipant, IsHRAdmin
-from .models import Feedback, Participant , ParticipantParticipantLink
+from .models import Feedback, Participant, ParticipantImage , ParticipantParticipantLink
 from .serializers import (
     ParticipantSerializer,
     ParticipantApprovalSerializer,
@@ -578,141 +578,244 @@ class FeedbackView(APIView):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated, IsParticipant])
-def upload_cv(request):
+@parser_classes([MultiPartParser, FormParser])
+def upload_image(request):
     """
-    Allows an authenticated participant to upload or update their CV.
+    Allows an authenticated participant to upload multiple profile images.
     """
     try:
         participant = request.user.participant_profile
-
-        file = request.FILES.get('file')
-        if not file:
-            return Response({'error': 'No file uploaded.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Validate file type (PDF only)
-        if not file.name.lower().endswith('.pdf'):
-            return Response({'error': 'Only PDF files are allowed.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Validate file size (max 5MB)
-        if file.size > 5 * 1024 * 1024:
-            return Response({'error': 'File size exceeds 5MB limit.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Generate a unique public_id
-        public_id = f"participants/cv/cv_{participant.id}_{int(timezone.now().timestamp())}"
-
-        # ✅ Upload to Cloudinary (auto-detects PDFs and stores as raw)
-        upload_result = cloudinary_upload(
-            file,
-            public_id=public_id,
-            resource_type='auto',  # Detects file type automatically
-            overwrite=True,
-            folder="participants/cv",
-            access_mode='public'
+        files = request.FILES.getlist('files')  # Support multiple files
+        
+        if not files:
+            return Response(
+                {'error': 'No files uploaded.'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        allowed_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
+        uploaded_images = []
+        errors = []
+        
+        for file in files:
+            # Validate file extension
+            if not any(file.name.lower().endswith(ext) for ext in allowed_extensions):
+                errors.append(f"{file.name}: Only image files (JPG, PNG, GIF, WEBP) are allowed.")
+                continue
+            
+            # Validate file size (max 15MB)
+            if file.size > 15 * 1024 * 1024:
+                errors.append(f"{file.name}: File size exceeds 15MB limit.")
+                continue
+            
+            try:
+                # Generate unique public_id
+                timestamp = int(timezone.now().timestamp())
+                public_id = f"participants/images/image_{participant.id}_{timestamp}_{file.name.split('.')[0]}"
+                
+                # Upload to Cloudinary
+                upload_result = cloudinary_upload(
+                    file,
+                    public_id=public_id,
+                    resource_type='image',
+                    overwrite=True,
+                    folder=f"participants/images",
+                    access_mode='public',
+                )
+                
+                file_url = upload_result.get('url')
+                
+                # Save to database
+                participant_image = ParticipantImage.objects.create(
+                    participant=participant,
+                    image_url=file_url,
+                    cloudinary_public_id=upload_result.get('public_id')
+                )
+                
+                uploaded_images.append({
+                    'id': participant_image.id,
+                    'file_name': file.name,
+                    'file_url': file_url,
+                    'uploaded_at': participant_image.uploaded_at
+                })
+                
+            except Exception as e:
+                errors.append(f"{file.name}: Upload failed - {str(e)}")
+        
+        if not uploaded_images and errors:
+            return Response(
+                {'error': 'No images uploaded successfully', 'details': errors},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        response_data = {
+            'message': f'{len(uploaded_images)} image(s) uploaded successfully',
+            'uploaded_images': uploaded_images,
+        }
+        
+        if errors:
+            response_data['warnings'] = errors
+        
+        return Response(response_data, status=status.HTTP_200_OK)
+        
+    except AttributeError:
+        return Response(
+            {'error': 'Participant profile not found.'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
-        # ✅ Use the public URL (not secure_url)
-        file_url = upload_result.get('url')
-
-        # Save the Cloudinary URL to the participant's profile
-        participant.cv_file = file_url
-        participant.save()
-
-        return Response({
-            'message': 'CV uploaded successfully',
-            'file_name': file.name,
-            'file_url': file_url
-        }, status=status.HTTP_200_OK)
-
-    except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_participant_cv(request, participant_id):
+@permission_classes([IsAuthenticated, IsParticipant])
+def get_participant_images(request, participant_id=None):
     """
-    Allows participants to view their own CV or companies/HR admins to view CVs of linked participants.
+    Retrieve all images for a participant.
+    - Participants can only view their own images
+    - HR admins can view any participant's images
     """
     user = request.user
-    participant = get_object_or_404(Participant, id=participant_id)
-
-    def build_cv_response():
-        cv_link = participant.cv_file
-        if not cv_link:
-            return None
-        if cv_link.startswith('http'):
-            return cv_link
-        return request.build_absolute_uri(cv_link)
-
-    cv_link = build_cv_response()
-
-    # If user is a participant, can only access own CV
-    if hasattr(user, 'participant_profile') and user.participant_profile.id == participant_id:
-        if not cv_link:
-            return Response({'error': 'No CV uploaded yet.'}, status=status.HTTP_404_NOT_FOUND)
-        return Response({'cv_link': cv_link})
-
-    # HR admins can access any participant's CV
-    if getattr(user, 'role', None) == CustomUser.Role.HR_ADMIN:
-        if not cv_link:
-            return Response({'error': 'This participant has not uploaded a CV yet.'}, status=status.HTTP_404_NOT_FOUND)
-        return Response({
+    
+    # If no participant_id provided, get current user's images
+    if participant_id is None:
+        if not hasattr(user, 'participant_profile'):
+            return Response(
+                {'error': 'User is not a participant.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        participant = user.participant_profile
+    else:
+        participant = get_object_or_404(Participant, id=participant_id)
+    
+    # Check permissions
+    is_own_profile = hasattr(user, 'participant_profile') and user.participant_profile.id == participant.id
+    is_hr_admin = getattr(user, 'role', None) == CustomUser.Role.HR_ADMIN
+    
+    if not (is_own_profile or is_hr_admin):
+        return Response(
+            {'error': 'Unauthorized access.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    # Get all images for this participant
+    images = participant.images.all()
+    
+    if not images.exists():
+        return Response(
+            {
+                'message': 'No images uploaded yet.',
+                'images': []
+            },
+            status=status.HTTP_200_OK
+        )
+    
+    serializer = ParticipantImageSerializer(images, many=True)
+    
+    return Response(
+        {
             'participant_id': participant.id,
             'participant_name': participant.full_name,
-            'cv_link': cv_link
-        })
+            'total_images': images.count(),
+            'images': serializer.data
+        },
+        status=status.HTTP_200_OK
+    )
 
-    # If user is a company, verify link
-    if hasattr(user, 'company_profile'):
-        company = user.company_profile
-        is_linked = ParticipantParticipantLink.objects.filter(
-            company=company,
-            participant=participant
-        ).exists()
-
-        if not is_linked:
-            return Response({'error': 'Access denied. This participant is not linked to your company.'},
-                           status=status.HTTP_403_FORBIDDEN)
-
-        if not cv_link:
-            return Response({'error': 'This participant has not uploaded a CV yet.'},
-                           status=status.HTTP_404_NOT_FOUND)
-
-        return Response({
-            'participant_id': participant.id,
-            'participant_name': participant.full_name,
-            'cv_link': cv_link
-        })
-
-    return Response({'error': 'Unauthorized access.'}, status=status.HTTP_403_FORBIDDEN)
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated, IsParticipant])
-def delete_cv(request):
+def delete_image(request, image_id):
     """
-    Allows participants to delete their own CV.
+    Delete a specific image.
+    Participants can only delete their own images, HR admins can delete any.
+    """
+    try:
+        image = get_object_or_404(ParticipantImage, id=image_id)
+        user = request.user
+        
+        # Check permissions
+        is_owner = hasattr(user, 'participant_profile') and user.participant_profile.id == image.participant.id
+        is_hr_admin = getattr(user, 'role', None) == CustomUser.Role.HR_ADMIN
+        
+        if not (is_owner or is_hr_admin):
+            return Response(
+                {'error': 'Unauthorized access.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Delete from Cloudinary
+        try:
+            from cloudinary.api import delete_resources
+            delete_resources([image.cloudinary_public_id])
+        except Exception as e:
+            # Log but don't fail if Cloudinary deletion fails
+            print(f"Warning: Failed to delete from Cloudinary: {str(e)}")
+        
+        # Delete from database
+        image.delete()
+        
+        return Response(
+            {'message': 'Image deleted successfully'},
+            status=status.HTTP_204_NO_CONTENT
+        )
+        
+    except Exception as e:
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated, IsParticipant])
+def delete_all_images(request):
+    """
+    Delete all images for the authenticated participant.
     """
     try:
         participant = request.user.participant_profile
+        images = participant.images.all()
         
-        if not participant.cv_file:
-            return Response({'error': 'No CV to delete.'}, status=status.HTTP_404_NOT_FOUND)
+        if not images.exists():
+            return Response(
+                {'message': 'No images to delete.'},
+                status=status.HTTP_200_OK
+            )
         
-        # Store the filename for the response
-        filename = participant.cv_file.name
+        # Delete all from Cloudinary
+        try:
+            from cloudinary.api import delete_resources
+            public_ids = [img.cloudinary_public_id for img in images]
+            if public_ids:
+                delete_resources(public_ids)
+        except Exception as e:
+            print(f"Warning: Failed to delete from Cloudinary: {str(e)}")
         
-        # Delete the CV file
-        participant.cv_file.delete(save=False)
-        participant.cv_file = None
-        participant.save()
+        deleted_count = images.count()
+        images.delete()
         
-        return Response({
-            'message': 'CV deleted successfully',
-            'deleted_file': filename
-        }, status=status.HTTP_200_OK)
+        return Response(
+            {
+                'message': f'{deleted_count} image(s) deleted successfully',
+                'deleted_count': deleted_count
+            },
+            status=status.HTTP_200_OK
+        )
         
+    except AttributeError:
+        return Response(
+            {'error': 'Participant profile not found.'},
+            status=status.HTTP_404_NOT_FOUND
+        )
     except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 @api_view(['POST'])
 @permission_classes([IsParticipant])
@@ -778,7 +881,8 @@ def list_linked_participants(request):
             'email': participant.email,
             'field_of_study': participant.field_of_study,
             'university': participant.university,
-            'has_cv': bool(participant.cv_file),
+            # 'has_cv': bool(participant.cv_file),
+            'linkedin_url': participant.linkedin_url,
             'linked_at': link.created_at
         })
     

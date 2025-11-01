@@ -280,7 +280,7 @@ def list_linked_participants(request):
             'email': participant.email,
             'field_of_study': participant.field_of_study,
             'university': participant.university,
-            'has_cv': bool(participant.cv_file),
+            # 'has_cv': bool(participant.cv_file),
             'linked_at': link.created_at
         })
     

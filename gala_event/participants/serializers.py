@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Participant , Feedback
+from .models import Participant , Feedback, ParticipantImage
 
 User = get_user_model()
 
@@ -88,7 +88,7 @@ class ParticipantRegistrationSerializer(serializers.Serializer):
     additional_comments = serializers.CharField(required=False, allow_blank=True)
 
     linkedin_url = serializers.URLField(required=False, allow_blank=True)
-    cv_file = serializers.FileField(required=False, allow_null=True)
+    # cv_file = serializers.FileField(required=False, allow_null=True)
     
 
     def validate_email(self, value):
@@ -170,7 +170,7 @@ class ParticipantSerializer(serializers.ModelSerializer):
             'plans_next_year', 'personal_description',
             'perspective_gala', 'benefit_from_event',
             'attended_before', 'heard_about', 'heard_about_other',
-            'additional_comments', 'linkedin_url', 'cv_file',
+            'additional_comments', 'linkedin_url',
             'status', 'payment_status',
             'approved_by', 'approved_by_name', 'approved_at',
             'rejection_reason', 'registered_at', 'updated_at',
@@ -292,4 +292,28 @@ class ParticipantWithTicketSerializer(ParticipantSerializer):
     class Meta(ParticipantSerializer.Meta):
         fields = ParticipantSerializer.Meta.fields + [
             'ticket_serial_number', 'ticket_status', 'ticket_issued_at'
+        ]
+
+
+class ParticipantImageSerializer(serializers.ModelSerializer):
+    """Serializer for individual participant images"""
+    class Meta:
+        model = ParticipantImage 
+        fields = ['id', 'image_url', 'uploaded_at']
+        read_only_fields = ['id', 'uploaded_at']
+
+
+class ParticipantWithImagesSerializer(serializers.ModelSerializer):
+    """Serializer that includes all participant images"""
+    images = ParticipantImageSerializer(many=True, read_only=True)
+    first_name = serializers.CharField(source='user.first_name', read_only=True)
+    last_name = serializers.CharField(source='user.last_name', read_only=True)
+    email = serializers.EmailField(source='user.email', read_only=True)
+    full_name = serializers.ReadOnlyField()
+    
+    class Meta:
+        model = Participant
+        fields = [
+            'id', 'first_name', 'last_name', 'email', 'phone',
+            'images'
         ]
