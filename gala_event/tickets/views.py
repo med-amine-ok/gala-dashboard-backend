@@ -22,12 +22,20 @@ from participants.models import Participant
 from accounts.permissions import IsHRAdmin
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from rest_framework.pagination import PageNumberPagination
 
+
+class TicketPagination(PageNumberPagination):
+    """Custom pagination for ticket lists"""
+    page_size = 1000
+    page_size_query_param = 'page_size'
+    max_page_size = 1000
 class TicketViewSet(viewsets.ModelViewSet):
     """Full CRUD operations for tickets (HR Admin only)"""
     queryset = Ticket.objects.all().order_by('-created_at')
     serializer_class = TicketSerializer
     permission_classes = [IsHRAdmin]
+    pagination_class = TicketPagination
     filterset_fields = ['status', 'participant__status']
     search_fields = ['serial_number', 'participant__full_name', 'participant__email']
     ordering_fields = ['created_at', 'issued_date', 'serial_number']
