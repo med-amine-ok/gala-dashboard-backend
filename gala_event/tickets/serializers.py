@@ -9,22 +9,22 @@ class TicketSerializer(serializers.ModelSerializer):
     participant_email = serializers.CharField(source='participant.email', read_only=True)
     checked_in_by_name = serializers.CharField(source='checked_in_by.username', read_only=True)
     is_valid = serializers.ReadOnlyField()
-    is_used = serializers.ReadOnlyField()
+    is_assigned = serializers.ReadOnlyField()
     
     class Meta:
         model = Ticket
         fields = [
             'id', 'serial_number', 'participant', 'participant_name', 
-            'participant_email', 'status', 'issued_at', 'used_at', 
+            'participant_email', 'status', 'issued_at', 'assigned_at', 
             'checked_in_at', 'checked_in_by', 'checked_in_by_name',
             'email_sent',
-            'email_sent_at', 'is_valid', 'is_used', 'created_at', 'updated_at'
+            'email_sent_at', 'is_valid', 'is_assigned', 'created_at', 'updated_at'
         ]
         read_only_fields = [
             'id', 'serial_number', 'participant_name', 'participant_email',
             'issued_at',
-            'used_at', 'checked_in_at', 'checked_in_by_name', 'email_sent',
-            'email_sent_at', 'is_valid', 'is_used', 'created_at', 'updated_at'
+            'assigned_at', 'checked_in_at', 'checked_in_by_name', 'email_sent',
+            'email_sent_at', 'is_valid', 'is_assigned', 'created_at', 'updated_at'
         ]
 
 class TicketListSerializer(serializers.ModelSerializer):
@@ -103,7 +103,7 @@ class BulkTicketActionSerializer(serializers.Serializer):
         required=True
     )
     action = serializers.ChoiceField(choices=[
-        'activate', 'cancel', 'mark_used', 'check_in'
+        'activate', 'cancel', 'mark_assigned', 'check_in'
     ])
    
 

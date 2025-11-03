@@ -143,7 +143,7 @@ class TicketViewSet(viewsets.ModelViewSet):
         """Get ticket statistics for dashboard"""
         total_tickets = Ticket.objects.count()
         active_tickets = Ticket.objects.filter(status='active').count()
-        used_tickets = Ticket.objects.filter(status='used').count()
+        assigned_tickets = Ticket.objects.filter(status='assigned').count()
         checked_in_tickets = Ticket.objects.filter(status='checked_in').count()
         cancelled_tickets = Ticket.objects.filter(status='cancelled').count()
         
@@ -175,7 +175,7 @@ class TicketViewSet(viewsets.ModelViewSet):
             'total_tickets': total_tickets,
             'status_breakdown': {
                 'active': active_tickets,
-                'used': used_tickets,
+                'assigned': assigned_tickets,
                 'checked_in': checked_in_tickets,
                 'cancelled': cancelled_tickets
             },
@@ -383,9 +383,9 @@ class TicketCheckInView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        if ticket.status == 'used' and action == 'check_in':
+        if ticket.status == 'assigned' and action == 'check_in':
             return Response(
-                {'error': 'This ticket has already been used'},
+                {'error': 'This ticket has already been assigned'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
@@ -395,7 +395,7 @@ class TicketCheckInView(APIView):
             message = 'Successfully checked in'
             scan_result = 'valid'
         else:
-            ticket.status = 'used'
+            ticket.status = 'assigned'
             message = 'Successfully checked out'
             scan_result = 'valid'
             
@@ -434,7 +434,7 @@ class TicketVerificationView(APIView):
                 'status': ticket.status,
                 'participant_name': f"{ticket.participant.full_name}  ",
                 'issued_date': ticket.issued_at,
-                'can_checkin': ticket.status in ['active', 'used']
+                'can_checkin': ticket.status in ['active', 'assigned']
             }, status=status.HTTP_200_OK)
             
         except Ticket.DoesNotExist:

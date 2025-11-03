@@ -11,7 +11,7 @@ def generate_serial_number():
 class Ticket(models.Model):
     STATUS_CHOICES = [
         ('active', 'Active'),
-        ('used', 'Used'),
+        ('assigned', 'Assigned'),
         ('cancelled', 'Cancelled'),
         ('checked_in', 'Checked In'),
     ]
@@ -28,7 +28,7 @@ class Ticket(models.Model):
     # Status and Usage
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
     issued_at = models.DateTimeField(auto_now_add=True)
-    used_at = models.DateTimeField(null=True, blank=True)
+    assigned_at = models.DateTimeField(null=True, blank=True)
     checked_in_at = models.DateTimeField(null=True, blank=True)
     checked_in_by = models.ForeignKey('accounts.CustomUser', on_delete=models.SET_NULL, null=True, blank=True, related_name='checked_in_tickets')
     
@@ -50,14 +50,14 @@ class Ticket(models.Model):
         return self.status in ['active', 'checked_in']
     
     @property
-    def is_used(self):
-        """Check if ticket has been used"""
-        return self.status in ['used', 'checked_in']
+    def is_assigned(self):
+        """Check if ticket has been assigned"""
+        return self.status in ['assigned', 'checked_in']
     
-    def mark_as_used(self, user=None):
-        """Mark ticket as used"""
-        self.status = 'used'
-        self.used_at = timezone.now()
+    def mark_as_assigned(self, user=None):
+        """Mark ticket as assigned"""
+        self.status = 'assigned'
+        self.assigned_at = timezone.now()
         if user:
             self.checked_in_by = user
         self.save()
@@ -89,7 +89,7 @@ class TicketScan(models.Model):
     scan_result = models.CharField(max_length=20, choices=[
         ('valid', 'Valid'),
         ('invalid', 'Invalid'),
-        ('already_used', 'Already Used'),
+        ('already_assigned', 'Already Assigned'),
         ('cancelled', 'Cancelled'),
     ])
     
