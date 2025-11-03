@@ -484,7 +484,7 @@ class ParticipantViewSet(viewsets.ReadOnlyModelViewSet):
 class ParticipantDetailView(APIView):
     """Allow participants to view their own profile, HR to view any"""
     permission_classes = [IsOwnerOrHRAdmin]
-    
+    pagination_class = ParticipantPagination
     def get(self, request, participant_id=None):
         try:
             if participant_id:
@@ -525,7 +525,7 @@ class ParticipantDetailView(APIView):
 class ParticipantManualyRegistrationView(APIView):
     """Allow HR Admins to manually register participants"""
     permission_classes = [IsHRAdmin]
-
+    pagination_class = ParticipantPagination
     @swagger_auto_schema(
         request_body=ParticipantRegistrationSerializer,
         operation_summary="Register a new participant (public)",
@@ -559,6 +559,7 @@ class FeedbackView(APIView):
     serializer_class = FeedbackSerializer
     permission_classes = [AllowAny]
     parser_classes = [JSONParser, MultiPartParser, FormParser]
+    pagination_class = ParticipantPagination
     @swagger_auto_schema(
         request_body=FeedbackSerializer,
         operation_summary="Submit feedback",

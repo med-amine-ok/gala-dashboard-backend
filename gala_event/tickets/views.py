@@ -364,7 +364,7 @@ class TicketViewSet(viewsets.ModelViewSet):
 class TicketCheckInView(APIView):
     """Handle ticket check-in operations"""
     permission_classes = [IsAuthenticated]
-    
+    pagination_class = TicketPagination
     def post(self, request):
         """Check-in a ticket using ticket number or QR scan"""
         serial_number = request.data.get('serial_number')
@@ -429,7 +429,7 @@ class TicketCheckInView(APIView):
 class TicketVerificationView(APIView):
     """Public ticket verification (no authentication required)"""
     permission_classes = [AllowAny]
-    
+    pagination_class = TicketPagination
     def get(self, request, serial_number):
         """Verify ticket validity without sensitive information"""
         try:
@@ -486,7 +486,7 @@ class TicketScanHistoryView(APIView):
 class ManualPaymentView(APIView):
     """Test endpoint for payment success flow (Swagger testing)"""
     permission_classes = [IsHRAdmin]  
-    
+    pagination_class = TicketPagination
     @swagger_auto_schema(
         operation_summary="Test payment success flow",
         operation_description="Simulates a successful payment and triggers the set password email flow",
