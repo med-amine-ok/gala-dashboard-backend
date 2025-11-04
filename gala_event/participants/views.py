@@ -594,6 +594,35 @@ def upload_image(request):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
+        # Check image limit 
+        MAX_IMAGES = 5
+        current_image_count = participant.images.count()
+        
+        if current_image_count >= MAX_IMAGES:
+            return Response(
+                {
+                    'error': f'Image upload limit reached. You can only upload {MAX_IMAGES} images.',
+                    'current_images': current_image_count,
+                    'max_images': MAX_IMAGES
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Check if upload would exceed limit 
+        images_to_upload = len(files)
+        available_slots = MAX_IMAGES - current_image_count
+        
+        if images_to_upload > available_slots:
+            return Response(
+                {
+                    'error': f'You can only upload {available_slots} more image(s). Maximum is {MAX_IMAGES} total.',
+                    'current_images': current_image_count,
+                    'attempting_to_upload': images_to_upload,
+                    'available_slots': available_slots
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
         allowed_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
         uploaded_images = []
         errors = []
@@ -604,9 +633,9 @@ def upload_image(request):
                 errors.append(f"{file.name}: Only image files (JPG, PNG, GIF, WEBP) are allowed.")
                 continue
             
-            # Validate file size (max 15MB)
-            if file.size > 15 * 1024 * 1024:
-                errors.append(f"{file.name}: File size exceeds 15MB limit.")
+            # Validate file size (max 10MB)
+            if file.size > 10 * 1024 * 1024:
+                errors.append(f"{file.name}: File size exceeds 10MB limit.")
                 continue
             
             try:
