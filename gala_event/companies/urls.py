@@ -19,7 +19,7 @@ urlpatterns = [
     path('companies/list/', CompanyListView.as_view(), name='company-list'),
     path('companies/public/<int:pk>/', CompanyDetailPublicView.as_view(), name='company-detail'),
     path('companies/profile/', CompanyProfileView.as_view(), name='company-profile'),
-    path('companies/link-participant/<int:participant_id>/', link_participant, name='link-participant'),
-    path('companies/unlink-participant/<int:participant_id>/', unlink_participant, name='unlink-participant'),
+    path('companies/link-participant/<int:user_id>/', link_participant, name='link-participant'),
+    path('companies/unlink-participant/<int:user_id>/', unlink_participant, name='unlink-participant'),
     path('companies/linked-participants/', list_linked_participants, name='list-linked-participants'),
 ]
