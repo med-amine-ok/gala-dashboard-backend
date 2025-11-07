@@ -9,7 +9,7 @@ from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Count
 from django.contrib.auth.hashers import make_password
-from accounts.permissions import IsHRAdmin , IsCompany, IsCompanyWithProfile
+from accounts.permissions import IsHRAdmin , IsCompany, IsCompanyWithProfile,IsHRAdminOrReadOnly
 from accounts.models import CustomUser
 from .models import Company
 from .serializers import CompanySerializer
@@ -22,7 +22,7 @@ class CompanyViewSet(viewsets.ModelViewSet):
     """Full CRUD operations for companies (HR Admin only)"""
     queryset = Company.objects.all()
     serializer_class = CompanySerializer
-    permission_classes = [IsHRAdmin]
+    permission_classes = [IsHRAdminOrReadOnly]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['field']  
     search_fields = ['name', 'email', 'website']
