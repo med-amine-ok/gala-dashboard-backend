@@ -2,7 +2,7 @@ from rest_framework import permissions
 from .models import CustomUser
 from rest_framework.permissions import BasePermission
 from rest_framework.exceptions import PermissionDenied
-from companies.models import Company
+# Note: Do not import Company here — permission checks should not create DB objects.
 
 class IsHRAdmin(permissions.BasePermission):
     """
@@ -241,22 +241,22 @@ class IsCompany(BasePermission):
 class IsCompanyWithProfile(BasePermission):
     """
     Allows access only to company users who have a company profile.
-    If profile is missing, creates a basic one automatically.
+    Does NOT auto-create a profile. Permission will be denied if the company
+    profile is missing. Creating database objects inside permission checks
+    can cause unexpected side effects (for example, endpoints being called
+    for unrelated actions which then create Company rows). Profile creation
+    should be handled explicitly (via a view or an admin action).
     """
     def has_permission(self, request, view):
         if not (request.user and request.user.is_authenticated):
             return False
         if request.user.role != CustomUser.Role.COMPANY:
             raise PermissionDenied("Only companies can access this endpoint.")
+        # If the user doesn't have a linked company profile, deny access
+        # instead of creating one implicitly. This avoids creating Company
+        # rows on incidental requests (such as linking participants).
         if not hasattr(request.user, 'company_profile'):
-            # Auto-create a basic company profile
-            name = f"{request.user.first_name} {request.user.last_name}".strip() or request.user.email
-            try:
-                Company.objects.create(
-                    user=request.user,
-                    name=name,
-                    email=request.user.email
-                )
-            except Exception as e:
-                raise PermissionDenied(f"Failed to create company profile: {str(e)}. Please contact HR Admin.")
+            raise PermissionDenied(
+                "Company profile missing. Please create a company profile first or contact an HR admin."
+            )
         return True

@@ -21,7 +21,7 @@ from django.db.models import Count
 from django.db import transaction
 from accounts.models import CustomUser
 from .serializers import FeedbackSerializer, ParticipantRegistrationSerializer,ParticipantImageSerializer, ParticipantWithImagesSerializer
-from accounts.permissions import IsOwnerOrHRAdmin, IsParticipant, IsHRAdmin
+from accounts.permissions import IsOwnerOrHRAdmin, IsParticipant, IsHRAdmin,IsCompany, IsCompanyWithProfile,IsHRAdminOrReadOnly
 from .models import Feedback, Participant, ParticipantImage , ParticipantParticipantLink
 from .serializers import (
     ParticipantSerializer,

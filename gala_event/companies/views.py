@@ -14,10 +14,12 @@ from accounts.models import CustomUser
 from .models import Company
 from .serializers import CompanySerializer
 from accounts.serializers import CompanyProfileSerializer
+from .serializers import CompanyCreateUpdateSerializer
 from django.shortcuts import get_object_or_404
 from participants.models import Participant
 from .models import CompanyParticipantLink
 from rest_framework.decorators import api_view, permission_classes
+
 class CompanyViewSet(viewsets.ModelViewSet):
     """Full CRUD operations for companies (HR Admin only)"""
     queryset = Company.objects.all()
@@ -101,12 +103,40 @@ class CompanyViewSet(viewsets.ModelViewSet):
 
         # Try to create the company
         try:
-            response = super().create(request, *args, **kwargs)
-            # Ensure the user's role is set to COMPANY (for newly created users or updates)
+            # First create the company without the user
+            company_data = request.data.copy()
+            if 'user' in company_data:
+                del company_data['user']  # Remove user from data
+            
+            serializer = self.get_serializer(data=company_data)
+            serializer.is_valid(raise_exception=True)
+            company = serializer.save()
+            
+            # Now link the user to the company profile
+            company.user = user
+            company.save()
+            
+            # Ensure user role is set to COMPANY
             if user.role != CustomUser.Role.COMPANY:
                 user.role = CustomUser.Role.COMPANY
                 user.save()
-            return response
+            
+            # Force refresh the user instance to ensure company_profile is loaded
+            user = CustomUser.objects.get(id=user.id)
+            
+            # Final verification
+            if not hasattr(user, 'company_profile'):
+                company.delete()  # Clean up if relationship failed
+                return Response(
+                    {"error": "Failed to establish company profile relationship"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+            
+            # Return the response with company data
+            return Response(
+                self.get_serializer(company).data,
+                status=status.HTTP_201_CREATED
+            )
         except Exception as e:
             # If company creation failed and user was newly created, delete the user
             if created:
@@ -266,7 +296,23 @@ def list_linked_participants(request):
     """
     Returns a list of participants linked to the company.
     """
-    company = request.user.company_profile
+    try:
+        print(f"User ID: {request.user.id}")
+        print(f"User Role: {request.user.role}")
+        print(f"Has company_profile: {hasattr(request.user, 'company_profile')}")
+        
+        company = request.user.company_profile
+        if not company:
+            return Response(
+                {"error": "Company profile not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return Response(
+            {"error": f"Error retrieving company profile: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
     
     # Get all links for this company
     links = CompanyParticipantLink.objects.filter(company=company).select_related('participant')

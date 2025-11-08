@@ -7,22 +7,32 @@ class CompanySerializer(serializers.ModelSerializer):
     """Full serializer for Company CRUD operations"""
     
     password = serializers.CharField(write_only=True, required=False, allow_blank=True, min_length=8)
+    user = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.all(), required=False)
    
-    
     class Meta:
         model = Company
         fields = [
             'id', 'name', 'description', 'email', 'website',
             'field', 'contact_person', 'phone', 'address',
-            'logo', 'created_at', 'updated_at', 'password'
+            'logo', 'created_at', 'updated_at', 'password', 'user'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
     
     def create(self, validated_data):
-        """Remove password from validated data before creating Company"""
+        """Create a Company and ensure proper user role and relationship"""
         # Remove password as it's not a Company model field
-        validated_data.pop('password', None)
-        return super().create(validated_data)
+        password = validated_data.pop('password', None)
+        user = validated_data.get('user')
+        
+        if user:
+            # Set the user's role to COMPANY if it isn't already
+            if user.role != CustomUser.Role.COMPANY:
+                user.role = CustomUser.Role.COMPANY
+                user.save()
+        
+        # Create the company instance
+        company = super().create(validated_data)
+        return company
     
     def update(self, instance, validated_data):
         """Remove password from validated data before updating Company"""
