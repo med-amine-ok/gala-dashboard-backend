@@ -33,7 +33,7 @@ static/
 .env
 .env.local
 .env.*.local
-
+schema.sql
 # IDE
 .idea/
 .vscode/

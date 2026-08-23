@@ -70,7 +70,7 @@ class LoginView(APIView):
             safe_data = {k: v for k, v in request.data.items() if k != 'password'}
             logger.info(f"Login attempt for: {safe_data}")
             
-            serializer = LoginSerializer(data=request.data)
+            serializer = LoginSerializer(data=request.data, context={'request': request})
             
             if not serializer.is_valid():
                 logger.warning(f"Login validation failed: {serializer.errors}")

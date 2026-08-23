@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Agenda, AgendaRegistration , Speaker
+from .models import Agenda, AgendaRegistration
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 
@@ -32,32 +32,22 @@ class AgendaSerializer(serializers.ModelSerializer):
         return None
     
     def validate(self, data):
-        """Validate start and end datetime"""
-        start_datetime = data.get('start_datetime')
-        end_datetime = data.get('end_datetime')
+        """Validate start and end time"""
+        start_time = data.get('start_time')
+        end_time = data.get('end_time')
         
-        if start_datetime and end_datetime:
-            if end_datetime <= start_datetime:
+        if start_time and end_time:
+            if end_time <= start_time:
                 raise serializers.ValidationError({
-                    'end_datetime': 'End datetime must be after start datetime.'
+                    'end_time': 'End time must be after start time.'
                 })
         
         return data
     
     def validate_speakers(self, value):
-        """Validate speakers JSON structure"""
+        """Validate speakers structure"""
         if not isinstance(value, list):
             raise serializers.ValidationError("Speakers must be a list.")
-        
-        for speaker in value:
-            if not isinstance(speaker, dict):
-                raise serializers.ValidationError("Each speaker must be an object.")
-            
-            required_fields = ['name']
-            for field in required_fields:
-                if field not in speaker or not speaker[field].strip():
-                    raise serializers.ValidationError(f"Speaker must have a '{field}' field.")
-        
         return value
 
 class AgendaListSerializer(serializers.ModelSerializer):
@@ -125,18 +115,3 @@ class MarkAttendanceSerializer(serializers.Serializer):
         min_length=1
     )
     attended = serializers.BooleanField()
-
-
-class SpeakerRegistrationSerializer(serializers.ModelSerializer):
-    """Serializer for speaker registration"""
-    class Meta:
-        model = Speaker  
-        fields = ['id', 'name', 'bio', 'company_name']
-        read_only_fields = ['id']
-
-class SpeakerSerializer(serializers.ModelSerializer):
-    """Serializer for speaker"""
-    class Meta:
-        model = Speaker
-        fields = ['id', 'name', 'bio', 'company_name']
-        read_only_fields = ['id']

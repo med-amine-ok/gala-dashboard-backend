@@ -1,7 +1,32 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, Group, Permission 
 from django.utils.translation import gettext_lazy as _
+from django.contrib.auth.models import UserManager
 
+
+class CustomUserManager(UserManager):
+    def create_user(self, email=None, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', False)
+        extra_fields.setdefault('is_superuser', False)
+        if email:
+            email = self.normalize_email(email)
+        username = extra_fields.pop('username', None) or email
+        return self._create_user(username, email, password, **extra_fields)
+
+    def create_superuser(self, email=None, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('role', 'HR')
+
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser must have is_staff=True.')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser must have is_superuser=True.')
+
+        if email:
+            email = self.normalize_email(email)
+        username = extra_fields.pop('username', None) or email
+        return self._create_user(username, email, password, **extra_fields)
 
 
 class CustomUser(AbstractUser):
@@ -9,6 +34,8 @@ class CustomUser(AbstractUser):
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
+
+    objects = CustomUserManager()
 
     class Role(models.TextChoices):
         HR_ADMIN = 'HR', _('HR Admin')

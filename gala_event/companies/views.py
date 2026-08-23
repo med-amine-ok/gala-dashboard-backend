@@ -164,34 +164,38 @@ class CompanyViewSet(viewsets.ModelViewSet):
         """Enhanced statistics about companies for dashboard"""
         total_companies = Company.objects.count()
         
-
-        # Companies with most participants (if you have participants app)
         try:
-            from participants.models import Participant
             companies_with_participants = Company.objects.annotate(
-                participant_count=Count('participants')
-            ).filter(participant_count__gt=0).order_by('-participant_count')[:5]
+                participant_count=Count('participant_links')
+            ).order_by('-participant_count', 'name')[:10]
             
             top_companies = [
                 {
+                    'id': company.id,
                     'name': company.name,
+                    'field': company.field or 'Corporate Partner',
+                    'website': company.website or '',
                     'participant_count': company.participant_count
                 }
                 for company in companies_with_participants
             ]
-        except ImportError:
-            top_companies = []
-
-        
+        except Exception:
+            top_companies = [
+                {
+                    'id': company.id,
+                    'name': company.name,
+                    'field': company.field or 'Corporate Partner',
+                    'website': company.website or '',
+                    'participant_count': 0
+                }
+                for company in Company.objects.all()[:10]
+            ]
 
         return Response({
             'total_companies': total_companies,
             'top_companies_by_participants': top_companies,
-            
-            
             'completion_rate': {
                 'with_website': Company.objects.exclude(website__isnull=True).exclude(website__exact='').count(),
-                
             }
         }, status=status.HTTP_200_OK)
 

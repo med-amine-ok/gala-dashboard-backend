@@ -10,8 +10,8 @@ from datetime import timedelta
 from django.db.models import Count, Q
 from rest_framework import serializers
 from accounts.permissions import IsHRAdmin, IsParticipant
-from .models import Agenda , Speaker
-from .serializers import AgendaSerializer , SpeakerSerializer, SpeakerRegistrationSerializer
+from .models import Agenda
+from .serializers import AgendaSerializer
 from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from django.middleware.csrf import get_token
@@ -22,7 +22,6 @@ class AgendaViewSet(viewsets.ModelViewSet):
     """Full CRUD operations for agenda (HR Admin only)"""
 
     permission_classes = [IsHRAdmin]
-    authentication_classes = [SessionAuthentication, TokenAuthentication]
     parser_classes = [JSONParser, MultiPartParser, FormParser]
     
     @swagger_auto_schema(
@@ -36,7 +35,6 @@ class AgendaViewSet(viewsets.ModelViewSet):
 
     queryset = Agenda.objects.all().order_by('start_time')
     serializer_class = AgendaSerializer
-    permission_classes = [IsHRAdmin]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     search_fields = ['title', 'place', 'speakers']
     ordering_fields = ['start_time', 'title', 'created_at']
@@ -51,14 +49,14 @@ class AgendaViewSet(viewsets.ModelViewSet):
         end_date = self.request.query_params.get('end_date')
         
         if start_date:
-            queryset = queryset.filter(start_datetime__date__gte=start_date)
+            queryset = queryset.filter(start_time__date__gte=start_date)
         if end_date:
-            queryset = queryset.filter(end_datetime__date__lte=end_date)
+            queryset = queryset.filter(end_time__date__lte=end_date)
 
         # Filter active/cancelled
         show_cancelled = self.request.query_params.get('show_cancelled', 'false').lower()
         if show_cancelled != 'true':
-            queryset = queryset.filter(created_at__date=timezone.now().date())
+            queryset = queryset.filter(is_cancelled=False)
 
         return queryset
 
@@ -74,17 +72,16 @@ class AgendaViewSet(viewsets.ModelViewSet):
 
     def _validate_overlapping_events(self, data, instance=None):
         """Check for overlapping events"""
-        start_datetime = data.get('start_datetime')
-        end_datetime = data.get('end_datetime')
+        start_time = data.get('start_time')
+        end_time = data.get('end_time')
         place = data.get('place')
 
-        if start_datetime and end_datetime and place:
+        if start_time and end_time and place:
             overlapping_events = Agenda.objects.filter(
-                
                 is_cancelled=False,
                 place=place,  # Same place conflicts
-                start_datetime__lt=end_datetime,
-                end_datetime__gt=start_datetime
+                start_time__lt=end_time,
+                end_time__gt=start_time
             )
 
             if instance:
@@ -132,12 +129,10 @@ class AgendaViewSet(viewsets.ModelViewSet):
             count=Count('event_type')
         ).order_by('-count')
 
-
         now = timezone.now()
         # Today's events
         today_events = Agenda.objects.filter(
-            start_datetime__date=now.date(),
-            
+            start_time__date=now.date(),
             is_cancelled=False
         ).count()
 
@@ -149,7 +144,6 @@ class AgendaViewSet(viewsets.ModelViewSet):
         return Response({
             'total_events': total_events,
             'status_breakdown': {
-                
                 'cancelled': cancelled_events,
                 'inactive': total_events 
             },
@@ -157,7 +151,6 @@ class AgendaViewSet(viewsets.ModelViewSet):
             'today_events': today_events,
             'popular_places': list(popular_places)
         }, status=status.HTTP_200_OK)
-
 
 class AgendaPublicView(APIView):
     """Public view of agenda for participants (no authentication required)"""
@@ -174,19 +167,19 @@ class AgendaPublicView(APIView):
         # Base queryset - only active and non-cancelled events
         queryset = Agenda.objects.filter(
             is_cancelled=False
-        ).order_by('start_datetime')
+        ).order_by('start_time')
         
         # Apply filters
         if event_type:
             queryset = queryset.filter(event_type=event_type)
             
         if date_filter == 'today':
-            queryset = queryset.filter(start_datetime__date=now.date())
+            queryset = queryset.filter(start_time__date=now.date())
         elif date_filter == 'upcoming':
-            queryset = queryset.filter(start_datetime__gte=now)
+            queryset = queryset.filter(start_time__gte=now)
         elif date_filter == 'current':
             # Current and future events
-            queryset = queryset.filter(end_datetime__gte=now)
+            queryset = queryset.filter(end_time__gte=now)
             
         # Serialize with limited fields for public view
         agenda_data = []
@@ -194,8 +187,8 @@ class AgendaPublicView(APIView):
             agenda_data.append({
                 'id': agenda.id,
                 'title': agenda.title,
-                'start_datetime': agenda.start_datetime,
-                'end_datetime': agenda.end_datetime,
+                'start_time': agenda.start_time,
+                'end_time': agenda.end_time,
                 'place': agenda.place,
                 'event_type': agenda.event_type,
                 'speakers': agenda.speakers,
@@ -203,34 +196,3 @@ class AgendaPublicView(APIView):
             })
         
         return Response(agenda_data, status=status.HTTP_200_OK)
-
-class SpeakerRegistrationView(APIView):
-    
-    """Speaker registration endpoint"""
-    permission_classes = [IsHRAdmin]
-    authentication_classes = [SessionAuthentication, TokenAuthentication]
-    parser_classes = [JSONParser, MultiPartParser, FormParser]
-    
-    @swagger_auto_schema(
-        request_body=SpeakerRegistrationSerializer,
-        responses={201: SpeakerRegistrationSerializer},
-        operation_description="Register a speaker",
-        operation_id="register_speaker"
-    )
-
-    def post(self, request):
-        """Register a speaker"""
-        serializer = SpeakerRegistrationSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(
-                {'message': 'Speaker registered successfully', 'data': serializer.data}, 
-                status=status.HTTP_201_CREATED
-            )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def get(self, request):
-        """Get all registered speakers"""
-        speakers = Speaker.objects.all()
-        serializer = SpeakerSerializer(speakers, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)

@@ -233,6 +233,16 @@ class ParticipantViewSet(viewsets.ReadOnlyModelViewSet):
             return ParticipantApprovalSerializer
         return ParticipantWithTicketSerializer
 
+    def destroy(self, request, *args, **kwargs):
+        """Allows HR Admins to delete participants and associated User accounts"""
+        instance = self.get_object()
+        user = instance.user
+        with transaction.atomic():
+            instance.delete()
+            if user:
+                user.delete()
+        return Response({"message": "Participant and associated user deleted successfully"}, status=status.HTTP_200_OK)
+
     @action(detail=True, methods=['post'])
     def approve_reject(self, request, pk=None):
         """Approve or reject a participant"""
@@ -539,6 +549,11 @@ class ParticipantManualyRegistrationView(APIView):
                 with transaction.atomic():
                     participant = serializer.save()
                     participant.status = Participant.Status.APPROVED
+                    participant.approved_by = request.user
+                    participant.approved_at = timezone.now()
+                    if participant.user:
+                        participant.user.is_active = True
+                        participant.user.save(update_fields=['is_active'])
                     participant.save()
                     return Response({
                         "message": "Participant registered successfully.",

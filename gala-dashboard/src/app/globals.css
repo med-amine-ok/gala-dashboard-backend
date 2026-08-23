@@ -1,0 +1,130 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+:root {
+  /* Warm Off-White Quiet Luxury Palette */
+  --background: #F7F4EE;
+  --surface: #FFFFFF;
+  --surface-muted: #F3EFE6;
+  --surface-border: #EAE3D5;
+  
+  /* Deep Charcoal Palette */
+  --foreground: #1A1A1A;
+  --foreground-muted: #6B6862;
+  --foreground-subtle: #96928B;
+  --charcoal-dark: #121212;
+  --charcoal-surface: #1E1E1E;
+  --charcoal-border: #2D2D2D;
+
+  /* Champagne Gold Palette - Understated Details */
+  --color-gold-primary: #C5A880;
+  --color-gold-light: #F7F1E6;
+  --color-gold-hover: #B08F63;
+  --color-gold-dark: #8C6F45;
+  --color-gold-gradient: linear-gradient(135deg, #DFC598 0%, #C4A77D 100%);
+  
+  /* Soft Lavender Accent Palette - Interactive States & Highlights */
+  --color-lavender-accent: #C8B6E2;
+  --color-lavender-light: #ECE5F8;
+  --color-lavender-subtle: #F6F2FC;
+  --color-lavender-border: #DDD0F3;
+  --color-lavender-dark: #6E4FA0;
+  
+  /* Status Colors */
+  --color-brand-success: #2E5A36;
+  --color-brand-success-bg: #EBF2EC;
+  --color-brand-warning: #C5A880;
+  --color-brand-warning-bg: #FAF5EB;
+  --color-brand-danger: #8B2635;
+  --color-brand-danger-bg: #F9ECEF;
+}
+
+@theme {
+  --color-warm-bg: #F7F4EE;
+  --color-warm-surface: #FFFFFF;
+  --color-warm-muted: #F3EFE6;
+  --color-warm-border: #EAE3D5;
+
+  --color-charcoal: #1A1A1A;
+  --color-charcoal-dark: #121212;
+  --color-charcoal-surface: #1E1E1E;
+  --color-charcoal-border: #2D2D2D;
+
+  --color-champagne: #C5A880;
+  --color-champagne-light: #F7F1E6;
+  --color-champagne-hover: #B08F63;
+  --color-champagne-dark: #8C6F45;
+  
+  --color-lavender: #C8B6E2;
+  --color-lavender-light: #ECE5F8;
+  --color-lavender-subtle: #F6F2FC;
+  --color-lavender-border: #DDD0F3;
+  --color-lavender-dark: #6E4FA0;
+
+  --color-gold-primary: var(--color-gold-primary);
+  --color-gold-light: var(--color-gold-light);
+  --color-gold-hover: var(--color-gold-hover);
+  
+  --color-brand-success: var(--color-brand-success);
+  --color-brand-success-bg: var(--color-brand-success-bg);
+  --color-brand-warning: var(--color-brand-warning);
+  --color-brand-warning-bg: var(--color-brand-warning-bg);
+  --color-brand-danger: var(--color-brand-danger);
+  --color-brand-danger-bg: var(--color-brand-danger-bg);
+
+  --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Quiet Luxury Utilities */
+.luxury-card {
+  background-color: #FFFFFF;
+  border: 1px solid rgba(239, 232, 220, 0.9);
+  border-radius: 20px;
+  box-shadow: 0 4px 20px -2px rgba(26, 26, 26, 0.025);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.luxury-card:hover {
+  border-color: rgba(197, 168, 128, 0.35);
+  box-shadow: 0 8px 30px -4px rgba(26, 26, 26, 0.04);
+}
+
+.bg-champagne-gradient {
+  background: linear-gradient(135deg, #DFC598 0%, #C4A77D 100%);
+}
+
+.interactive-lavender {
+  transition: all 0.2s ease-in-out;
+}
+
+.interactive-lavender:hover {
+  background-color: #F4EFFF;
+  border-color: #DDD0F3;
+  color: #7A5F9E;
+}
+
+/* Custom Refined Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #E5DAC6;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #C5A880;
+}

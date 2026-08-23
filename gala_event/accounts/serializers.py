@@ -40,11 +40,17 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError('Invalid email or password.')
         
         # Try to authenticate
-        user = authenticate(username=email, password=password)
+        request = self.context.get('request')
+        user = authenticate(request=request, username=user_exists.email, password=password)
         
         if not user:
-            # User exists but wrong password
-            raise serializers.ValidationError('Invalid email or password.')
+            user = authenticate(request=request, username=user_exists.username, password=password)
+            
+        if not user:
+            if user_exists.check_password(password):
+                user = user_exists
+            else:
+                raise serializers.ValidationError('Invalid email or password.')
         
         if not user.is_active:
             # Check if it's a participant who needs approval

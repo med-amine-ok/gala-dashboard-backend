@@ -4,8 +4,7 @@ from .models import Company
 from accounts.models import CustomUser
 
 class CompanySerializer(serializers.ModelSerializer):
-    """Full serializer for Company CRUD operations"""
-    
+   
     password = serializers.CharField(write_only=True, required=False, allow_blank=True, min_length=8)
     user = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.all(), required=False)
    

@@ -391,9 +391,15 @@ class TicketCheckInView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        if ticket.status == 'assigned' and action == 'check_in':
+        if ticket.status == 'checked_in' and action == 'check_in':
             return Response(
-                {'error': 'This ticket has already been assigned'},
+                {'error': 'This ticket has already been checked in'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if action == 'check_out' and ticket.status != 'checked_in':
+            return Response(
+                {'error': 'This ticket is not checked in'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
