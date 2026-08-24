@@ -152,7 +152,7 @@ export default function CompaniesPage() {
   return (
     <div className="space-y-8 text-[#1A1A1A]">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 pb-2">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2">
         <div className="space-y-1">
           <div className="flex items-center gap-2 mb-2">
             <span className="px-3 py-1 rounded-full bg-[#1A1A1A] text-[#FAF7F2] text-[10px] font-semibold tracking-widest uppercase shadow-2xs">
@@ -171,7 +171,7 @@ export default function CompaniesPage() {
         </div>
         <button
           onClick={() => { resetForm(); setIsFormModalOpen(true); }}
-          className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#ECE5F8] text-[#6E4FA0] border border-[#DDD0F3] hover:bg-[#DDD0F3] rounded-2xl text-xs font-semibold transition-all shadow-2xs cursor-pointer shrink-0"
+          className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#ECE5F8] text-[#6E4FA0] border border-[#DDD0F3] hover:bg-[#DDD0F3] rounded-2xl text-xs font-semibold transition-all shadow-2xs cursor-pointer w-full sm:w-auto shrink-0 min-h-[44px]"
         >
           <Plus className="h-4 w-4" />
           <span>Add Company</span>
@@ -179,7 +179,7 @@ export default function CompaniesPage() {
       </div>
 
       {/* Filter and search */}
-      <div className="bg-white p-5 rounded-3xl border border-[#EAE3D5] shadow-[0_4px_24px_-4px_rgba(26,26,26,0.02)] flex flex-col md:flex-row gap-4 items-center justify-between">
+      <div className="bg-white p-4 sm:p-5 rounded-3xl border border-[#EAE3D5] shadow-[0_4px_24px_-4px_rgba(26,26,26,0.02)] flex flex-col md:flex-row gap-3 sm:gap-4 items-center justify-between">
         <div className="relative w-full md:w-80">
           <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-[#96928B]" />
           <input
@@ -191,11 +191,11 @@ export default function CompaniesPage() {
           />
         </div>
 
-        <div>
+        <div className="w-full md:w-auto">
           <select
             value={fieldFilter}
             onChange={(e) => setFieldFilter(e.target.value)}
-            className="px-4 py-3 bg-[#FAF8F5] border border-[#EAE3D5] rounded-2xl text-xs font-medium text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2]"
+            className="w-full md:w-auto px-4 py-3 bg-[#FAF8F5] border border-[#EAE3D5] rounded-2xl text-xs font-medium text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2]"
           >
             <option value="">All Sectors</option>
             <option value="Technology">Technology</option>
@@ -371,7 +371,7 @@ export default function CompaniesPage() {
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[10px] uppercase tracking-wider text-[#666666] font-semibold mb-1">Representative Name</label>
                   <input
@@ -440,11 +440,11 @@ export default function CompaniesPage() {
                 />
               </div>
 
-              <div className="flex gap-4 border-t border-[#EAE3D5] pt-4">
+              <div className="flex flex-col sm:flex-row gap-3 border-t border-[#EAE3D5] pt-4">
                 <button
                   type="submit"
                   disabled={createCompanyMutation.isPending || updateCompanyMutation.isPending}
-                  className="flex-1 py-3.5 px-4 bg-[#ECE5F8] text-[#6E4FA0] border border-[#DDD0F3] hover:bg-[#DDD0F3] rounded-2xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer shadow-2xs"
+                  className="flex-1 py-3.5 px-4 bg-[#ECE5F8] text-[#6E4FA0] border border-[#DDD0F3] hover:bg-[#DDD0F3] rounded-2xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer shadow-2xs min-h-[44px]"
                 >
                   {(createCompanyMutation.isPending || updateCompanyMutation.isPending) && (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -454,7 +454,7 @@ export default function CompaniesPage() {
                 <button
                   type="button"
                   onClick={() => setIsFormModalOpen(false)}
-                  className="px-5 py-3.5 bg-[#FAF8F5] hover:bg-[#ECE5F8] text-[#6E4FA0] border border-[#EAE3D5] rounded-2xl text-xs font-semibold transition-colors"
+                  className="px-5 py-3.5 bg-[#FAF8F5] hover:bg-[#ECE5F8] text-[#6E4FA0] border border-[#EAE3D5] rounded-2xl text-xs font-semibold transition-colors min-h-[44px]"
                 >
                   Cancel
                 </button>

@@ -205,7 +205,7 @@ export default function AgendaPage() {
   return (
     <div className="space-y-8 text-[#1A1A1A]">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 pb-2">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2">
         <div className="space-y-1">
           <div className="flex items-center gap-2 mb-2">
             <span className="px-3 py-1 rounded-full bg-[#1A1A1A] text-[#FAF7F2] text-[10px] font-semibold tracking-widest uppercase shadow-2xs">
@@ -223,11 +223,11 @@ export default function AgendaPage() {
           </p>
         </div>
         
-        <div className="flex gap-3 items-center">
-          <div className="border border-[#EAE3D5] rounded-2xl overflow-hidden flex bg-white p-1 shadow-2xs">
+        <div className="flex flex-wrap sm:flex-nowrap gap-3 items-center w-full sm:w-auto">
+          <div className="border border-[#EAE3D5] rounded-2xl overflow-hidden flex bg-white p-1 shadow-2xs w-full sm:w-auto justify-center">
             <button
               onClick={() => setViewMode('timeline')}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+              className={`flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer min-h-[40px] ${
                 viewMode === 'timeline' ? 'bg-[#ECE5F8] text-[#6E4FA0] border border-[#DDD0F3]' : 'text-[#6B6862] hover:bg-[#FAF8F5]'
               }`}
             >
@@ -236,7 +236,7 @@ export default function AgendaPage() {
             </button>
             <button
               onClick={() => setViewMode('table')}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+              className={`flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer min-h-[40px] ${
                 viewMode === 'table' ? 'bg-[#ECE5F8] text-[#6E4FA0] border border-[#DDD0F3]' : 'text-[#6B6862] hover:bg-[#FAF8F5]'
               }`}
             >
@@ -247,7 +247,7 @@ export default function AgendaPage() {
 
           <button
             onClick={() => { resetForm(); setIsModalOpen(true); }}
-            className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#ECE5F8] text-[#6E4FA0] border border-[#DDD0F3] hover:bg-[#DDD0F3] rounded-2xl text-xs font-semibold transition-all shadow-2xs cursor-pointer shrink-0"
+            className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#ECE5F8] text-[#6E4FA0] border border-[#DDD0F3] hover:bg-[#DDD0F3] rounded-2xl text-xs font-semibold transition-all shadow-2xs cursor-pointer w-full sm:w-auto shrink-0 min-h-[44px]"
           >
             <Plus className="h-4 w-4" />
             <span>Add Session</span>
@@ -256,12 +256,12 @@ export default function AgendaPage() {
       </div>
 
       {/* Filter */}
-      <div className="bg-white p-5 rounded-3xl border border-[#EAE3D5] shadow-[0_4px_24px_-4px_rgba(26,26,26,0.02)] flex items-center justify-between">
+      <div className="bg-white p-4 sm:p-5 rounded-3xl border border-[#EAE3D5] shadow-[0_4px_24px_-4px_rgba(26,26,26,0.02)] flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
         <span className="text-xs font-semibold text-[#6B6862] uppercase tracking-wider">Venue Filters</span>
         <select
           value={placeFilter}
           onChange={(e) => setPlaceFilter(e.target.value)}
-          className="px-4 py-2.5 bg-[#FAF8F5] border border-[#EAE3D5] rounded-2xl text-xs font-medium text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2]"
+          className="w-full sm:w-auto px-4 py-2.5 bg-[#FAF8F5] border border-[#EAE3D5] rounded-2xl text-xs font-medium text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2]"
         >
           <option value="">All Venues</option>
           {places.map(p => <option key={p} value={p}>{p}</option>)}
@@ -444,7 +444,7 @@ export default function AgendaPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[10px] uppercase tracking-wider text-[#666666] font-semibold mb-1">Start Datetime</label>
                   <input
@@ -467,7 +467,7 @@ export default function AgendaPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[10px] uppercase tracking-wider text-[#666666] font-semibold mb-1">Venue Location</label>
                   <select
@@ -537,11 +537,11 @@ export default function AgendaPage() {
                 </div>
               )}
 
-              <div className="flex gap-4 border-t border-[#EAE3D5] pt-4">
+              <div className="flex flex-col sm:flex-row gap-3 border-t border-[#EAE3D5] pt-4">
                 <button
                   type="submit"
                   disabled={createMutation.isPending || updateMutation.isPending}
-                  className="flex-1 py-3.5 px-4 bg-[#ECE5F8] text-[#6E4FA0] border border-[#DDD0F3] hover:bg-[#DDD0F3] rounded-2xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer shadow-2xs"
+                  className="flex-1 py-3.5 px-4 bg-[#ECE5F8] text-[#6E4FA0] border border-[#DDD0F3] hover:bg-[#DDD0F3] rounded-2xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer shadow-2xs min-h-[44px]"
                 >
                   {(createMutation.isPending || updateMutation.isPending) && (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -551,7 +551,7 @@ export default function AgendaPage() {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-5 py-3.5 bg-[#FAF8F5] hover:bg-[#ECE5F8] text-[#6E4FA0] border border-[#EAE3D5] rounded-2xl text-xs font-semibold transition-colors"
+                  className="px-5 py-3.5 bg-[#FAF8F5] hover:bg-[#ECE5F8] text-[#6E4FA0] border border-[#EAE3D5] rounded-2xl text-xs font-semibold transition-colors min-h-[44px]"
                 >
                   Cancel
                 </button>

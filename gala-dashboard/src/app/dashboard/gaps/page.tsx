@@ -62,11 +62,11 @@ export default function GapsPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         {gaps.map((gap, index) => {
           const Icon = gap.icon;
           return (
-            <div key={index} className="bg-white p-7 rounded-3xl border border-[#EAE3D5] shadow-[0_4px_24px_-4px_rgba(26,26,26,0.02)] space-y-4 hover:border-[#C8B6E2]/60 hover:shadow-[0_8px_30px_-4px_rgba(200,182,226,0.15)] transition-all">
+            <div key={index} className="bg-white p-5 sm:p-7 rounded-3xl border border-[#EAE3D5] shadow-[0_4px_24px_-4px_rgba(26,26,26,0.02)] space-y-4 hover:border-[#C8B6E2]/60 hover:shadow-[0_8px_30px_-4px_rgba(200,182,226,0.15)] transition-all">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-2xl bg-[#FAF8F5] border border-[#EAE3D5] flex items-center justify-center shadow-2xs">
@@ -90,7 +90,7 @@ export default function GapsPage() {
                   <p className="text-[#6B6862] mt-0.5 leading-relaxed">{gap.desc}</p>
                 </div>
                 
-                <div className="p-4 bg-[#FAF8F5] rounded-2xl border border-[#EAE3D5]">
+                <div className="p-3.5 sm:p-4 bg-[#FAF8F5] rounded-2xl border border-[#EAE3D5]">
                   <span className="text-[10px] text-[#8C6F45] uppercase tracking-wider font-semibold block">Resolution Strategy</span>
                   <p className="text-[#1A1A1A] mt-1 leading-relaxed">{gap.mitigation}</p>
                 </div>
@@ -101,7 +101,7 @@ export default function GapsPage() {
       </div>
 
       {/* DRF Production Note Card */}
-      <div className="p-7 bg-[#171717] rounded-3xl border border-[#2D2D2D] text-[#FAF7F2] space-y-2 shadow-xl">
+      <div className="p-5 sm:p-7 bg-[#171717] rounded-3xl border border-[#2D2D2D] text-[#FAF7F2] space-y-2 shadow-xl">
         <div className="flex items-center gap-2">
           <Building2 className="h-4.5 w-4.5 text-[#C5A880]" />
           <h4 className="font-serif font-semibold text-sm">Django REST Framework Integration Note</h4>

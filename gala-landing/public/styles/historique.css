@@ -1,0 +1,194 @@
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Raleway:wght@400;700&display=swap");
+
+header {
+  display: flex;
+  justify-content: space-between;
+  text-align: center;
+  color: black;
+  align-items: center;
+  font-family: "Playfair Display", serif;
+  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.1);
+  padding-bottom: 0.5em;
+}
+
+#left {
+  padding-left: 1em;
+  display: flex;
+  justify-content: flex-start;
+  width: 45em;
+  gap: 1em;
+  font-family: "Playfair Display", serif;
+  font-size: 1.5em;
+}
+
+#mid {
+  padding-top: 1em;
+}
+
+#right {
+  padding-right: 1em;
+  display: flex;
+  justify-content: flex-end;
+  width: 45em;
+  gap: 2em;
+  font-family: "Playfair Display", serif;
+  font-size: 1.5em;
+}
+
+#billet {
+  margin-top: 0.25em;
+  background: linear-gradient(135deg, #a1642e 5%, #faca6c 52%, #a1642e 95%);
+  border: none;
+  color: white;
+  padding-left: 2em;
+  padding-right: 2em;
+  text-align: center;
+  font-size: 1em;
+  cursor: pointer;
+  border-radius: 3em;
+  font-family: "Playfair Display", serif;
+  transition: background 0.3s, border 0.1s, color 0.3s;
+}
+
+#billet:hover {
+  background: white;
+  border: solid black;
+  color: black;
+}
+
+#billet:active {
+  opacity: 0.8;
+}
+
+.pleft {
+  background: transparent;
+  border: none;
+  color: black;
+  font-size: 1em;
+  cursor: pointer;
+  font-family: "Playfair Display", serif;
+  transition: color 0.3s;
+}
+
+.pleft:hover {
+  color: #faca6c;
+}
+
+.pleft:active {
+  opacity: 0.8;
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  position: relative;
+}
+
+#editions {
+  background: linear-gradient(90deg, #a1642e 5%, #faca6c 52%, #a1642e 95%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+  font-size: 6em;
+  position: absolute;
+  top: -0.75em;
+  font-family: "Playfair Display", serif;
+}
+
+#historiquedeeng {
+  margin-top: 3.5em;
+  font-size: 3em;
+  font-family: "Playfair Display", sans-serif;
+}
+#description {
+  font-size: 1.75em;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+  font-family: "Raleway", serif;
+}
+#line {
+  margin-top: 2em;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 4em;
+}
+section {
+  position: relative;
+  padding-bottom: 1em;
+}
+.eventimg {
+  width: 20em;
+  height: auto;
+  border-radius: 1.5em;
+  transition: transform 0.3s;
+}
+.eventimg:hover {
+  transform: scale(1.05);
+}
+.eventdescription {
+  font-size: 1.25em;
+  margin-top: 1em;
+  margin-bottom: 2em;
+  font-family: "Raleway", serif;
+  width: 33em;
+  text-align: center;
+}
+#d18 {
+  font-family: "Playfair Display";
+  font-size: 2.5em;
+  position: absolute;
+  top: -0.6em;
+  left: 1.2em;
+}
+#d19 {
+  font-family: "Playfair Display";
+  font-size: 2.5em;
+  position: absolute;
+  top: 4.2em;
+  left: -2.25em;
+}
+#d24 {
+  font-family: "Playfair Display";
+  font-size: 2.5em;
+  position: absolute;
+  top: 10.2em;
+  left: 1.2em;
+}
+#p18 {
+  position: absolute;
+  top: 2em;
+  left: -7.5em;
+  font-size: 1.5em;
+}
+#p19 {
+  position: absolute;
+  top: 10em;
+  left: -25em;
+  font-size: 1.5em;
+}
+#p24 {
+  position: absolute;
+  top: 20em;
+  left: -6em;
+  font-size: 1.5em;
+}
+#img1 {
+  position: absolute;
+  top: 3em;
+  left: 32em;
+}
+#img2 {
+  position: absolute;
+  top: 15em;
+  left: -50em;
+}
+#img3 {
+  position: absolute;
+  top: 30em;
+  left: 32em;
+}

@@ -17,7 +17,7 @@ export default function Home() {
         <Sparkles className="h-6 w-6 text-[#C5A880] animate-pulse" />
       </div>
       <span className="text-xs uppercase tracking-widest text-[#666666] font-medium animate-pulse">
-        Initializing GALA Portal...
+        Initializing GALA Dashboard...
       </span>
     </div>
   );

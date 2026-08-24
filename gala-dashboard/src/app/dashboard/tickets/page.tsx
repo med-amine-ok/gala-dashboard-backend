@@ -49,21 +49,29 @@ export default function TicketsPage() {
   });
 
   // Query unassigned tickets
-  const { data: unassignedData } = useQuery<{ tickets: Array<{ serial_number: string }> }>({
+  const { data: unassignedData, isLoading: isUnassignedLoading } = useQuery<{ tickets: Array<{ serial_number: string }> }>({
     queryKey: ['unassigned-tickets'],
     queryFn: () => apiClient.get('/api/tickets/unassigned_tickets/')
   });
 
-  // Query approved participants without tickets (candidates for assignment)
-  const { data: participantsData } = useQuery<{ results: Participant[] }>({
-    queryKey: ['participants-no-tickets'],
-    queryFn: () => apiClient.get('/api/participants/view/?status=APPROVED&payment_status=pending')
+  // Query all participants (to find candidates without tickets)
+  const { data: participantsData, isLoading: isParticipantsLoading } = useQuery<{ results: Participant[] }>({
+    queryKey: ['participants-candidate-list'],
+    queryFn: () => apiClient.get('/api/participants/view/?page_size=1000')
   });
+
+  // Filter candidates: participants who do not have a ticket assigned yet
+  const candidateParticipants = React.useMemo(() => {
+    return participantsData?.results?.filter(p => !p.ticket_serial_number) || [];
+  }, [participantsData]);
+
+  const unassignedTickets = unassignedData?.tickets || [];
 
   const invalidateQueries = () => {
     queryClient.invalidateQueries({ queryKey: ['tickets'] });
     queryClient.invalidateQueries({ queryKey: ['unassigned-tickets'] });
-    queryClient.invalidateQueries({ queryKey: ['participants-no-tickets'] });
+    queryClient.invalidateQueries({ queryKey: ['participants-candidate-list'] });
+    queryClient.invalidateQueries({ queryKey: ['participants'] });
     queryClient.invalidateQueries({ queryKey: ['dashboard-overview'] });
   };
 
@@ -117,7 +125,7 @@ export default function TicketsPage() {
   return (
     <div className="space-y-8 text-[#1A1A1A]">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 pb-2">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2">
         <div className="space-y-1">
           <div className="flex items-center gap-2 mb-2">
             <span className="px-3 py-1 rounded-full bg-[#1A1A1A] text-[#FAF7F2] text-[10px] font-semibold tracking-widest uppercase shadow-2xs">
@@ -135,10 +143,10 @@ export default function TicketsPage() {
           </p>
         </div>
         
-        <div className="flex gap-3 items-center">
+        <div className="flex flex-wrap sm:flex-nowrap gap-3 items-center w-full sm:w-auto">
           <button
             onClick={() => setIsGenerateModalOpen(true)}
-            className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#FAF8F5] border border-[#EAE3D5] text-[#6E4FA0] hover:bg-[#ECE5F8] hover:border-[#DDD0F3] rounded-2xl text-xs font-semibold transition-all cursor-pointer shadow-2xs"
+            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#FAF8F5] border border-[#EAE3D5] text-[#6E4FA0] hover:bg-[#ECE5F8] hover:border-[#DDD0F3] rounded-2xl text-xs font-semibold transition-all cursor-pointer shadow-2xs min-h-[44px]"
           >
             <Plus className="h-4 w-4 text-[#6E4FA0]" />
             <span>Generate Pool</span>
@@ -146,7 +154,7 @@ export default function TicketsPage() {
 
           <button
             onClick={() => setIsAssignModalOpen(true)}
-            className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#ECE5F8] text-[#6E4FA0] border border-[#DDD0F3] hover:bg-[#DDD0F3] rounded-2xl text-xs font-semibold transition-all shadow-2xs cursor-pointer shrink-0"
+            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#ECE5F8] text-[#6E4FA0] border border-[#DDD0F3] hover:bg-[#DDD0F3] rounded-2xl text-xs font-semibold transition-all shadow-2xs cursor-pointer min-h-[44px]"
           >
             <UserPlus className="h-4 w-4" />
             <span>Assign Ticket</span>
@@ -155,29 +163,29 @@ export default function TicketsPage() {
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-3 gap-6 bg-white p-6 border border-[#EAE3D5] rounded-3xl shadow-[0_4px_24px_-4px_rgba(26,26,26,0.02)]">
-        <div className="text-center border-r border-[#EAE3D5]">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 bg-white p-5 sm:p-6 border border-[#EAE3D5] rounded-3xl shadow-[0_4px_24px_-4px_rgba(26,26,26,0.02)]">
+        <div className="text-center border-b sm:border-b-0 sm:border-r border-[#EAE3D5] pb-4 sm:pb-0">
           <span className="text-[10px] text-[#6B6862] font-semibold uppercase tracking-widest block">Issued Tickets</span>
           <span className="text-2xl font-serif font-semibold text-[#1A1A1A] mt-1.5 block">
             {ticketsData?.results?.filter(t => t.participant).length || 0}
           </span>
         </div>
-        <div className="text-center border-r border-[#EAE3D5]">
+        <div className="text-center border-b sm:border-b-0 sm:border-r border-[#EAE3D5] pb-4 sm:pb-0">
           <span className="text-[10px] text-[#6B6862] font-semibold uppercase tracking-widest block">Unassigned Pool</span>
           <span className="text-2xl font-serif font-semibold text-[#8C6F45] mt-1.5 block">
-            {unassignedData?.tickets?.length || 0}
+            {unassignedTickets.length}
           </span>
         </div>
-        <div className="text-center">
+        <div className="text-center pt-1 sm:pt-0">
           <span className="text-[10px] text-[#6B6862] font-semibold uppercase tracking-widest block">Candidates Pending Ticket</span>
           <span className="text-2xl font-serif font-semibold text-[#6E4FA0] mt-1.5 block">
-            {participantsData?.results?.length || 0}
+            {candidateParticipants.length}
           </span>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-5 rounded-3xl border border-[#EAE3D5] shadow-[0_4px_24px_-4px_rgba(26,26,26,0.02)] flex flex-col md:flex-row gap-4 items-center justify-between">
+      <div className="bg-white p-4 sm:p-5 rounded-3xl border border-[#EAE3D5] shadow-[0_4px_24px_-4px_rgba(26,26,26,0.02)] flex flex-col md:flex-row gap-3 sm:gap-4 items-center justify-between">
         <div className="relative w-full md:w-80">
           <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-[#96928B]" />
           <input
@@ -189,11 +197,11 @@ export default function TicketsPage() {
           />
         </div>
 
-        <div>
+        <div className="w-full md:w-auto">
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-3 bg-[#FAF8F5] border border-[#EAE3D5] rounded-2xl text-xs font-medium text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2]"
+            className="w-full md:w-auto px-4 py-3 bg-[#FAF8F5] border border-[#EAE3D5] rounded-2xl text-xs font-medium text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2]"
           >
             <option value="">All Ticket Statuses</option>
             <option value="active">Active</option>
@@ -309,15 +317,15 @@ export default function TicketsPage() {
               <span className="text-[10px] text-[#8C8C8C] mt-1 block">Generates unassigned active tickets into the corporate pool.</span>
             </div>
 
-            <div className="flex gap-3 pt-2 text-xs">
+            <div className="flex flex-col sm:flex-row gap-3 pt-2 text-xs">
               <button
                 onClick={() => generateUnassignedMutation.mutate(generateCount)}
                 disabled={generateUnassignedMutation.isPending}
-                className="flex-1 py-3.5 px-4 bg-[#ECE5F8] text-[#6E4FA0] border border-[#DDD0F3] hover:bg-[#DDD0F3] rounded-2xl font-semibold transition-colors disabled:opacity-50 cursor-pointer shadow-2xs"
+                className="flex-1 py-3.5 px-4 bg-[#ECE5F8] text-[#6E4FA0] border border-[#DDD0F3] hover:bg-[#DDD0F3] rounded-2xl font-semibold transition-colors disabled:opacity-50 cursor-pointer shadow-2xs min-h-[44px]"
               >
                 {generateUnassignedMutation.isPending ? 'Generating...' : 'Confirm'}
               </button>
-              <button onClick={() => setIsGenerateModalOpen(false)} className="px-5 py-3.5 bg-[#FAF8F5] hover:bg-[#ECE5F8] text-[#6E4FA0] border border-[#EAE3D5] rounded-2xl font-semibold">
+              <button onClick={() => setIsGenerateModalOpen(false)} className="px-5 py-3.5 bg-[#FAF8F5] hover:bg-[#ECE5F8] text-[#6E4FA0] border border-[#EAE3D5] rounded-2xl font-semibold min-h-[44px]">
                 Cancel
               </button>
             </div>
@@ -328,13 +336,50 @@ export default function TicketsPage() {
       {/* Assign Ticket Modal */}
       {isAssignModalOpen && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl shadow-2xl p-6 max-w-md w-full space-y-4 animate-fade-in border border-[#EAE3D5]">
+          <div className="bg-white rounded-3xl shadow-2xl p-4 sm:p-6 max-w-md w-full space-y-4 animate-fade-in border border-[#EAE3D5] max-h-[90vh] overflow-y-auto">
             <div>
               <span className="text-[10px] uppercase tracking-wider text-[#C5A880] font-semibold">Ticket Assignment</span>
               <h3 className="text-lg font-serif font-semibold text-[#1A1A1A] mt-0.5">
                 Assign Ticket & Record Payment
               </h3>
             </div>
+
+            {/* Warning if no pool tickets available */}
+            {unassignedTickets.length === 0 && !isUnassignedLoading && (
+              <div className="p-3.5 bg-[#FFF8E6] border border-[#F4DCAC] rounded-2xl text-xs text-[#8C6F45] space-y-1.5">
+                <p className="font-semibold flex items-center gap-1.5">
+                  <AlertCircle className="h-4 w-4 text-[#8C6F45]" />
+                  No unassigned tickets available in pool
+                </p>
+                <p className="text-[11px]">
+                  You must generate unassigned tickets first before assigning one to a participant.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAssignModalOpen(false);
+                    setIsGenerateModalOpen(true);
+                  }}
+                  className="text-[#6E4FA0] hover:text-[#583C85] underline font-semibold text-[11px] cursor-pointer inline-flex items-center gap-1 pt-1"
+                >
+                  <span>Generate Pool Tickets Now</span>
+                  <ArrowRight className="h-3 w-3" />
+                </button>
+              </div>
+            )}
+
+            {/* Info if no candidates awaiting ticket */}
+            {candidateParticipants.length === 0 && !isParticipantsLoading && (
+              <div className="p-3.5 bg-[#FAF8F5] border border-[#EAE3D5] rounded-2xl text-xs text-[#6B6862] space-y-1">
+                <p className="font-semibold flex items-center gap-1.5 text-[#1A1A1A]">
+                  <CheckCircle2 className="h-4 w-4 text-[#2E5A36]" />
+                  No candidates awaiting tickets
+                </p>
+                <p className="text-[11px]">
+                  All registered participants currently have a ticket, or no participants exist in the directory.
+                </p>
+              </div>
+            )}
 
             <form
               onSubmit={(e) => {
@@ -344,30 +389,50 @@ export default function TicketsPage() {
               className="space-y-4"
             >
               <div>
-                <label className="block text-[10px] text-[#666666] font-semibold mb-1 uppercase">Select Approved Participant</label>
+                <label className="block text-[10px] text-[#666666] font-semibold mb-1 uppercase">
+                  Select Participant ({candidateParticipants.length} Available)
+                </label>
                 <select
                   required
+                  disabled={candidateParticipants.length === 0}
                   value={assignForm.participant_id}
                   onChange={(e) => setAssignForm(prev => ({ ...prev, participant_id: e.target.value }))}
-                  className="w-full p-2.5 bg-[#FAF8F5] border border-[#EAE3D5] rounded-xl text-xs text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2]"
+                  className="w-full p-2.5 bg-[#FAF8F5] border border-[#EAE3D5] rounded-xl text-xs text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2] disabled:opacity-50"
                 >
-                  <option value="">Choose Candidate...</option>
-                  {participantsData?.results?.map(p => (
-                    <option key={p.id} value={p.id}>{p.full_name} ({p.email})</option>
+                  <option value="">
+                    {isParticipantsLoading
+                      ? 'Loading participants...'
+                      : candidateParticipants.length === 0
+                      ? 'No participants awaiting tickets'
+                      : 'Choose Participant...'}
+                  </option>
+                  {candidateParticipants.map(p => (
+                    <option key={p.id} value={p.id}>
+                      {p.full_name || p.email} ({p.email || 'No email'}) • [{p.status}]
+                    </option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className="block text-[10px] text-[#666666] font-semibold mb-1 uppercase">Select Available Pool Ticket</label>
+                <label className="block text-[10px] text-[#666666] font-semibold mb-1 uppercase">
+                  Select Pool Ticket ({unassignedTickets.length} Available)
+                </label>
                 <select
                   required
+                  disabled={unassignedTickets.length === 0}
                   value={assignForm.ticket_serial}
                   onChange={(e) => setAssignForm(prev => ({ ...prev, ticket_serial: e.target.value }))}
-                  className="w-full p-2.5 bg-[#FAF8F5] border border-[#EAE3D5] rounded-xl text-xs text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2]"
+                  className="w-full p-2.5 bg-[#FAF8F5] border border-[#EAE3D5] rounded-xl text-xs text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2] disabled:opacity-50"
                 >
-                  <option value="">Choose Ticket Serial...</option>
-                  {unassignedData?.tickets?.map(t => (
+                  <option value="">
+                    {isUnassignedLoading
+                      ? 'Loading pool tickets...'
+                      : unassignedTickets.length === 0
+                      ? 'No tickets in pool (Generate pool first)'
+                      : 'Choose Ticket Serial...'}
+                  </option>
+                  {unassignedTickets.map(t => (
                     <option key={t.serial_number} value={t.serial_number}>{t.serial_number}</option>
                   ))}
                 </select>
@@ -384,16 +449,16 @@ export default function TicketsPage() {
                 />
               </div>
 
-              <div className="flex gap-3 pt-2 text-xs">
+              <div className="flex flex-col sm:flex-row gap-3 pt-2 text-xs">
                 <button
                   type="submit"
-                  disabled={assignTicketMutation.isPending}
-                  className="flex-1 py-3.5 px-4 bg-[#ECE5F8] text-[#6E4FA0] border border-[#DDD0F3] hover:bg-[#DDD0F3] rounded-2xl font-semibold flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer shadow-2xs"
+                  disabled={assignTicketMutation.isPending || candidateParticipants.length === 0 || unassignedTickets.length === 0}
+                  className="flex-1 py-3.5 px-4 bg-[#ECE5F8] text-[#6E4FA0] border border-[#DDD0F3] hover:bg-[#DDD0F3] rounded-2xl font-semibold flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer shadow-2xs min-h-[44px]"
                 >
                   {assignTicketMutation.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                   <span>Issue & Confirm Payment</span>
                 </button>
-                <button type="button" onClick={() => setIsAssignModalOpen(false)} className="px-5 py-3.5 bg-[#FAF8F5] hover:bg-[#ECE5F8] text-[#6E4FA0] border border-[#EAE3D5] rounded-2xl font-semibold">
+                <button type="button" onClick={() => setIsAssignModalOpen(false)} className="px-5 py-3.5 bg-[#FAF8F5] hover:bg-[#ECE5F8] text-[#6E4FA0] border border-[#EAE3D5] rounded-2xl font-semibold min-h-[44px]">
                   Cancel
                 </button>
               </div>

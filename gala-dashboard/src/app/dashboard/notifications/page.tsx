@@ -84,7 +84,7 @@ export default function NotificationsLogsPage() {
   return (
     <div className="space-y-8 text-[#1A1A1A]">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 pb-2">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2">
         <div className="space-y-1">
           <div className="flex items-center gap-2 mb-2">
             <span className="px-3 py-1 rounded-full bg-[#1A1A1A] text-[#FAF7F2] text-[10px] font-semibold tracking-widest uppercase shadow-2xs">
@@ -105,7 +105,7 @@ export default function NotificationsLogsPage() {
         {tab === 'system' && (
           <button
             onClick={() => markAllReadMutation.mutate()}
-            className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#ECE5F8] text-[#6E4FA0] border border-[#DDD0F3] hover:bg-[#DDD0F3] rounded-2xl text-xs font-semibold transition-all cursor-pointer shadow-2xs shrink-0"
+            className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#ECE5F8] text-[#6E4FA0] border border-[#DDD0F3] hover:bg-[#DDD0F3] rounded-2xl text-xs font-semibold transition-all cursor-pointer shadow-2xs w-full sm:w-auto shrink-0 min-h-[44px]"
           >
             <Check className="h-4 w-4 text-[#6E4FA0]" />
             <span>Mark All Read</span>
@@ -114,10 +114,10 @@ export default function NotificationsLogsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-[#EAE3D5]">
+      <div className="flex border-b border-[#EAE3D5] overflow-x-auto">
         <button
           onClick={() => setTab('emails')}
-          className={`px-6 py-3.5 text-xs font-semibold tracking-wider uppercase border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
+          className={`px-4 sm:px-6 py-3.5 text-xs font-semibold tracking-wider uppercase border-b-2 transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap min-h-[44px] ${
             tab === 'emails' ? 'border-[#6E4FA0] text-[#6E4FA0]' : 'border-transparent text-[#96928B] hover:text-[#1A1A1A]'
           }`}
         >
@@ -126,7 +126,7 @@ export default function NotificationsLogsPage() {
         </button>
         <button
           onClick={() => setTab('system')}
-          className={`px-6 py-3.5 text-xs font-semibold tracking-wider uppercase border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
+          className={`px-4 sm:px-6 py-3.5 text-xs font-semibold tracking-wider uppercase border-b-2 transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap min-h-[44px] ${
             tab === 'system' ? 'border-[#6E4FA0] text-[#6E4FA0]' : 'border-transparent text-[#96928B] hover:text-[#1A1A1A]'
           }`}
         >
@@ -139,7 +139,7 @@ export default function NotificationsLogsPage() {
       {tab === 'emails' ? (
         <div className="space-y-6">
           {/* Filters */}
-          <div className="bg-white p-5 rounded-3xl border border-[#EAE3D5] shadow-[0_4px_24px_-4px_rgba(26,26,26,0.02)] flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div className="bg-white p-4 sm:p-5 rounded-3xl border border-[#EAE3D5] shadow-[0_4px_24px_-4px_rgba(26,26,26,0.02)] flex flex-col md:flex-row gap-3 sm:gap-4 items-center justify-between">
             <div className="relative w-full md:w-80">
               <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-[#96928B]" />
               <input
@@ -151,11 +151,11 @@ export default function NotificationsLogsPage() {
               />
             </div>
             
-            <div className="flex gap-3">
+            <div className="flex gap-3 w-full md:w-auto">
               <select
                 value={emailStatusFilter}
                 onChange={(e) => { setEmailStatusFilter(e.target.value); setEmailsPage(1); }}
-                className="px-4 py-3 bg-[#FAF8F5] border border-[#EAE3D5] rounded-2xl text-xs font-medium text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2]"
+                className="flex-1 md:flex-none px-4 py-3 bg-[#FAF8F5] border border-[#EAE3D5] rounded-2xl text-xs font-medium text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2]"
               >
                 <option value="">All Statuses</option>
                 <option value="sent">Sent</option>
@@ -166,6 +166,7 @@ export default function NotificationsLogsPage() {
               <button
                 onClick={() => refetchEmails()}
                 className="p-3 border border-[#EAE3D5] rounded-xl hover:bg-[#FAF8F5] text-[#96928B] cursor-pointer shadow-2xs"
+                title="Refresh logs"
               >
                 <RefreshCw className="h-4 w-4" />
               </button>
@@ -324,7 +325,7 @@ export default function NotificationsLogsPage() {
             </div>
             
             <div className="p-6 space-y-4 text-xs">
-              <div className="grid grid-cols-2 gap-4 bg-[#FAF7F2] p-4 rounded-2xl border border-[#EFE8DC]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 bg-[#FAF7F2] p-4 rounded-2xl border border-[#EFE8DC]">
                 <div>
                   <span className="text-[#666666] block text-[10px] uppercase font-semibold">Template Type</span>
                   <span className="font-semibold text-[#1A1A1A] mt-0.5 block">{detailedEmail.template_name || 'Direct'}</span>

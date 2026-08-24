@@ -134,22 +134,23 @@ export default function DashboardLayout({
       </aside>
 
       {/* Mobile Top Navigation */}
-      <div className="md:hidden flex items-center justify-between w-full h-16 bg-white px-4 fixed top-0 left-0 right-0 z-40 ">
+      <div className="md:hidden flex items-center justify-between w-full h-16 bg-white/95 backdrop-blur-md px-4 border-b border-[#EAE3D5] fixed top-0 left-0 right-0 z-40 shadow-xs">
         <Link href="/dashboard" className="flex items-center gap-2">
-          <div className="p-1.5 shadow-2xs flex items-center justify-center">
+          <div className="p-1 flex items-center justify-center">
             <Image
               src="/GALA.png"
               alt="Gala Logo"
-              width={100}
-              height={30}
-              className="h-6 w-auto object-contain"
+              width={110}
+              height={32}
+              className="h-7 w-auto object-contain"
               priority
             />
           </div>
         </Link>
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="text-[#1A1A1A] hover:text-[#6E4FA0] transition-colors p-1"
+          aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+          className="text-[#1A1A1A] hover:text-[#6E4FA0] transition-colors p-2.5 rounded-xl hover:bg-[#F7F4EE] flex items-center justify-center min-w-[44px] min-h-[44px] cursor-pointer"
         >
           {mobileMenuOpen ? (
             <X className="h-6 w-6" />
@@ -159,64 +160,75 @@ export default function DashboardLayout({
         </button>
       </div>
 
-      {/* Mobile Menu Drawer */}
+      {/* Mobile Menu Drawer Overlay */}
       {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 top-16 bg-white z-30 flex flex-col justify-between border-t border-[#EAE3D5] animate-fade-in">
-          <nav className="p-4 space-y-1.5 overflow-y-auto">
-            {navigation.map((item) => {
-              const isActive = pathname === item.href;
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-semibold transition-all ${
-                    isActive
-                      ? "text-[#6E4FA0] bg-[#ECE5F8] border border-[#DDD0F3]"
-                      : "text-[#6B6862] hover:text-[#1A1A1A] hover:bg-[#F7F4EE]"
-                  }`}
-                >
-                  <Icon
-                    className={`h-5 w-5 ${isActive ? "text-[#6E4FA0]" : "text-[#96928B]"}`}
-                  />
-                  <span>{item.name}</span>
-                </Link>
-              );
-            })}
-          </nav>
+        <div 
+          className="md:hidden fixed inset-0 top-16 bg-black/40 backdrop-blur-xs z-30 animate-fade-in"
+          onClick={() => setMobileMenuOpen(false)}
+        >
+          <div 
+            className="bg-white h-full flex flex-col justify-between border-t border-[#EAE3D5] max-w-xs w-full shadow-2xl animate-in slide-in-from-left duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <nav className="p-4 space-y-1.5 overflow-y-auto flex-1">
+              {navigation.map((item) => {
+                const isActive = pathname === item.href;
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl text-xs font-semibold transition-all min-h-[44px] ${
+                      isActive
+                        ? "text-[#6E4FA0] bg-[#ECE5F8] border border-[#DDD0F3] shadow-2xs"
+                        : "text-[#6B6862] hover:text-[#1A1A1A] hover:bg-[#F7F4EE]"
+                    }`}
+                  >
+                    <Icon
+                      className={`h-5 w-5 ${isActive ? "text-[#6E4FA0]" : "text-[#96928B]"}`}
+                    />
+                    <span className="tracking-tight">{item.name}</span>
+                    {isActive && (
+                      <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#6E4FA0]" />
+                    )}
+                  </Link>
+                );
+              })}
+            </nav>
 
-          <div className="p-4 border-t border-[#EAE3D5] bg-[#FAF8F5]">
-            <div className="flex items-center gap-3 px-3 py-2.5 mb-3 rounded-2xl bg-white border border-[#EAE3D5]">
-              <div className="h-8 w-8 rounded-xl bg-[#ECE5F8] border border-[#DDD0F3] flex items-center justify-center">
-                <UserCheck className="h-4 w-4 text-[#6E4FA0]" />
+            <div className="p-4 border-t border-[#EAE3D5] bg-[#FAF8F5]">
+              <div className="flex items-center gap-3 px-3 py-2.5 mb-3 rounded-2xl bg-white border border-[#EAE3D5]">
+                <div className="h-8 w-8 rounded-xl bg-[#ECE5F8] border border-[#DDD0F3] flex items-center justify-center shrink-0">
+                  <UserCheck className="h-4 w-4 text-[#6E4FA0]" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold text-[#1A1A1A] truncate">
+                    {user ? `${user.first_name} ${user.last_name}` : "HR Admin"}
+                  </p>
+                  <p className="text-[10px] text-[#8C6F45] uppercase tracking-wider font-semibold truncate">
+                    {user?.role_display || "HR Admin"}
+                  </p>
+                </div>
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold text-[#1A1A1A]">
-                  {user ? `${user.first_name} ${user.last_name}` : "HR Admin"}
-                </p>
-                <p className="text-[10px] text-[#8C6F45] uppercase tracking-wider font-semibold">
-                  {user?.role_display || "HR Admin"}
-                </p>
-              </div>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  logout();
+                }}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-xs font-semibold text-[#8B2635] hover:bg-[#8B2635]/10 border border-[#8B2635]/20 transition-all cursor-pointer min-h-[44px]"
+              >
+                <LogOut className="h-4 w-4" />
+                <span>Sign Out</span>
+              </button>
             </div>
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                logout();
-              }}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-[#8B2635] hover:bg-[#8B2635]/10 transition-all cursor-pointer"
-            >
-              <LogOut className="h-4 w-4" />
-              <span>Sign Out</span>
-            </button>
           </div>
         </div>
       )}
 
       {/* Main Content Area */}
-      <main className="flex-1 md:pl-64 min-h-screen pt-16 md:pt-0 flex flex-col">
-        <div className="flex-1 p-6 md:p-10 lg:p-12 max-w-7xl w-full mx-auto space-y-10">
+      <main className="flex-1 md:pl-64 min-h-screen pt-16 md:pt-0 flex flex-col min-w-0 overflow-x-hidden">
+        <div className="flex-1 p-4 sm:p-6 md:p-8 lg:p-10 max-w-7xl w-full mx-auto space-y-8 min-w-0">
           {children}
         </div>
       </main>

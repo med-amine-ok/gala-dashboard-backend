@@ -198,7 +198,7 @@ export default function ParticipantsPage() {
   return (
     <div className="space-y-8 text-[#1A1A1A]">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 pb-2">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2">
         <div className="space-y-1">
           <div className="flex items-center gap-2 mb-2">
             <span className="px-3 py-1 rounded-full bg-[#1A1A1A] text-[#FAF7F2] text-[10px] font-semibold tracking-widest uppercase shadow-2xs">
@@ -217,7 +217,7 @@ export default function ParticipantsPage() {
         </div>
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#ECE5F8] text-[#6E4FA0] border border-[#DDD0F3] hover:bg-[#DDD0F3] rounded-2xl text-xs font-semibold transition-all shadow-2xs cursor-pointer shrink-0"
+          className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#ECE5F8] text-[#6E4FA0] border border-[#DDD0F3] hover:bg-[#DDD0F3] rounded-2xl text-xs font-semibold transition-all shadow-2xs cursor-pointer w-full sm:w-auto shrink-0 min-h-[44px]"
         >
           <Plus className="h-4 w-4" />
           <span>Add Participant</span>
@@ -225,7 +225,7 @@ export default function ParticipantsPage() {
       </div>
 
       {/* Filters bar */}
-      <div className="bg-white p-5 rounded-3xl border border-[#EAE3D5] shadow-[0_4px_24px_-4px_rgba(26,26,26,0.02)] flex flex-col md:flex-row gap-4 items-center justify-between">
+      <div className="bg-white p-4 sm:p-5 rounded-3xl border border-[#EAE3D5] shadow-[0_4px_24px_-4px_rgba(26,26,26,0.02)] flex flex-col md:flex-row gap-3 sm:gap-4 items-center justify-between">
         <div className="relative w-full md:w-80">
           <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-[#96928B]" />
           <input
@@ -237,12 +237,12 @@ export default function ParticipantsPage() {
           />
         </div>
 
-        <div className="flex flex-wrap gap-3 w-full md:w-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-3 md:flex gap-3 w-full md:w-auto">
           {/* Status Filter */}
           <select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-            className="px-4 py-3 bg-[#FAF8F5] border border-[#EAE3D5] rounded-2xl text-xs font-medium text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2]"
+            className="px-4 py-3 bg-[#FAF8F5] border border-[#EAE3D5] rounded-2xl text-xs font-medium text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2] w-full"
           >
             <option value="">All Statuses</option>
             <option value="PENDING">Pending</option>
@@ -254,7 +254,7 @@ export default function ParticipantsPage() {
           <select
             value={typeFilter}
             onChange={(e) => { setTypeFilter(e.target.value); setPage(1); }}
-            className="px-4 py-3 bg-[#FAF8F5] border border-[#EAE3D5] rounded-2xl text-xs font-medium text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2]"
+            className="px-4 py-3 bg-[#FAF8F5] border border-[#EAE3D5] rounded-2xl text-xs font-medium text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2] w-full"
           >
             <option value="">All Types</option>
             <option value="ST">Student</option>
@@ -265,7 +265,7 @@ export default function ParticipantsPage() {
           <select
             value={paymentFilter}
             onChange={(e) => { setPaymentFilter(e.target.value); setPage(1); }}
-            className="px-4 py-3 bg-[#FAF8F5] border border-[#EAE3D5] rounded-2xl text-xs font-medium text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2]"
+            className="px-4 py-3 bg-[#FAF8F5] border border-[#EAE3D5] rounded-2xl text-xs font-medium text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2] w-full"
           >
             <option value="">All Payments</option>
             <option value="pending">Pending Payment</option>
@@ -277,15 +277,15 @@ export default function ParticipantsPage() {
 
       {/* Bulk actions bar */}
       {selectedIds.length > 0 && (
-        <div className="bg-[#FAF8F5] border border-[#EAE3D5] px-6 py-4 rounded-2xl flex items-center justify-between animate-fade-in shadow-2xs">
+        <div className="bg-[#FAF8F5] border border-[#EAE3D5] px-4 sm:px-6 py-4 rounded-2xl flex flex-col sm:flex-row gap-3 items-center justify-between animate-fade-in shadow-2xs">
           <span className="text-xs font-semibold text-[#1A1A1A] flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[#6E4FA0]" />
             {selectedIds.length} participants selected
           </span>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full sm:w-auto">
             <button
               onClick={() => bulkActionMutation.mutate({ ids: selectedIds, action: 'approved' })}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#2E5A36] text-white rounded-xl text-xs font-semibold hover:bg-emerald-800 transition-colors cursor-pointer shadow-xs"
+              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-[#2E5A36] text-white rounded-xl text-xs font-semibold hover:bg-emerald-800 transition-colors cursor-pointer shadow-xs min-h-[40px]"
             >
               <Check className="h-3.5 w-3.5" />
               <span>Approve Selection</span>
@@ -295,7 +295,7 @@ export default function ParticipantsPage() {
                 const reason = prompt('Rejection reason (required):');
                 if (reason) bulkActionMutation.mutate({ ids: selectedIds, action: 'rejected', reason });
               }}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#8B2635] text-white rounded-xl text-xs font-semibold hover:bg-red-800 transition-colors cursor-pointer shadow-xs"
+              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-[#8B2635] text-white rounded-xl text-xs font-semibold hover:bg-red-800 transition-colors cursor-pointer shadow-xs min-h-[40px]"
             >
               <X className="h-3.5 w-3.5" />
               <span>Reject Selection</span>
@@ -313,7 +313,7 @@ export default function ParticipantsPage() {
                 <th className="py-4 px-6 w-12 text-center">
                   <input
                     type="checkbox"
-                    checked={data?.results && selectedIds.length === data.results.length}
+                    checked={Boolean(data?.results?.length && selectedIds.length === data.results.length)}
                     onChange={handleSelectAll}
                     className="rounded-sm border-[#EAE3D5] text-[#C5A880] focus:ring-[#C5A880]"
                   />
@@ -365,12 +365,31 @@ export default function ParticipantsPage() {
                       </span>
                     </td>
                     <td className="py-4 px-6">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold leading-4 ${
-                        p.status === 'APPROVED' ? 'bg-[#EBF2EC] text-[#2E5A36] border border-[#D5E6D8]' :
-                        p.status === 'REJECTED' ? 'bg-[#F9ECEF] text-[#8B2635] border border-[#F2C2CB]' : 'bg-[#F7F1E6] text-[#8C6F45] border border-[#E5DAC6]'
-                      }`}>
-                        {p.status}
-                      </span>
+                      <select
+                        value={p.status}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === 'APPROVED') {
+                            approveRejectMutation.mutate({ id: p.id, action: 'approved' });
+                          } else if (val === 'REJECTED') {
+                            setRejectingParticipantId(p.id);
+                          } else if (val === 'PENDING') {
+                            approveRejectMutation.mutate({ id: p.id, action: 'pending' });
+                          }
+                        }}
+                        disabled={approveRejectMutation.isPending}
+                        className={`text-[10px] font-bold uppercase tracking-wider rounded-full px-2.5 py-1 border transition-all cursor-pointer shadow-2xs focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2] ${
+                          p.status === 'APPROVED'
+                            ? 'bg-[#EBF2EC] text-[#2E5A36] border-[#D5E6D8] hover:bg-[#DEEBDC]'
+                            : p.status === 'REJECTED'
+                            ? 'bg-[#F9ECEF] text-[#8B2635] border-[#F2C2CB] hover:bg-[#F5DEE3]'
+                            : 'bg-[#F7F1E6] text-[#8C6F45] border-[#E5DAC6] hover:bg-[#EFE6D5]'
+                        }`}
+                      >
+                        <option value="PENDING" className="bg-white text-[#8C6F45] font-semibold">PENDING</option>
+                        <option value="APPROVED" className="bg-white text-[#2E5A36] font-semibold">APPROVED</option>
+                        <option value="REJECTED" className="bg-white text-[#8B2635] font-semibold">REJECTED</option>
+                      </select>
                     </td>
                     <td className="py-4 px-6">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold leading-4 ${
@@ -391,13 +410,7 @@ export default function ParticipantsPage() {
                       >
                         <Eye className="h-4 w-4" />
                       </button>
-                      <button
-                        onClick={() => deleteMutation.mutate(p.id)}
-                        className="p-1 hover:text-[#8B2635] text-gray-400 transition-colors inline-block cursor-pointer"
-                        title="Delete registration"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      
                     </td>
                   </tr>
                 ))
@@ -430,76 +443,83 @@ export default function ParticipantsPage() {
         )}
       </div>
 
-      {/* Participant Detail Drawer */}
+      {/* Participant Detail Modal (Centered Box) */}
       {detailParticipant && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex justify-end">
-          <div className="w-full max-w-2xl bg-white h-full shadow-2xl overflow-y-auto flex flex-col animate-slide-in">
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 sm:p-6 animate-fade-in"
+          onClick={() => setDetailParticipant(null)}
+        >
+          <div 
+            className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] border border-[#EAE3D5]"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Header */}
-            <div className="p-6 border-b border-[#EFE8DC] bg-[#FAF7F2] flex justify-between items-center">
+            <div className="p-6 border-b border-[#EAE3D5] bg-[#FAF8F5] flex justify-between items-center shrink-0">
               <div>
-                <span className="text-[10px] uppercase tracking-wider text-[#C5A880] font-semibold">
+                <span className="text-[10px] uppercase tracking-wider text-[#B8964A] font-bold">
                   Participant Profile
                 </span>
-                <h3 className="text-xl font-serif font-semibold text-[#1A1A1A] mt-1">
+                <h3 className="text-xl font-serif font-bold text-[#1A1A1A] mt-0.5">
                   {detailParticipant.full_name}
                 </h3>
               </div>
               <button
                 onClick={() => setDetailParticipant(null)}
-                className="p-2 hover:bg-[#EFE8DC]/50 rounded-full transition-colors text-gray-400 hover:text-gray-700"
+                className="p-2 hover:bg-[#EAE3D5]/60 rounded-full transition-colors text-[#6B6862] hover:text-[#1A1A1A] cursor-pointer"
+                title="Close"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             {/* Profile Content */}
-            <div className="p-6 flex-1 space-y-6">
+            <div className="p-6 overflow-y-auto space-y-6 flex-1 text-xs">
               {/* Quick Details Cards */}
-              <div className="grid grid-cols-3 gap-4">
-                <div className="p-3 bg-[#FAF7F2] rounded-2xl border border-[#EFE8DC]">
-                  <span className="text-[10px] text-[#666666] font-semibold block uppercase">Status</span>
-                  <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+              <div className="grid grid-cols-3 gap-3.5">
+                <div className="p-3.5 bg-[#FAF8F5] rounded-2xl border border-[#EAE3D5]">
+                  <span className="text-[10px] text-[#6B6862] font-semibold block uppercase">Status</span>
+                  <span className={`inline-block mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                     detailParticipant.status === 'APPROVED' ? 'bg-[#EBF2EC] text-[#2E5A36] border border-[#D5E6D8]' :
                     detailParticipant.status === 'REJECTED' ? 'bg-[#F9ECEF] text-[#8B2635] border border-[#F2C2CB]' : 'bg-[#F7F1E6] text-[#8C6F45] border border-[#E5DAC6]'
                   }`}>
                     {detailParticipant.status}
                   </span>
                 </div>
-                <div className="p-3 bg-[#FAF7F2] rounded-2xl border border-[#EFE8DC]">
-                  <span className="text-[10px] text-[#666666] font-semibold block uppercase">Payment</span>
-                  <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                <div className="p-3.5 bg-[#FAF8F5] rounded-2xl border border-[#EAE3D5]">
+                  <span className="text-[10px] text-[#6B6862] font-semibold block uppercase">Payment</span>
+                  <span className={`inline-block mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                     detailParticipant.payment_status === 'paid' ? 'bg-[#EBF2EC] text-[#2E5A36] border border-[#D5E6D8]' :
                     detailParticipant.payment_status === 'failed' ? 'bg-[#F9ECEF] text-[#8B2635] border border-[#F2C2CB]' : 'bg-[#F7F1E6] text-[#8C6F45] border border-[#E5DAC6]'
                   }`}>
                     {detailParticipant.payment_status.toUpperCase()}
                   </span>
                 </div>
-                <div className="p-3 bg-[#FAF7F2] rounded-2xl border border-[#EFE8DC]">
-                  <span className="text-[10px] text-[#666666] font-semibold block uppercase">Ticket</span>
-                  <span className="block mt-1 font-semibold text-xs text-[#1A1A1A]">
+                <div className="p-3.5 bg-[#FAF8F5] rounded-2xl border border-[#EAE3D5]">
+                  <span className="text-[10px] text-[#6B6862] font-semibold block uppercase">Ticket Serial</span>
+                  <span className="block mt-1 font-mono font-bold text-xs text-[#1A1A1A]">
                     {detailParticipant.ticket_serial_number || 'None Issued'}
                   </span>
                 </div>
               </div>
 
               {/* Main Info */}
-              <div className="space-y-4">
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-[#666666] border-b border-[#EFE8DC] pb-2">
+              <div className="space-y-3">
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-[#6B6862] border-b border-[#EAE3D5] pb-2">
                   Contact Information
                 </h4>
-                <div className="grid grid-cols-2 gap-4 text-xs">
-                  <div className="flex items-center gap-2 text-[#1A1A1A]">
-                    <Mail className="h-4 w-4 text-[#8C8C8C]" />
-                    <span>{detailParticipant.email}</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div className="flex items-center gap-2.5 text-[#1A1A1A] p-2.5 bg-[#FAF8F5] rounded-xl border border-[#EAE3D5]/60">
+                    <Mail className="h-4 w-4 text-[#B8964A] shrink-0" />
+                    <span className="truncate">{detailParticipant.email}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-[#1A1A1A]">
-                    <Phone className="h-4 w-4 text-[#8C8C8C]" />
+                  <div className="flex items-center gap-2.5 text-[#1A1A1A] p-2.5 bg-[#FAF8F5] rounded-xl border border-[#EAE3D5]/60">
+                    <Phone className="h-4 w-4 text-[#B8964A] shrink-0" />
                     <span>{detailParticipant.phone || 'No phone recorded'}</span>
                   </div>
                   {detailParticipant.linkedin_url && (
-                    <div className="flex items-center gap-2 text-[#1A1A1A] col-span-2">
-                      <Linkedin className="h-4 w-4 text-[#8C8C8C]" />
-                      <a href={detailParticipant.linkedin_url} target="_blank" rel="noreferrer" className="text-[#C5A880] hover:underline">
+                    <div className="flex items-center gap-2.5 text-[#1A1A1A] col-span-1 sm:col-span-2 p-2.5 bg-[#FAF8F5] rounded-xl border border-[#EAE3D5]/60">
+                      <Linkedin className="h-4 w-4 text-[#0A66C2] shrink-0" />
+                      <a href={detailParticipant.linkedin_url} target="_blank" rel="noreferrer" className="text-[#6E4FA0] hover:underline truncate">
                         {detailParticipant.linkedin_url}
                       </a>
                     </div>
@@ -507,49 +527,51 @@ export default function ParticipantsPage() {
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-[#666666] border-b border-[#EFE8DC] pb-2">
+              {/* Academic Background */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-[#6B6862] border-b border-[#EAE3D5] pb-2">
                   Academic Background
                 </h4>
-                <div className="grid grid-cols-2 gap-4 text-xs">
-                  <div className="flex items-start gap-2 text-[#1A1A1A]">
-                    <GraduationCap className="h-4 w-4 text-[#8C8C8C] mt-0.5" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div className="flex items-start gap-2.5 text-[#1A1A1A] p-3 bg-[#FAF8F5] rounded-xl border border-[#EAE3D5]">
+                    <GraduationCap className="h-4 w-4 text-[#B8964A] mt-0.5 shrink-0" />
                     <div>
                       <div className="font-semibold">{detailParticipant.university === 'OTHER' ? detailParticipant.university_other : detailParticipant.university}</div>
-                      <div className="text-[10px] text-[#666666]">University / School</div>
+                      <div className="text-[10px] text-[#6B6862]">University / School</div>
                     </div>
                   </div>
-                  <div className="flex items-start gap-2 text-[#1A1A1A]">
-                    <BookOpen className="h-4 w-4 text-[#8C8C8C] mt-0.5" />
+                  <div className="flex items-start gap-2.5 text-[#1A1A1A] p-3 bg-[#FAF8F5] rounded-xl border border-[#EAE3D5]">
+                    <BookOpen className="h-4 w-4 text-[#B8964A] mt-0.5 shrink-0" />
                     <div>
                       <div className="font-semibold">{detailParticipant.field_of_study === 'OTHER' ? detailParticipant.field_of_study_other : detailParticipant.field_of_study}</div>
-                      <div className="text-[10px] text-[#666666]">Field of Study</div>
+                      <div className="text-[10px] text-[#6B6862]">Field of Study</div>
                     </div>
                   </div>
-                  <div className="col-span-2 text-[#1A1A1A] bg-[#FAF7F2] p-3.5 rounded-xl border border-[#EFE8DC]">
-                    <div className="font-semibold text-[10px] text-[#666666] uppercase mb-1">Academic Level & Graduation</div>
-                    {detailParticipant.academic_level} (Class of {detailParticipant.graduation_year})
+                  <div className="sm:col-span-2 text-[#1A1A1A] bg-[#FAF8F5] p-3.5 rounded-xl border border-[#EAE3D5]">
+                    <div className="font-semibold text-[10px] text-[#6B6862] uppercase mb-1">Academic Level & Graduation</div>
+                    <span className="font-medium">{detailParticipant.academic_level}</span> (Class of {detailParticipant.graduation_year})
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-[#666666] border-b border-[#EFE8DC] pb-2">
-                  Registration Answers
+              {/* Registration Answers */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-[#6B6862] border-b border-[#EAE3D5] pb-2">
+                  Registration Questionnaire
                 </h4>
-                <div className="space-y-3 text-xs text-[#1A1A1A]">
+                <div className="space-y-3">
                   <div>
                     <div className="font-semibold text-[#1A1A1A]">Why do you want to attend GALA?</div>
-                    <div className="mt-1 bg-[#FAF7F2] p-3 rounded-xl border border-[#EFE8DC] text-[#666666] italic">"{detailParticipant.perspective_gala}"</div>
+                    <div className="mt-1 bg-[#FAF8F5] p-3 rounded-xl border border-[#EAE3D5] text-[#6B6862] italic">"{detailParticipant.perspective_gala}"</div>
                   </div>
                   <div>
                     <div className="font-semibold text-[#1A1A1A]">What are your plans next year?</div>
-                    <div className="mt-1 bg-[#FAF7F2] p-3 rounded-xl border border-[#EFE8DC] text-[#666666]">"{detailParticipant.plans_next_year}"</div>
+                    <div className="mt-1 bg-[#FAF8F5] p-3 rounded-xl border border-[#EAE3D5] text-[#6B6862]">"{detailParticipant.plans_next_year}"</div>
                   </div>
                   {detailParticipant.benefit_from_event && (
                     <div>
                       <div className="font-semibold text-[#1A1A1A]">How will you benefit from the event?</div>
-                      <div className="mt-1 bg-[#FAF7F2] p-3 rounded-xl border border-[#EFE8DC] text-[#666666] italic">"{detailParticipant.benefit_from_event}"</div>
+                      <div className="mt-1 bg-[#FAF8F5] p-3 rounded-xl border border-[#EAE3D5] text-[#6B6862] italic">"{detailParticipant.benefit_from_event}"</div>
                     </div>
                   )}
                 </div>
@@ -557,35 +579,30 @@ export default function ParticipantsPage() {
             </div>
 
             {/* Footer Action buttons */}
-            <div className="p-6 border-t border-[#EFE8DC] bg-[#FAF7F2] flex gap-3">
-              {detailParticipant.status === 'PENDING' && (
-                <>
-                  <button
-                    onClick={() => approveRejectMutation.mutate({ id: detailParticipant.id, action: 'approved' })}
-                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-[#2E5A36] text-white rounded-xl text-xs font-semibold hover:bg-emerald-800 transition-colors cursor-pointer"
-                  >
-                    <Check className="h-4 w-4" />
-                    <span>Approve</span>
-                  </button>
-                  <button
-                    onClick={() => setRejectingParticipantId(detailParticipant.id)}
-                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-[#8B2635] text-white rounded-xl text-xs font-semibold hover:bg-red-800 transition-colors cursor-pointer"
-                  >
-                    <X className="h-4 w-4" />
-                    <span>Reject</span>
-                  </button>
-                </>
-              )}
-              {detailParticipant.status === 'APPROVED' && (
-                <div className="text-xs text-[#2E5A36] font-semibold bg-[#EBF2EC] py-2 px-4 rounded-xl flex-1 text-center border border-[#D5E6D8]">
-                  Participant stands approved. Credentials setup email triggered.
-                </div>
-              )}
-              {detailParticipant.status === 'REJECTED' && (
-                <div className="text-xs text-[#8B2635] font-semibold bg-[#F9ECEF] py-2 px-4 rounded-xl flex-1 text-center border border-[#F1D2D6]">
-                  Participant was rejected. Reason: "{detailParticipant.rejection_reason || 'No reason provided'}"
-                </div>
-              )}
+            <div className="p-5 border-t border-[#EAE3D5] bg-[#FAF8F5] flex gap-3 shrink-0">
+              <button
+                onClick={() => approveRejectMutation.mutate({ id: detailParticipant.id, action: 'approved' })}
+                disabled={approveRejectMutation.isPending || detailParticipant.status === 'APPROVED'}
+                className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-[#2E5A36] text-white rounded-xl text-xs font-semibold hover:bg-emerald-800 disabled:opacity-40 transition-colors cursor-pointer"
+              >
+                <Check className="h-4 w-4" />
+                <span>Approve</span>
+              </button>
+              <button
+                onClick={() => setRejectingParticipantId(detailParticipant.id)}
+                disabled={approveRejectMutation.isPending || detailParticipant.status === 'REJECTED'}
+                className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-[#8B2635] text-white rounded-xl text-xs font-semibold hover:bg-red-800 disabled:opacity-40 transition-colors cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+                <span>Reject</span>
+              </button>
+              <button
+                onClick={() => approveRejectMutation.mutate({ id: detailParticipant.id, action: 'pending' })}
+                disabled={approveRejectMutation.isPending || detailParticipant.status === 'PENDING'}
+                className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-[#FAF8F5] text-[#8C6F45] border border-[#E5DAC6] rounded-xl text-xs font-semibold hover:bg-[#EFE6D5] disabled:opacity-40 transition-colors cursor-pointer"
+              >
+                <span>Set Pending</span>
+              </button>
             </div>
           </div>
         </div>
@@ -615,9 +632,9 @@ export default function ParticipantsPage() {
                 e.preventDefault();
                 addParticipantMutation.mutate(addForm);
               }}
-              className="p-6 space-y-4 flex-1"
+              className="p-4 sm:p-6 space-y-4 flex-1 text-xs"
             >
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[10px] uppercase tracking-wider text-[#666666] font-semibold mb-1">First Name</label>
                   <input
@@ -640,7 +657,7 @@ export default function ParticipantsPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[10px] uppercase tracking-wider text-[#666666] font-semibold mb-1">Email</label>
                   <input
@@ -663,7 +680,7 @@ export default function ParticipantsPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[10px] uppercase tracking-wider text-[#666666] font-semibold mb-1">Type</label>
                   <select
@@ -686,7 +703,7 @@ export default function ParticipantsPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 border-t border-[#EFE8DC] pt-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-[#EFE8DC] pt-4">
                 <div>
                   <label className="block text-[10px] uppercase tracking-wider text-[#666666] font-semibold mb-1">University</label>
                   <select
@@ -716,7 +733,7 @@ export default function ParticipantsPage() {
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[10px] uppercase tracking-wider text-[#666666] font-semibold mb-1">Study Stream</label>
                   <select
@@ -746,11 +763,11 @@ export default function ParticipantsPage() {
                 )}
               </div>
 
-              <div className="flex gap-4 border-t border-[#EAE3D5] pt-4">
+              <div className="flex flex-col sm:flex-row gap-3 border-t border-[#EAE3D5] pt-4">
                 <button
                   type="submit"
                   disabled={addParticipantMutation.isPending}
-                  className="flex-1 py-3.5 px-4 bg-[#ECE5F8] text-[#6E4FA0] border border-[#DDD0F3] hover:bg-[#DDD0F3] rounded-2xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer shadow-2xs"
+                  className="flex-1 py-3.5 px-4 bg-[#ECE5F8] text-[#6E4FA0] border border-[#DDD0F3] hover:bg-[#DDD0F3] rounded-2xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer shadow-2xs min-h-[44px]"
                 >
                   {addParticipantMutation.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                   <span>Register & Auto Approve</span>
@@ -758,7 +775,7 @@ export default function ParticipantsPage() {
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="px-5 py-3.5 bg-[#FAF8F5] hover:bg-[#ECE5F8] text-[#6E4FA0] border border-[#EAE3D5] rounded-2xl text-xs font-semibold transition-colors"
+                  className="px-5 py-3.5 bg-[#FAF8F5] hover:bg-[#ECE5F8] text-[#6E4FA0] border border-[#EAE3D5] rounded-2xl text-xs font-semibold transition-colors min-h-[44px]"
                 >
                   Cancel
                 </button>

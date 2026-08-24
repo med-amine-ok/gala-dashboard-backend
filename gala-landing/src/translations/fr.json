@@ -1,0 +1,280 @@
+{
+  "nav": {
+    "menu": [
+      { "label": "Accueil", "id": "home" },
+      { "label": "Historique", "id": "historique" },
+      { "label": "Cette année", "id": "cetteannee" },
+      { "label": "Agenda", "id": "agenda" },
+      { "label": "Tarif", "id": "tarification" },
+      { "label": "App", "id": "app" },
+      { "label": "À propos", "id": "apropos" },
+      { "label": "Contact", "id": "contact" }
+    ],
+    "register": "S'inscrire"
+  },
+  "accueil": {
+    "description": "Une soirée exceptionnelle pour célébrer l'excellence et l'innovation dans le domaine de l'ingénierie. Rejoignez-nous pour une journée inoubliable de networking, de divertissement et d'inspiration.",
+    "date": "08 Novembre 2025",
+    "place": "Hôtel Mercure",
+    "button": "S'inscrire maintenant",
+    "remaining": "Temps restant avant l'événement",
+    "countdown": ["Jours", "Heures", "Minutes", "Secondes"]
+  },
+  "pricing": {
+    "title": {
+      "part1": "Frais d’entrée",
+      "highlighted": "Unique"
+    },
+    "subtitle": "Accès réservé aux participants inscrits",
+    "description": "Une journée pour apprendre, échanger et s’inspirer. Votre ticket vous ouvre les portes du Engineers’ Gala : conférences, expositions, discussions et bien plus encore. Réservé exclusivement aux participants inscrits et confirmés..",
+    "ticketName": "Entrée Générale",
+    "note": "Un tarif unique pour vivre l’expérience VIC — conférences, stands et espaces d’échanges réservés aux participants confirmés."
+  },
+  "historique": {
+    "title": "Éditions précédentes",
+    "subtitle": "historique de Engineers' GALA",
+    "description": "Depuis sa première édition, Engineers' GALA s'est imposé comme un rendez-vous incontournable de l'ingénierie en Algérie. Chaque édition est marquée par des conférences de qualité, des invités prestigieux et une atmosphère unique d'innovation et de networking.",
+    "events": [
+      {
+        "year": "Édition 2017 – La Première",
+        "text": "La première édition en 2017 a marqué le début d’une tradition pour le Vision & Innovation Club, symbolisant la rencontre entre l’élégance, l’excellence et l’innovation.",
+        "img": "/images/lowla.png",
+        "reverse": false
+      },
+      {
+        "year": "Édition 2019 – Plus de succès",
+        "text": "L’édition 2019 a été un véritable succès, le Gala des Ingénieurs célébrant la réussite. Une soirée marquée par la créativité et le renforcement des liens entre générations.",
+        "img": "/images/deuxième.png",
+        "reverse": true
+      },
+      {
+        "year": "Édition 2024 – Dernière édition",
+        "text": "L’édition 2024 a réuni 40 invités, 176 participants, 60 membres de l’équipe organisatrice (OT) et 12 stands.",
+        "img": "/images/troisième.png",
+        "reverse": false
+      }
+    ]
+  },
+  "annee": {
+    "title": "Cette année",
+    "subtitle": "8ème édition",
+    "description": "Pour cette 8ème édition, nous visons à aller encore plus loin en proposant des espaces interactifs, des conférences enrichissantes et des opportunités inédites pour les étudiants et jeunes diplômés.",
+    "cards": [
+      {
+        "src": "/images/lema.svg",
+        "title": "Startup Pitch",
+        "text": "Une scène pour les étudiants et jeunes entrepreneurs afin de présenter leurs projets à un panel d’experts, suivie de discussions ouvertes et feedback constructif.",
+        "badge": "NOUVEAU!",
+        "delay": 0.05
+      },
+      {
+        "src": "/images/gpt.svg",
+        "title": "CV review corner",
+        "text": "Un espace dédié à l'analyse et au conseil sur les CV des étudiants, animé par des professionnels. Une surprise attendra nos invités le jour J.",
+        "badge": "NOUVEAU!",
+        "delay": 0.18
+      },
+      {
+        "src": "/images/host.svg",
+        "title": "TED-Style Talks",
+        "text": "Des interventions dynamiques de 15 à 20 minutes animées par des conférenciers et experts sur des thématiques variées liées à l'innovation, à la technologie et au développement personnel.",
+        "badge": "NOUVEAU!",
+        "delay": 0.31
+      }
+    ]
+  },
+  "agenda": {
+    "title": {
+      "part1": "Engineers' GALA ",
+      "highlighted": "Agenda officielle"
+    },
+    "footer": "Rejoignez-nous pour une journée mémorable d'innovation et de networking",
+    "items": [
+      { "id": 1, "time": "9:00-9:30", "title": "Check-in" },
+      { "id": 2, "time": "9:30-12:00", "title": "Stands et expositions" },
+      { "id": 3, "time": "13:00-13:30", "title": "Check-in 2" },
+      { "id": 4, "time": "13:30-14:00", "title": "Cérémonie d'ouverture" },
+      { "id": 5, "time": "14:00-14:30", "title": "1ère Conférence" },
+      { "id": 6, "time": "14:30-15:30", "title": "Table ronde interactive" },
+      { "id": 7, "time": "15:30-16:00", "title": "Pause café & Networking" },
+      { "id": 8, "time": "16:00-16:30", "title": "2ème Conférence" },
+      { "id": 9, "time": "16:30-17:30", "title": "Table ronde thématique" },
+      { "id": 10, "time": "17:30-18:00", "title": "Panel de discussion" },
+      { "id": 11, "time": "18:00-18:20", "title": "Cérémonie de clôture" }
+    ]
+  },
+  "apropos": {
+    "title": {
+      "part1": "À propos du",
+      "highlighted": "Vision & Innovation Club"
+    },
+    "description": "Créé en 2014 sous la tutelle de l'association « EL-MAARIFA », le Vision & Innovation Club (VIC) est un club scientifique actif à l'École Nationale Polytechnique d'Alger.",
+    "stats": {
+      "title": "Statistiques:",
+      "items": ["Événements majeurs", "Membres actifs", "Alumnis"]
+    },
+    "mission": {
+      "title": "Notre mission:",
+      "items": [
+        {
+          "icon": "/images/enrichir-icon.svg",
+          "text": "Enrichir les perspectives des étudiants"
+        },
+        {
+          "icon": "/images/ofrir-icon.svg",
+          "text": "Offrir une plateforme d'échange et d'interaction"
+        },
+        {
+          "icon": "/images/organiser-icon.svg",
+          "text": "Organiser compétitions, conférences, workshops et actions caritatives."
+        }
+      ]
+    }
+  },
+  "application": {
+    "title": {
+      "gradient": "Application officielle",
+      "black": "du GALA",
+      "gradient2": "GALA des Ingénieurs"
+    },
+    "downloadButton": "Télécharger l’application",
+    "subtitle": "Fonctionnalités",
+    "tutorial": "Tutoriel",
+    "experience": "L’expérience du GALA des Ingénieurs au bout des doigts",
+    "description": "L’application officielle du GALA vous accompagne tout au long de l’événement —",
+    "description2": "du réseautage avec les entreprises à la capture de vos meilleurs moments.",
+    "featuresTitle": "Fonctionnalités principales :",
+    "features": [
+      {
+        "title": "Capturez et partagez le GALA",
+        "description": "Prenez des photos, partagez vos moments et vivez l’expérience du GALA avec la communauté."
+      },
+      {
+        "title": "Découvrez des opportunités",
+        "description": "Déposez votre CV, explorez les entreprises participantes et entrez en contact avec les recruteurs."
+      },
+      {
+        "title": "Restez informé",
+        "description": "Consultez le programme, découvrez les intervenants et suivez toutes les actualités du GALA."
+      }
+    ]
+  },
+  "register": {
+    "register": {
+      "closed": {
+        "title": "Inscriptions fermées",
+        "message": "Nous vous remercions de votre intérêt, mais les inscriptions sont désormais fermées.",
+        "subtitle": "Restez à l'écoute pour notre prochain événement !"
+      }
+    },
+
+    "steps": {
+      "step1": {
+        "title": "Partie 01",
+        "subtitle": "Informations personnelles"
+      },
+      "step2": { "title": "Partie 02", "subtitle": "Vos plans et motivation" },
+      "step3": { "title": "Partie 03", "subtitle": "Votre vision du Gala" },
+      "step4": { "title": "Partie 04", "subtitle": "Confirmation" }
+    },
+    "fields": {
+      "firstName": "Prénom *",
+      "lastName": "Nom *",
+      "email": "Adresse e-mail *",
+      "phone": "Téléphone *",
+      "university": "Université *",
+      "universityOther": "Précisez votre université *",
+      "universities": {
+        "ENP": "ENP",
+        "ENSTA": "ENSTA",
+        "USTHB": "USTHB",
+        "ESAA": "ESAA",
+        "ENSTP": "ENSTP",
+        "OTHER": "Autre"
+      },
+      "fieldOfStudy": "Spécialité *",
+      "fieldOfStudyOther": "Précisez votre spécialité *",
+      "fieldOfStudies": {
+        "hydraulics": "Hydraulique",
+        "green_hydrogen": "Hydrogène vert",
+        "civil": "Génie civil",
+        "chemical": "Génie chimique",
+        "materials": "Génie des matériaux",
+        "mining": "Génie minier",
+        "industrial": "Génie industriel",
+        "mechanical": "Génie mécanique",
+        "automotive": "Génie automobile",
+        "environmental": "Génie environnemental",
+        "electrical": "Génie électrique",
+        "electronics": "Électronique",
+        "qhse": "QHSE (Qualité, Santé, Sécurité & Environnement)",
+        "automation": "Automatisation & Contrôle",
+        "datascience_ai": "Data Science & IA",
+        "OTHER": "Autre"
+      },
+      "academicLevel": "Niveau académique *",
+      "academicLevelOther": "Précisez votre niveau académique *",
+      "academicLevels": {
+        "bachelor": "Licence",
+        "master": "Master",
+        "engineering": "Diplôme d’ingénieur",
+        "phd": "Doctorat",
+        "pgs": "Études Postgraduées (PGS)",
+        "other": "Autre"
+      },
+      "currentYear": "Année d'étude *",
+      "graduationYear": "Année de diplomation *",
+      "graduationYearOther": "Précisez votre année de diplomation *",
+      "graduationYears": {
+        "2023": "2023",
+        "2024": "2024",
+        "2025": "2025",
+        "2026": "2026",
+        "2027": "2027",
+        "2028": "2028",
+        "OTHER": "Autre"
+      },
+      "plansNextYear": "Quels sont vos projets pour l'année à venir ? *",
+      "personalDescription": "Courte description personnelle / Motivation",
+      "perspectiveGala": "Que savez-vous du Engineers' Gala ? *",
+      "benefitFromEvent": "En quoi votre participation vous sera bénéfique ? *",
+      "attendedBefore": "Avez-vous déjà assisté à une édition précédente ? *",
+      "heardAbout": "Comment avez-vous entendu parler du Gala ? *",
+      "heardAboutOther": "Précisez comment *",
+      "heardAboutOptions": {
+        "Facebook": "Facebook",
+        "Instagram": "Instagram",
+        "throughAFriend": "Par un ami",
+        "LinkedIn": "LinkedIn",
+        "OTHER": "Autre"
+      },
+      "additionalComments": "Commentaires additionnels"
+    },
+    "options": { "yes": "Oui", "no": "Non" },
+    "buttons": {
+      "previous": "Précédent",
+      "next": "Suivant",
+      "submit": "Soumettre",
+      "submitting": "Soumission..."
+    },
+    "confirmation": {
+      "message": "Vérifiez vos informations avant de soumettre votre inscription."
+    },
+    "success": {
+      "title": "Inscription réussie !",
+      "message": "Merci pour votre participation à l'Engineers' Gala."
+    },
+    "errors": {
+      "submit": "Échec de l'inscription. Veuillez réessayer.",
+      "network": "Impossible de se connecter au serveur. Réessayez."
+    }
+  },
+  "footer": {
+    "description": "Engineer's Gala réunit chaque année les esprits les plus brillants pour célébrer la créativité, la technologie et l'entrepreneuriat.",
+    "quickLinks": "Liens rapides",
+    "contact": "Contact",
+    "address": "École Nationale Polytechnique d'Alger, Algérie",
+    "emailLabel": "Email :",
+    "copyright": "Engineer's Gala — Tous droits réservés."
+  }
+}

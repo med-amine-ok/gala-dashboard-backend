@@ -297,7 +297,7 @@ class TicketViewSet(viewsets.ModelViewSet):
             
             # Update payment status
             participant.payment_status = "paid"
-            participant.status = "approved"  # Ensure participant is approved
+            participant.status = Participant.Status.APPROVED  # Ensure participant is approved
             participant.save()  
             
             # Ensure user account exists and is active

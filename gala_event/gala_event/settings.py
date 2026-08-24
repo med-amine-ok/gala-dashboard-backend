@@ -93,13 +93,21 @@ MIDDLEWARE = [
 # CORS settings
 CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[
     "http://localhost:3000",
+    "http://localhost:3001",
+    "http://localhost:3002",
     "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001",
+    "http://127.0.0.1:3002",
+    "http://172.23.64.1:3000",
     "https://engineers-gala.vercel.app",
     "https://mellifluous-meerkat-6b4957.netlify.app",
     "https://gala-xady.vercel.app",
     "https://vitreous-sheree-devvv-team-7eaaa976.koyeb.app",
     "https://gala.vic-enp.com",
 ])
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^http://(localhost|127\.0\.0\.1)(:\d+)?$",
+]
 CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = "gala_event.urls"

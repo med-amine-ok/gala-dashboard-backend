@@ -382,29 +382,6 @@ export default function DashboardHome() {
     }
   };
 
-  const isLoading = overviewLoading && partStatsLoading;
-
-  if (isLoading) {
-    return (
-      <div className="space-y-8 animate-pulse p-2">
-        <div className="flex justify-between items-center">
-          <div className="h-10 w-64 bg-[#EFE8DC] rounded-2xl" />
-          <div className="h-10 w-44 bg-[#EFE8DC] rounded-full" />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-40 bg-white border border-[#EAE3D5] rounded-3xl p-6" />
-          ))}
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="h-80 bg-white border border-[#EAE3D5] rounded-3xl p-6" />
-          <div className="h-80 bg-white border border-[#EAE3D5] rounded-3xl p-6" />
-          <div className="h-80 bg-white border border-[#EAE3D5] rounded-3xl p-6" />
-        </div>
-      </div>
-    );
-  }
-
   // Extract variables with reliable fallbacks from real data
   const quickStats = overview?.quick_stats;
   const todayMetrics = overview?.today_metrics;
@@ -433,15 +410,32 @@ export default function DashboardHome() {
 
   // Build top company representations
   let topCompanies = companyStats?.top_companies_by_participants || [];
-  if (topCompanies.length === 0 && allCompanies.length > 0) {
-    topCompanies = allCompanies.map((c) => ({
-      id: c.id,
-      name: c.name,
-      field: c.field || 'Corporate Partner',
-      website: c.website || '',
-      participant_count: 0
+
+  const displayCompanies = React.useMemo(() => {
+    if (allCompanies.length > 0) {
+      return allCompanies.map((c) => {
+        const stat = topCompanies.find(
+          (tc) => tc.id === c.id || tc.name?.toLowerCase() === c.name?.toLowerCase()
+        );
+        return {
+          id: c.id,
+          name: c.name,
+          field: c.field || 'Corporate Partner',
+          website: c.website || '',
+          logo: c.logo || '',
+          participant_count: stat ? stat.participant_count : 0
+        };
+      });
+    }
+    return topCompanies.map((tc, idx) => ({
+      id: tc.id || idx,
+      name: tc.name,
+      field: tc.field || 'Corporate Partner',
+      website: tc.website || '',
+      logo: '',
+      participant_count: tc.participant_count || 0
     }));
-  }
+  }, [allCompanies, topCompanies]);
 
   // Agenda data consolidation (from statistics + agenda items list)
   const allAgenda = agendaItems || [];
@@ -487,6 +481,29 @@ export default function DashboardHome() {
   // Estimated Revenue Calculation
   const estimatedRevenue = paidParticipants * 190;
 
+  const isLoading = overviewLoading && partStatsLoading;
+
+  if (isLoading) {
+    return (
+      <div className="space-y-8 animate-pulse p-2">
+        <div className="flex justify-between items-center">
+          <div className="h-10 w-64 bg-[#EFE8DC] rounded-2xl" />
+          <div className="h-10 w-44 bg-[#EFE8DC] rounded-full" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-40 bg-white border border-[#EAE3D5] rounded-3xl p-6" />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="h-80 bg-white border border-[#EAE3D5] rounded-3xl p-6" />
+          <div className="h-80 bg-white border border-[#EAE3D5] rounded-3xl p-6" />
+          <div className="h-80 bg-white border border-[#EAE3D5] rounded-3xl p-6" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 text-[#1A1A1A]">
       {/* 1. Header & Live Telemetry Controls */}
@@ -506,20 +523,20 @@ export default function DashboardHome() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 w-full sm:w-auto">
           <button
             onClick={handleRefreshAll}
             disabled={isFetchingOverview}
             title="Refresh analytics data"
-            className="p-2.5 bg-white text-[#6B6862] hover:text-[#1A1A1A] border border-[#EAE3D5] hover:bg-[#F7F4EE] rounded-full text-xs font-semibold transition-all shadow-2xs cursor-pointer flex items-center gap-1.5"
+            className="flex-1 sm:flex-none px-3.5 py-2.5 bg-white text-[#6B6862] hover:text-[#1A1A1A] border border-[#EAE3D5] hover:bg-[#F7F4EE] rounded-full text-xs font-semibold transition-all shadow-2xs cursor-pointer flex items-center justify-center gap-1.5 min-h-[40px]"
           >
             <RefreshCw className={`h-4 w-4 ${isFetchingOverview ? 'animate-spin text-[#B8964A]' : ''}`} />
-            <span className="hidden md:inline">Sync Data</span>
+            <span>Sync Data</span>
           </button>
 
           <button
             onClick={handleExport}
-            className="px-4 py-2.5 bg-[#ECE5F8] text-[#6E4FA0] border border-[#DDD0F3] hover:bg-[#E0D5F3] rounded-full text-xs font-semibold transition-all shadow-2xs cursor-pointer flex items-center gap-2"
+            className="flex-1 sm:flex-none px-4 py-2.5 bg-[#ECE5F8] text-[#6E4FA0] border border-[#DDD0F3] hover:bg-[#E0D5F3] rounded-full text-xs font-semibold transition-all shadow-2xs cursor-pointer flex items-center justify-center gap-2 min-h-[40px]"
           >
             <FileSpreadsheet className="h-4 w-4" />
             <span>Export Analytics</span>
@@ -1058,7 +1075,7 @@ export default function DashboardHome() {
       {/* 5. CORPORATE DELEGATIONS & AGENDA SESSIONS BY CATEGORY */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Sponsoring Companies */}
-        <div className="bg-white rounded-3xl border border-[#EAE3D5] p-6 shadow-[0_4px_24px_-4px_rgba(26,26,26,0.02)] space-y-5">
+        <div className="bg-white rounded-3xl border border-[#EAE3D5] p-6 shadow-[0_4px_24px_-4px_rgba(26,26,26,0.02)] space-y-5 flex flex-col justify-between">
           <div className="flex items-center justify-between pb-3 border-b border-[#EAE3D5]/60">
             <div className="flex items-center gap-2">
               <div className="p-2 bg-[#FAF5EB] rounded-xl text-[#8C6F45]">
@@ -1079,54 +1096,97 @@ export default function DashboardHome() {
             </Link>
           </div>
 
-          {topCompanies.length === 0 ? (
-            <div className="py-10 text-center text-xs text-[#96928B]">
+          {displayCompanies.length === 0 ? (
+            <div className="py-12 text-center text-xs text-[#96928B]">
               No company records found in database.
             </div>
           ) : (
-            <div className="space-y-3.5 pt-1">
-              {topCompanies.slice(0, 5).map((comp, idx) => {
-                const maxCount = Math.max(...topCompanies.map((c) => c.participant_count), 1);
-                const hasParticipants = comp.participant_count > 0;
-                const barWidth = hasParticipants ? Math.round((comp.participant_count / maxCount) * 100) : 100;
+            <div className="max-h-[220px] overflow-y-auto pr-1">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {displayCompanies.map((comp, idx) => {
+                  const websiteUrl = comp.website
+                    ? (comp.website.startsWith('http') ? comp.website : `https://${comp.website}`)
+                    : null;
 
-                return (
-                  <div key={idx} className="space-y-1.5 p-3 rounded-2xl bg-[#FAF8F5]/70 border border-[#EAE3D5]/70 hover:border-[#C5A880]/50 transition-all">
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-[#1A1A1A]">{comp.name}</span>
-                        {comp.field && (
-                          <span className="text-[10px] px-2 py-0.5 bg-white border border-[#EAE3D5] rounded-full text-[#6B6862] font-medium">
-                            {comp.field}
+                  return websiteUrl ? (
+                    <a
+                      key={comp.id || idx}
+                      href={websiteUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="aspect-square flex flex-col items-center justify-center p-3 rounded-2xl hover:border-[#C5A880] hover:bg-[#FAF5EB]/50 hover:shadow-xs transition-all group relative text-center"
+                      title={`Visit ${comp.name} website (${websiteUrl})`}
+                    >
+                      {/* Logo Picture */}
+                      <div className="relative flex items-center justify-center">
+                        {comp.logo ? (
+                          <img
+                            src={comp.logo}
+                            alt={comp.name}
+                            className="h-16 w-16 rounded-xl object-contain bg-white p-1.5 shadow-2xs group-hover:scale-105 transition-transform"
+                          />
+                        ) : (
+                          <div className="h-12 w-12 rounded-xl bg-[#ECE5F8] border border-[#DDD0F3] flex items-center justify-center text-[#6E4FA0] shadow-2xs group-hover:scale-105 transition-transform">
+                            <Building2 className="h-6 w-6" />
+                          </div>
+                        )}
+                        {comp.participant_count > 0 && (
+                          <span className="absolute -top-1 -right-1 px-1.5 py-0.2 rounded-full bg-[#1A1A1A] text-white text-[9px] font-mono font-bold shadow-xs">
+                            {comp.participant_count}
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-2">
-                        {comp.website && (
-                          <a
-                            href={comp.website.startsWith('http') ? comp.website : `https://${comp.website}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[#8C6F45] hover:text-[#B8964A]"
-                            title="Visit website"
-                          >
-                            <Globe className="h-3.5 w-3.5" />
-                          </a>
+
+                      {/* Company Name */}
+                      <span className="font-serif font-semibold text-xs text-[#1A1A1A] text-center line-clamp-1 mt-2 group-hover:text-[#8C6F45] transition-colors w-full px-1">
+                        {comp.name}
+                      </span>
+
+                      {/* Subtitle / Field */}
+                      <span className="text-[10px] text-[#8C827A] truncate max-w-full px-1">
+                        {comp.field || 'Partner'}
+                      </span>
+                    </a>
+                  ) : (
+                    <Link
+                      key={comp.id || idx}
+                      href="/dashboard/companies"
+                      className="aspect-square flex flex-col items-center justify-center p-3 rounded-2xl hover:border-[#C5A880] hover:bg-[#FAF5EB]/50 hover:shadow-xs transition-all group relative text-center"
+                      title={`${comp.name} (View in Companies)`}
+                    >
+                      {/* Logo Picture */}
+                      <div className="relative flex items-center justify-center">
+                        {comp.logo ? (
+                          <img
+                            src={comp.logo}
+                            alt={comp.name}
+                            className="h-16 w-16 rounded-xl object-contain bg-white p-1.5 shadow-2xs group-hover:scale-105 transition-transform"
+                          />
+                        ) : (
+                          <div className="h-12 w-12 rounded-xl bg-[#ECE5F8] border border-[#DDD0F3] flex items-center justify-center text-[#6E4FA0] shadow-2xs group-hover:scale-105 transition-transform">
+                            <Building2 className="h-6 w-6" />
+                          </div>
                         )}
-                        <span className="font-mono text-xs font-bold text-[#8C6F45]">
-                          {hasParticipants ? `${comp.participant_count} delegates` : 'Partner Active'}
-                        </span>
+                        {comp.participant_count > 0 && (
+                          <span className="absolute -top-1 -right-1 px-1.5 py-0.2 rounded-full bg-[#1A1A1A] text-white text-[9px] font-mono font-bold shadow-xs">
+                            {comp.participant_count}
+                          </span>
+                        )}
                       </div>
-                    </div>
-                    <div className="w-full bg-[#F3EFE6] h-2 rounded-full overflow-hidden">
-                      <div
-                        className="bg-[#C5A880] h-full rounded-full transition-all duration-700 ease-out"
-                        style={{ width: `${hasParticipants ? barWidth : 100}%` }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
+
+                      {/* Company Name */}
+                      <span className="font-serif font-semibold text-xs text-[#1A1A1A] text-center line-clamp-1 mt-2 group-hover:text-[#8C6F45] transition-colors w-full px-1">
+                        {comp.name}
+                      </span>
+
+                      {/* Subtitle / Field */}
+                      <span className="text-[10px] text-[#8C827A] truncate max-w-full px-1">
+                        {comp.field || 'Partner'}
+                      </span>
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
           )}
 
@@ -1247,7 +1307,7 @@ export default function DashboardHome() {
               No recent activity captured yet.
             </div>
           ) : (
-            <div className="divide-y divide-[#EAE3D5]/50">
+            <div className="divide-y divide-[#EAE3D5]/50 max-h-[255px] overflow-y-auto pr-1">
               {activities.map((act, index) => {
                 const timeAgo = new Date(act.timestamp).toLocaleDateString([], {
                   month: 'short',
