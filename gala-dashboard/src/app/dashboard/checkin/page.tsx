@@ -122,9 +122,7 @@ export default function CheckInLiveAdmissions() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-[#EAE3D5]/60">
         <div className="space-y-1">
           <div className="flex items-center gap-2 mb-2">
-            <span className="px-3 py-1 rounded-full bg-[#1A1A1A] text-[#FAF7F2] text-[10px] font-semibold tracking-widest uppercase shadow-2xs">
-              Live Gate Admissions
-            </span>
+            
             <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EBF2EC] text-[#2E5A36] border border-[#D5E6D8] text-[10px] font-semibold">
               <span className="relative flex h-2 w-2">
                 {isLivePolling && (
