@@ -91,7 +91,7 @@ MIDDLEWARE = [
 ]
 
 # CORS settings
-CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[
+raw_cors = env.list('CORS_ALLOWED_ORIGINS', default=[
     "http://localhost:3000",
     "http://localhost:3001",
     "http://localhost:3002",
@@ -105,6 +105,8 @@ CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[
     "https://vitreous-sheree-devvv-team-7eaaa976.koyeb.app",
     "https://gala.vic-enp.com",
 ])
+# Strip any trailing slashes or whitespace so Django CORS check never fails
+CORS_ALLOWED_ORIGINS = [origin.strip().rstrip('/') for origin in raw_cors if origin.strip()]
 CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^http://(localhost|127\.0\.0\.1)(:\d+)?$",
 ]
@@ -181,7 +183,8 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+STATIC_DIR = os.path.join(BASE_DIR, 'static')
+STATICFILES_DIRS = [STATIC_DIR] if os.path.exists(STATIC_DIR) else []
 
 # Media files
 MEDIA_URL = '/media/'
