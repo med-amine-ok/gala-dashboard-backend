@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient, { Ticket, Participant } from '@/lib/apiClient';
+import QRCodeDisplay from '@/components/QRCodeDisplay';
 import {
   Search,
   Plus,
@@ -12,10 +13,14 @@ import {
   Ticket as TicketIcon,
   CheckCircle2,
   AlertCircle,
-  FileSpreadsheet,
-  QrCode,
+  Clock,
+  Eye,
+  UserCheck,
+  UserPlus,
   ArrowRight,
-  UserPlus
+  Sparkles,
+  ShieldCheck,
+  QrCode
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -23,11 +28,12 @@ export default function TicketsPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [activeTab, setActiveTab] = useState<'all' | 'scanned' | 'assigned' | 'unassigned'>('all');
   
   // Modals state
   const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
-  const [activeTicketQR, setActiveTicketQR] = useState<Ticket | null>(null);
+  const [selectedTicketDetail, setSelectedTicketDetail] = useState<Ticket | null>(null);
 
   // Form states
   const [generateCount, setGenerateCount] = useState(10);
@@ -65,7 +71,32 @@ export default function TicketsPage() {
     return participantsData?.results?.filter(p => !p.ticket_serial_number) || [];
   }, [participantsData]);
 
+  const allTickets = ticketsData?.results || [];
   const unassignedTickets = unassignedData?.tickets || [];
+
+  // Ticket stats calculations
+  const totalTicketsCount = allTickets.length;
+  const assignedTicketsCount = allTickets.filter(t => t.participant).length;
+  const scannedTicketsCount = allTickets.filter(t => t.status === 'checked_in' || t.checked_in_at).length;
+  const unassignedCount = unassignedTickets.length;
+  const pendingCandidatesCount = candidateParticipants.length;
+  const scanRate = assignedTicketsCount > 0 ? Math.round((scannedTicketsCount / assignedTicketsCount) * 100) : 0;
+
+  // Filtered tickets based on active tab & search
+  const displayedTickets = React.useMemo(() => {
+    return allTickets.filter(ticket => {
+      if (activeTab === 'scanned') {
+        return ticket.status === 'checked_in' || Boolean(ticket.checked_in_at);
+      }
+      if (activeTab === 'assigned') {
+        return Boolean(ticket.participant) && ticket.status !== 'checked_in';
+      }
+      if (activeTab === 'unassigned') {
+        return !ticket.participant;
+      }
+      return true;
+    });
+  }, [allTickets, activeTab]);
 
   const invalidateQueries = () => {
     queryClient.invalidateQueries({ queryKey: ['tickets'] });
@@ -125,28 +156,29 @@ export default function TicketsPage() {
   return (
     <div className="space-y-8 text-[#1A1A1A]">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-[#EAE3D5]/60">
         <div className="space-y-1">
           <div className="flex items-center gap-2 mb-2">
             <span className="px-3 py-1 rounded-full bg-[#1A1A1A] text-[#FAF7F2] text-[10px] font-semibold tracking-widest uppercase shadow-2xs">
-              Ticketing
+              Ticketing & Telemetry
             </span>
-            <span className="px-3 py-1 rounded-full bg-[#F4EFFF] text-[#7A5F9E] border border-[#DDD0F3] text-[10px] font-semibold tracking-wider">
-              {ticketsData?.results?.length || 0} Pool Total
+            <span className="px-3 py-1 rounded-full bg-[#EBF2EC] text-[#2E5A36] border border-[#D5E6D8] text-[10px] font-semibold tracking-wider flex items-center gap-1">
+              <CheckCircle2 className="h-3 w-3 text-[#2E5A36]" />
+              {scannedTicketsCount} Scanned at Gates
             </span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-serif font-semibold text-[#1A1A1A] tracking-tight">
-            Ticket Management
+            Ticket Data & Scanned Passes
           </h1>
           <p className="text-xs text-[#666666] font-sans font-normal tracking-wide">
-            Generate ticket serial pools, issue delegate barcodes, and track gate admissions.
+            Live overview of issued tickets, gate scan timestamps, and assigned attendee profiles.
           </p>
         </div>
         
         <div className="flex flex-wrap sm:flex-nowrap gap-3 items-center w-full sm:w-auto">
           <button
             onClick={() => setIsGenerateModalOpen(true)}
-            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#FAF8F5] border border-[#EAE3D5] text-[#6E4FA0] hover:bg-[#ECE5F8] hover:border-[#DDD0F3] rounded-2xl text-xs font-semibold transition-all cursor-pointer shadow-2xs min-h-[44px]"
+            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#FAF8F5] border border-[#EAE3D5] text-[#6E4FA0] hover:bg-[#ECE5F8] hover:border-[#DDD0F3] rounded-2xl text-xs font-semibold transition-all cursor-pointer shadow-2xs min-h-[42px]"
           >
             <Plus className="h-4 w-4 text-[#6E4FA0]" />
             <span>Generate Pool</span>
@@ -154,7 +186,7 @@ export default function TicketsPage() {
 
           <button
             onClick={() => setIsAssignModalOpen(true)}
-            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#ECE5F8] text-[#6E4FA0] border border-[#DDD0F3] hover:bg-[#DDD0F3] rounded-2xl text-xs font-semibold transition-all shadow-2xs cursor-pointer min-h-[44px]"
+            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#ECE5F8] text-[#6E4FA0] border border-[#DDD0F3] hover:bg-[#DDD0F3] rounded-2xl text-xs font-semibold transition-all shadow-2xs cursor-pointer min-h-[42px]"
           >
             <UserPlus className="h-4 w-4" />
             <span>Assign Ticket</span>
@@ -162,136 +194,391 @@ export default function TicketsPage() {
         </div>
       </div>
 
-      {/* Stats row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 bg-white p-5 sm:p-6 border border-[#EAE3D5] rounded-3xl shadow-[0_4px_24px_-4px_rgba(26,26,26,0.02)]">
-        <div className="text-center border-b sm:border-b-0 sm:border-r border-[#EAE3D5] pb-4 sm:pb-0">
-          <span className="text-[10px] text-[#6B6862] font-semibold uppercase tracking-widest block">Issued Tickets</span>
-          <span className="text-2xl font-serif font-semibold text-[#1A1A1A] mt-1.5 block">
-            {ticketsData?.results?.filter(t => t.participant).length || 0}
-          </span>
+      {/* 4-Stat Overview Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        {/* Card 1: Total Ticket Pool */}
+        <div className="bg-white p-5 rounded-3xl border border-[#EAE3D5] shadow-[0_4px_24px_-4px_rgba(26,26,26,0.02)] flex flex-col justify-between hover:border-[#C5A880]/60 transition-all">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-[#6B6862] font-semibold flex items-center gap-1.5">
+              <TicketIcon className="h-3.5 w-3.5 text-[#8C6F45]" />
+              Total Ticket Pool
+            </span>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FAF8F5] text-[#8C6F45] border border-[#EAE3D5] font-semibold">
+              Pool
+            </span>
+          </div>
+          <div className="mt-3">
+            <span className="text-3xl font-serif font-bold text-[#1A1A1A] block">
+              {totalTicketsCount}
+            </span>
+            <p className="text-[11px] text-[#8C8C8C] mt-1 font-mono">
+              {unassignedCount} unassigned in pool
+            </p>
+          </div>
         </div>
-        <div className="text-center border-b sm:border-b-0 sm:border-r border-[#EAE3D5] pb-4 sm:pb-0">
-          <span className="text-[10px] text-[#6B6862] font-semibold uppercase tracking-widest block">Unassigned Pool</span>
-          <span className="text-2xl font-serif font-semibold text-[#8C6F45] mt-1.5 block">
-            {unassignedTickets.length}
-          </span>
+
+        {/* Card 2: Assigned Tickets */}
+        <div className="bg-white p-5 rounded-3xl border border-[#EAE3D5] shadow-[0_4px_24px_-4px_rgba(26,26,26,0.02)] flex flex-col justify-between hover:border-[#C5A880]/60 transition-all">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-[#6B6862] font-semibold flex items-center gap-1.5">
+              <UserCheck className="h-3.5 w-3.5 text-[#6E4FA0]" />
+              Assigned Passes
+            </span>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#ECE5F8] text-[#6E4FA0] border border-[#DDD0F3] font-semibold">
+              Delegates
+            </span>
+          </div>
+          <div className="mt-3">
+            <span className="text-3xl font-serif font-bold text-[#1A1A1A] block">
+              {assignedTicketsCount}
+            </span>
+            <p className="text-[11px] text-[#8C8C8C] mt-1">
+              Issued to verified attendees
+            </p>
+          </div>
         </div>
-        <div className="text-center pt-1 sm:pt-0">
-          <span className="text-[10px] text-[#6B6862] font-semibold uppercase tracking-widest block">Candidates Pending Ticket</span>
-          <span className="text-2xl font-serif font-semibold text-[#6E4FA0] mt-1.5 block">
-            {candidateParticipants.length}
-          </span>
+
+        {/* Card 3: Scanned / Checked In */}
+        <div className="bg-white p-5 rounded-3xl border border-[#EAE3D5] shadow-[0_4px_24px_-4px_rgba(26,26,26,0.02)] flex flex-col justify-between hover:border-[#2E5A36]/60 transition-all bg-gradient-to-br from-white to-[#F2F7F3]/30">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-[#2E5A36] font-semibold flex items-center gap-1.5">
+              <CheckCircle2 className="h-3.5 w-3.5 text-[#2E5A36]" />
+              Scanned / Checked In
+            </span>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#EBF2EC] text-[#2E5A36] border border-[#D5E6D8] font-semibold">
+              {scanRate}% Turnout
+            </span>
+          </div>
+          <div className="mt-3">
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-serif font-bold text-[#2E5A36]">
+                {scannedTicketsCount}
+              </span>
+              <span className="text-xs text-[#6B6862] font-sans font-medium">
+                / {assignedTicketsCount} assigned
+              </span>
+            </div>
+            <p className="text-[11px] text-[#2E5A36]/80 mt-1 font-medium">
+              Admitted through gate scanners
+            </p>
+          </div>
+        </div>
+
+        {/* Card 4: Pending Candidates */}
+        <div className="bg-white p-5 rounded-3xl border border-[#EAE3D5] shadow-[0_4px_24px_-4px_rgba(26,26,26,0.02)] flex flex-col justify-between hover:border-[#C5A880]/60 transition-all">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-[#6B6862] font-semibold flex items-center gap-1.5">
+              <Clock className="h-3.5 w-3.5 text-[#8C6F45]" />
+              Awaiting Assignment
+            </span>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FAF8F5] text-[#8C6F45] border border-[#EAE3D5] font-semibold">
+              Action
+            </span>
+          </div>
+          <div className="mt-3">
+            <span className="text-3xl font-serif font-bold text-[#1A1A1A] block">
+              {pendingCandidatesCount}
+            </span>
+            <p className="text-[11px] text-[#8C8C8C] mt-1">
+              Registered candidates without ticket
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white p-4 sm:p-5 rounded-3xl border border-[#EAE3D5] shadow-[0_4px_24px_-4px_rgba(26,26,26,0.02)] flex flex-col md:flex-row gap-3 sm:gap-4 items-center justify-between">
-        <div className="relative w-full md:w-80">
-          <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-[#96928B]" />
-          <input
-            type="text"
-            placeholder="Search serial, email, name..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-[#FAF8F5] border border-[#EAE3D5] rounded-2xl text-xs placeholder-[#96928B] text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2]"
-          />
+      {/* Quick View Tabs & Filter Bar */}
+      <div className="space-y-4">
+        <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
+          {/* Status Tabs */}
+          <div className="flex bg-white p-1 rounded-2xl border border-[#EAE3D5] shadow-2xs overflow-x-auto">
+            <button
+              onClick={() => setActiveTab('all')}
+              className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                activeTab === 'all'
+                  ? 'bg-[#1A1A1A] text-[#FAF7F2] shadow-xs'
+                  : 'text-[#6B6862] hover:text-[#1A1A1A] hover:bg-[#FAF8F5]'
+              }`}
+            >
+              All Passes ({totalTicketsCount})
+            </button>
+            <button
+              onClick={() => setActiveTab('scanned')}
+              className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
+                activeTab === 'scanned'
+                  ? 'bg-[#2E5A36] text-white shadow-xs'
+                  : 'text-[#6B6862] hover:text-[#1A1A1A] hover:bg-[#FAF8F5]'
+              }`}
+            >
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              <span>Scanned ({scannedTicketsCount})</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('assigned')}
+              className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
+                activeTab === 'assigned'
+                  ? 'bg-[#6E4FA0] text-white shadow-xs'
+                  : 'text-[#6B6862] hover:text-[#1A1A1A] hover:bg-[#FAF8F5]'
+              }`}
+            >
+              <UserCheck className="h-3.5 w-3.5" />
+              <span>Assigned ({assignedTicketsCount - scannedTicketsCount})</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('unassigned')}
+              className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                activeTab === 'unassigned'
+                  ? 'bg-[#8C6F45] text-white shadow-xs'
+                  : 'text-[#6B6862] hover:text-[#1A1A1A] hover:bg-[#FAF8F5]'
+              }`}
+            >
+              Unassigned Pool ({unassignedCount})
+            </button>
+          </div>
+
+          {/* Search bar */}
+          <div className="relative w-full md:w-80">
+            <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-[#96928B]" />
+            <input
+              type="text"
+              placeholder="Search serial, participant, email..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#EAE3D5] rounded-2xl text-xs placeholder-[#96928B] text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2] shadow-2xs"
+            />
+          </div>
         </div>
 
-        <div className="w-full md:w-auto">
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full md:w-auto px-4 py-3 bg-[#FAF8F5] border border-[#EAE3D5] rounded-2xl text-xs font-medium text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2]"
-          >
-            <option value="">All Ticket Statuses</option>
-            <option value="active">Active</option>
-            <option value="assigned">Assigned</option>
-            <option value="checked_in">Checked In</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Tickets List */}
-      <div className="bg-white rounded-3xl border border-[#EAE3D5] overflow-hidden shadow-[0_4px_24px_-4px_rgba(26,26,26,0.02)]">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-[#EAE3D5] bg-[#FAF8F5] text-[10px] font-semibold uppercase tracking-wider text-[#6B6862]">
-                <th className="p-4 px-6">Ticket Serial</th>
-                <th className="p-4 px-6">Assigned Participant</th>
-                <th className="p-4 px-6">Issued At</th>
-                <th className="p-4 px-6">Check-In Datetime</th>
-                <th className="p-4 px-6">Status</th>
-                <th className="p-4 px-6 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#FAF8F5]">
-              {isLoading ? (
-                [...Array(5)].map((_, i) => (
-                  <tr key={i} className="animate-pulse">
-                    <td colSpan={6} className="p-4 px-6 h-12 bg-[#FAF7F2]/50" />
-                  </tr>
-                ))
-              ) : !ticketsData?.results?.length ? (
-                <tr>
-                  <td colSpan={6} className="p-12 text-center text-[#8C8C8C]">
-                    No tickets found.
-                  </td>
+        {/* Tickets List Table */}
+        <div className="bg-white rounded-3xl border border-[#EAE3D5] overflow-hidden shadow-[0_4px_24px_-4px_rgba(26,26,26,0.02)]">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="border-b border-[#EAE3D5] bg-[#FAF8F5] text-[10px] font-semibold uppercase tracking-wider text-[#6B6862]">
+                  <th className="p-4 px-6">Ticket Serial</th>
+                  <th className="p-4 px-6">Assigned Attendee</th>
+                  <th className="p-4 px-6">Gate Admission / Scan</th>
+                  <th className="p-4 px-6">Issued Date</th>
+                  <th className="p-4 px-6">Status</th>
+                  <th className="p-4 px-6 text-right">Details</th>
                 </tr>
-              ) : (
-                ticketsData.results.map((t) => (
-                  <tr key={t.id} className="hover:bg-[#F4EFFF]/40 transition-colors">
-                    <td className="p-4 px-6 font-semibold font-mono text-[#1A1A1A]">{t.serial_number}</td>
-                    <td className="p-4 px-6">
-                      {t.participant_name ? (
-                        <div>
-                          <div className="font-semibold text-[#1A1A1A]">{t.participant_name}</div>
-                          <div className="text-[10px] text-[#8C8C8C] mt-0.5">{t.participant_email}</div>
-                        </div>
-                      ) : (
-                        <span className="text-[#8C8C8C] italic">Unassigned (Pool)</span>
-                      )}
-                    </td>
-                    <td className="p-4 px-6 text-[#666666]">{new Date(t.issued_at || t.created_at).toLocaleDateString()}</td>
-                    <td className="p-4 px-6 text-[#666666]">
-                      {t.checked_in_at ? new Date(t.checked_in_at).toLocaleString() : '-'}
-                    </td>
-                    <td className="p-4 px-6">
-                      <span className={`inline-flex px-2.5 py-0.5 rounded-full text-[9px] font-semibold leading-4 tracking-wider uppercase ${
-                        t.status === 'checked_in' ? 'bg-[#EBF2EC] text-[#2E5A36] border border-[#D5E6D8]' :
-                        t.status === 'cancelled' ? 'bg-[#F9ECEF] text-[#8B2635] border border-[#F2C2CB]' : 'bg-[#F7F1E6] text-[#8C6F45] border border-[#E5DAC6]'
-                      }`}>
-                        {t.status.replace('_', ' ')}
-                      </span>
-                    </td>
-                    <td className="p-4 px-6 text-right space-x-2">
-                      {t.participant && (
-                        <button
-                          onClick={() => setActiveTicketQR(t)}
-                          className="p-1.5 hover:bg-[#FAF7F2] rounded-xl hover:text-[#C5A880] text-[#8C8C8C] transition-colors cursor-pointer inline-block"
-                          title="View Barcode / Ticket Badge"
-                        >
-                          <QrCode className="h-4.5 w-4.5" />
-                        </button>
-                      )}
-                      {t.status !== 'cancelled' && (
-                        <button
-                          onClick={() => { if (confirm('Cancel this ticket?')) cancelTicketMutation.mutate(t.id); }}
-                          className="p-1.5 hover:bg-[#F9ECEF] rounded-xl hover:text-[#8B2635] text-[#8C8C8C] transition-colors cursor-pointer inline-block"
-                          title="Cancel ticket"
-                        >
-                          <Trash2 className="h-4.5 w-4.5" />
-                        </button>
-                      )}
+              </thead>
+              <tbody className="divide-y divide-[#FAF8F5]">
+                {isLoading ? (
+                  [...Array(5)].map((_, i) => (
+                    <tr key={i} className="animate-pulse">
+                      <td colSpan={6} className="p-4 px-6 h-12 bg-[#FAF7F2]/50" />
+                    </tr>
+                  ))
+                ) : displayedTickets.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="p-12 text-center text-[#8C8C8C]">
+                      <TicketIcon className="h-8 w-8 mx-auto mb-2 text-[#C5A880] opacity-40" />
+                      <p className="font-medium text-xs">No tickets match the selected criteria.</p>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  displayedTickets.map((t) => {
+                    const isScanned = t.status === 'checked_in' || Boolean(t.checked_in_at);
+
+                    return (
+                      <tr key={t.id} className="hover:bg-[#F4EFFF]/30 transition-colors">
+                        <td className="p-4 px-6 font-semibold font-mono text-[#1A1A1A]">
+                          <span className="px-2.5 py-1 bg-[#FAF8F5] border border-[#EAE3D5] rounded-xl text-xs font-mono tracking-wider">
+                            {t.serial_number}
+                          </span>
+                        </td>
+                        <td className="p-4 px-6">
+                          {t.participant_name ? (
+                            <div>
+                              <div className="font-semibold text-[#1A1A1A] flex items-center gap-1.5">
+                                <span>{t.participant_name}</span>
+                              </div>
+                              <div className="text-[10px] text-[#8C8C8C] mt-0.5">{t.participant_email}</div>
+                            </div>
+                          ) : (
+                            <span className="text-[11px] text-[#8C8C8C] italic">Unassigned Pool Pass</span>
+                          )}
+                        </td>
+                        <td className="p-4 px-6">
+                          {isScanned ? (
+                            <div className="space-y-1">
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-semibold bg-[#EBF2EC] text-[#2E5A36] border border-[#D5E6D8]">
+                                <CheckCircle2 className="h-3 w-3 text-[#2E5A36]" />
+                                <span>SCANNED & ADMITTED</span>
+                              </span>
+                              {t.checked_in_at && (
+                                <div className="text-[10px] text-[#666666] font-mono flex items-center gap-1">
+                                  <Clock className="h-2.5 w-2.5 text-[#8C8C8C]" />
+                                  <span>{new Date(t.checked_in_at).toLocaleString()}</span>
+                                </div>
+                              )}
+                            </div>
+                          ) : t.participant ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-semibold bg-[#FFF8E6] text-[#8C6F45] border border-[#F4DCAC]">
+                              <Clock className="h-3 w-3 text-[#8C6F45]" />
+                              <span>Awaiting Gate Check-In</span>
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-[#A0A0A0] font-mono">-</span>
+                          )}
+                        </td>
+                        <td className="p-4 px-6 text-[#666666]">
+                          {t.issued_at || t.created_at ? new Date(t.issued_at || t.created_at).toLocaleDateString() : '-'}
+                        </td>
+                        <td className="p-4 px-6">
+                          <span className={`inline-flex px-2.5 py-0.5 rounded-full text-[9px] font-semibold leading-4 tracking-wider uppercase ${
+                            isScanned ? 'bg-[#EBF2EC] text-[#2E5A36] border border-[#D5E6D8]' :
+                            t.status === 'cancelled' ? 'bg-[#F9ECEF] text-[#8B2635] border border-[#F2C2CB]' :
+                            t.participant ? 'bg-[#ECE5F8] text-[#6E4FA0] border border-[#DDD0F3]' :
+                            'bg-[#F7F1E6] text-[#8C6F45] border border-[#E5DAC6]'
+                          }`}>
+                            {isScanned ? 'CHECKED IN' : t.status.replace('_', ' ')}
+                          </span>
+                        </td>
+                        <td className="p-4 px-6 text-right space-x-1.5">
+                          <button
+                            onClick={() => setSelectedTicketDetail(t)}
+                            className="p-1.5 hover:bg-[#ECE5F8] rounded-xl hover:text-[#6E4FA0] text-[#8C8C8C] transition-colors cursor-pointer inline-block"
+                            title="View Ticket QR Code & Attendee Details"
+                          >
+                            <QrCode className="h-4 w-4 text-[#6E4FA0]" />
+                          </button>
+                          <button
+                            onClick={() => setSelectedTicketDetail(t)}
+                            className="p-1.5 hover:bg-[#FAF8F5] rounded-xl hover:text-[#1A1A1A] text-[#8C8C8C] transition-colors cursor-pointer inline-block"
+                            title="View Full Pass Details"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                          {t.status !== 'cancelled' && (
+                            <button
+                              onClick={() => { if (confirm('Cancel this ticket pass?')) cancelTicketMutation.mutate(t.id); }}
+                              className="p-1.5 hover:bg-[#F9ECEF] rounded-xl hover:text-[#8B2635] text-[#8C8C8C] transition-colors cursor-pointer inline-block"
+                              title="Cancel ticket"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
+
+      {/* Ticket & Attendee Details Modal */}
+      {selectedTicketDetail && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl shadow-2xl overflow-hidden max-w-md w-full animate-fade-in border border-[#EAE3D5] max-h-[90vh] overflow-y-auto">
+            <div className="p-6 bg-[#FAF8F5] border-b border-[#EAE3D5] flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-2xl bg-[#ECE5F8] border border-[#DDD0F3] flex items-center justify-center text-[#6E4FA0] shadow-2xs">
+                  <TicketIcon className="h-5 w-5" />
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase tracking-wider text-[#8C6F45] font-semibold block">Pass & QR Code</span>
+                  <h3 className="font-serif text-sm font-bold text-[#1A1A1A] font-mono">{selectedTicketDetail.serial_number}</h3>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedTicketDetail(null)}
+                className="p-1.5 rounded-xl hover:bg-white text-gray-400 hover:text-gray-700 transition-colors cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-5 text-xs">
+              {/* QR Code Presentation */}
+              <div className="p-5 bg-[#FAF8F5] rounded-3xl border border-[#EAE3D5] text-center">
+                <QRCodeDisplay
+                  value={selectedTicketDetail.serial_number}
+                  size={160}
+                  label={`SERIAL: ${selectedTicketDetail.serial_number}`}
+                  showActions={true}
+                />
+              </div>
+
+              {/* Scan Status Banner */}
+              <div className={`p-4 rounded-2xl border flex items-center justify-between ${
+                selectedTicketDetail.status === 'checked_in' || selectedTicketDetail.checked_in_at
+                  ? 'bg-[#EBF2EC] border-[#D5E6D8] text-[#2E5A36]'
+                  : 'bg-[#FFF8E6] border-[#F4DCAC] text-[#8C6F45]'
+              }`}>
+                <div className="flex items-center gap-2">
+                  {selectedTicketDetail.status === 'checked_in' || selectedTicketDetail.checked_in_at ? (
+                    <CheckCircle2 className="h-5 w-5 text-[#2E5A36] shrink-0" />
+                  ) : (
+                    <Clock className="h-5 w-5 text-[#8C6F45] shrink-0" />
+                  )}
+                  <div>
+                    <h4 className="font-bold text-xs">
+                      {selectedTicketDetail.status === 'checked_in' || selectedTicketDetail.checked_in_at
+                        ? 'Scanned & Admitted at Gate'
+                        : 'Awaiting Gate Scanner Check-In'}
+                    </h4>
+                    <p className="text-[10px] opacity-80 mt-0.5">
+                      {selectedTicketDetail.checked_in_at
+                        ? `Validated on ${new Date(selectedTicketDetail.checked_in_at).toLocaleString()}`
+                        : 'Attendee has not scanned QR code at terminal yet'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Attendee Profile Info */}
+              <div className="p-4 bg-[#FAF8F5] rounded-2xl border border-[#EAE3D5] space-y-2">
+                <span className="text-[10px] text-[#8C6F45] uppercase tracking-wider font-semibold block">
+                  Assigned Attendee
+                </span>
+                {selectedTicketDetail.participant_name ? (
+                  <div className="space-y-1">
+                    <div className="font-semibold text-sm text-[#1A1A1A]">
+                      {selectedTicketDetail.participant_name}
+                    </div>
+                    <div className="text-xs text-[#666666] font-mono">
+                      {selectedTicketDetail.participant_email}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-xs text-[#8C8C8C] italic">
+                    Unassigned Ticket in Pool.
+                  </div>
+                )}
+              </div>
+
+              {/* Technical Timestamps */}
+              <div className="grid grid-cols-2 gap-3 text-[11px]">
+                <div className="p-3 bg-[#FAF8F5] rounded-xl border border-[#EAE3D5]">
+                  <span className="text-[10px] text-[#8C8C8C] uppercase font-semibold block">Issued Date</span>
+                  <span className="font-semibold text-[#1A1A1A] mt-0.5 block">
+                    {selectedTicketDetail.issued_at ? new Date(selectedTicketDetail.issued_at).toLocaleDateString() : 'N/A'}
+                  </span>
+                </div>
+                <div className="p-3 bg-[#FAF8F5] rounded-xl border border-[#EAE3D5]">
+                  <span className="text-[10px] text-[#8C8C8C] uppercase font-semibold block">Pass Status</span>
+                  <span className="font-semibold text-[#1A1A1A] mt-0.5 block uppercase">
+                    {selectedTicketDetail.status}
+                  </span>
+                </div>
+              </div>
+
+              <div className="pt-1">
+                <button
+                  onClick={() => setSelectedTicketDetail(null)}
+                  className="w-full py-3 bg-[#FAF8F5] hover:bg-[#ECE5F8] text-[#6E4FA0] border border-[#EAE3D5] rounded-2xl font-semibold transition-colors cursor-pointer text-xs"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Generate Unassigned Tickets Modal */}
       {isGenerateModalOpen && (
@@ -463,66 +750,6 @@ export default function TicketsPage() {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* Ticket QR / Badge Viewer */}
-      {activeTicketQR && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl shadow-2xl overflow-hidden max-w-sm w-full animate-fade-in border border-[#EAE3D5]">
-            {/* Elegant Ticket Background */}
-            <div className="p-6 bg-[#171717] text-white text-center space-y-4 relative border-b border-[#262626]">
-              <div className="absolute top-3 right-3 text-[#C5A880] font-serif text-[10px] tracking-widest font-semibold">
-                GALA 2026
-              </div>
-              <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-[#DFC598]/20 to-[#C8B6E2]/20 border border-[#C5A880]/30 flex items-center justify-center mx-auto mt-2">
-                <TicketIcon className="h-6 w-6 text-[#C5A880]" />
-              </div>
-              <div>
-                <h3 className="font-serif text-lg tracking-wider font-medium text-[#FAF7F2]">ADMIT ONE</h3>
-                <p className="text-[10px] text-[#C5A880] tracking-widest uppercase font-semibold mt-1">Gala Event Access</p>
-              </div>
-            </div>
-
-            {/* Ticket Details */}
-            <div className="p-6 space-y-6 text-center">
-              <div>
-                <span className="text-[10px] text-[#666666] font-semibold uppercase tracking-wider block">Attendee</span>
-                <span className="font-serif text-lg font-semibold text-[#1A1A1A] mt-1 block">{activeTicketQR.participant_name}</span>
-                <span className="text-[10px] text-[#8C8C8C] block mt-0.5">{activeTicketQR.participant_email}</span>
-              </div>
-
-              {/* Barcode Mockup */}
-              <div className="py-4 px-6 bg-[#FAF8F5] border border-[#EAE3D5] rounded-2xl space-y-2 inline-block mx-auto">
-                {/* Barcode lines */}
-                <div className="flex items-center justify-center h-12 w-48 gap-0.5 overflow-hidden">
-                  {[...Array(24)].map((_, i) => (
-                    <div 
-                      key={i} 
-                      className="bg-[#1A1A1A] h-full shrink-0" 
-                      style={{ width: `${(i % 3 === 0 ? 3 : i % 2 === 0 ? 1.5 : 0.5) * 2}px` }} 
-                    />
-                  ))}
-                </div>
-                <span className="font-mono text-xs tracking-widest text-[#1A1A1A] font-semibold block">{activeTicketQR.serial_number}</span>
-              </div>
-
-              <div className="flex gap-3 text-xs justify-center pt-2">
-                <button
-                  onClick={() => {
-                    toast.success('Ticket layout code generated for print.');
-                    setActiveTicketQR(null);
-                  }}
-                  className="px-5 py-3 bg-[#ECE5F8] text-[#6E4FA0] border border-[#DDD0F3] hover:bg-[#DDD0F3] rounded-2xl font-semibold transition-colors cursor-pointer shadow-2xs"
-                >
-                  Print Ticket
-                </button>
-                <button onClick={() => setActiveTicketQR(null)} className="px-5 py-3 bg-[#FAF8F5] hover:bg-[#ECE5F8] text-[#6E4FA0] border border-[#EAE3D5] rounded-2xl font-semibold">
-                  Close
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       )}
