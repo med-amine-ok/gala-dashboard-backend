@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../app_colors.dart';
 
 // ---------------- Models ----------------
@@ -105,13 +106,17 @@ class GuestPage extends ConsumerWidget {
       backgroundColor: AppColors.bg,
       appBar: AppBar(
         backgroundColor: AppColors.bg,
-        title: const Text(
-          "Guests",
-          style: TextStyle(
-            color: AppColors.white,
+        title: Text(
+          "Distinguished Guests",
+          style: GoogleFonts.cinzel(
+            color: AppColors.textPrimary,
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: AppColors.textPrimary),
+          onPressed: () => Navigator.maybePop(context),
         ),
       ),
       body: Column(
@@ -122,27 +127,33 @@ class GuestPage extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
               child: Row(
                 children: [
                   // "All" chip
                   Padding(
                     padding: const EdgeInsets.only(right: 8),
-                    child: ChoiceChip(
-                      label: const Text("All"),
-                      selected: selectedMajor == null,
-                      onSelected:
-                          (_) =>
-                              ref.read(selectedMajorProvider.notifier).state =
-                                  null,
-                      selectedColor: AppColors.accent,
-                      backgroundColor: AppColors.surface,
-                      labelStyle: TextStyle(
-                        color:
-                            selectedMajor == null
-                                ? AppColors.bg
-                                : AppColors.textPrimary,
-                        fontWeight: FontWeight.bold,
+                    child: FilterChip(
+                      label: Text(
+                        "All Guests",
+                        style: GoogleFonts.plusJakartaSans(
+                          color: selectedMajor == null ? AppColors.charcoalDark : AppColors.textSecondary,
+                          fontWeight: selectedMajor == null ? FontWeight.w700 : FontWeight.w500,
+                          fontSize: 12.5,
+                        ),
                       ),
+                      selected: selectedMajor == null,
+                      onSelected: (_) => ref.read(selectedMajorProvider.notifier).state = null,
+                      selectedColor: AppColors.goldLight,
+                      backgroundColor: AppColors.surface,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(
+                          color: selectedMajor == null ? AppColors.goldPrimary : AppColors.border,
+                          width: 1,
+                        ),
+                      ),
+                      showCheckmark: false,
                     ),
                   ),
                   // Major chips
@@ -151,20 +162,28 @@ class GuestPage extends ConsumerWidget {
                     final isSelected = selectedMajor == major;
                     return Padding(
                       padding: const EdgeInsets.only(right: 8),
-                      child: ChoiceChip(
-                        label: Text(fullName),
-                        selected: isSelected,
-                        onSelected:
-                            (_) =>
-                                ref.read(selectedMajorProvider.notifier).state =
-                                    isSelected ? null : major,
-                        selectedColor: AppColors.accent,
-                        backgroundColor: AppColors.surface,
-                        labelStyle: TextStyle(
-                          color:
-                              isSelected ? AppColors.bg : AppColors.textPrimary,
-                          fontWeight: FontWeight.bold,
+                      child: FilterChip(
+                        label: Text(
+                          fullName,
+                          style: GoogleFonts.plusJakartaSans(
+                            color: isSelected ? AppColors.charcoalDark : AppColors.textSecondary,
+                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                            fontSize: 12.5,
+                          ),
                         ),
+                        selected: isSelected,
+                        onSelected: (_) =>
+                            ref.read(selectedMajorProvider.notifier).state = isSelected ? null : major,
+                        selectedColor: AppColors.goldLight,
+                        backgroundColor: AppColors.surface,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(
+                            color: isSelected ? AppColors.goldPrimary : AppColors.border,
+                            width: 1,
+                          ),
+                        ),
+                        showCheckmark: false,
                       ),
                     );
                   }),
@@ -178,12 +197,13 @@ class GuestPage extends ConsumerWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: GridView.builder(
+                physics: const BouncingScrollPhysics(),
                 itemCount: filteredGuests.length,
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 3,
-                  mainAxisSpacing: 16,
-                  crossAxisSpacing: 16,
-                  childAspectRatio: 0.65,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 0.72,
                 ),
                 itemBuilder: (context, index) {
                   final guest = filteredGuests[index];
@@ -205,60 +225,83 @@ class _GuestCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final initials =
-        guest.name
-            .trim()
-            .split(' ')
-            .map((e) => e[0])
-            .take(2)
-            .join()
-            .toUpperCase();
+    final initials = guest.name
+        .trim()
+        .split(' ')
+        .where((e) => e.isNotEmpty)
+        .map((e) => e[0])
+        .take(2)
+        .join()
+        .toUpperCase();
 
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border, width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.4),
-            blurRadius: 6,
+            color: AppColors.charcoal.withOpacity(0.03),
+            blurRadius: 10,
             offset: const Offset(0, 3),
           ),
         ],
       ),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(10),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircleAvatar(
-            radius: 28,
-            backgroundColor: AppColors.accent,
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              gradient: AppColors.goldGradient,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.goldPrimary.withOpacity(0.25),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            alignment: Alignment.center,
             child: Text(
               initials,
-              style: const TextStyle(
-                color: AppColors.bg,
-                fontSize: 16,
+              style: GoogleFonts.cinzel(
+                color: AppColors.charcoalDark,
+                fontSize: 15,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           Text(
             guest.name,
-            style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 6),
-          Text(
-            majorFullName[guest.major] ?? guest.major,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 12,
+            style: GoogleFonts.plusJakartaSans(
+              color: AppColors.textPrimary,
+              fontSize: 12.5,
+              fontWeight: FontWeight.w600,
             ),
             textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 3),
+          Text(
+            majorFullName[guest.major] ?? guest.major,
+            style: GoogleFonts.plusJakartaSans(
+              color: AppColors.goldDark,
+              fontSize: 10.5,
+              fontWeight: FontWeight.w500,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
     );
   }
 }
+

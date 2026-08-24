@@ -55,9 +55,8 @@ abstract class ApiService {
 
 // Concrete implementation
 class ApiServiceImpl implements ApiService {
-  // static const String baseUrl = 'http://localhost:8000/api';
   static const String baseUrl =
-      'https://common-vicky-dev-teaaam-26351298.koyeb.app/api'; // Use your base URL
+      'https://gala-dashboard-backend.onrender.com/api'; // Deployed Render base URL
   final Dio dio;
 
   ApiServiceImpl({Dio? dioClient})

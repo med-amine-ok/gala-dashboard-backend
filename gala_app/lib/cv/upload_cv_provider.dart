@@ -9,6 +9,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../agenda/agenda_provider.dart';
 import '../core/supabase_provider.dart';
+import '../core/user_provider.dart';
 import '../profile/profile_screen.dart';
 
 class CvUploadNotifier extends AutoDisposeAsyncNotifier<String?> {
@@ -20,7 +21,9 @@ class CvUploadNotifier extends AutoDisposeAsyncNotifier<String?> {
 
   Future<String?> getCv(Ref ref) async {
     try {
-      final userId = ref.read(profileInformationProvider).value!.id;
+      final user = ref.read(userProvider.notifier).user;
+      final profileVal = ref.read(profileInformationProvider).value;
+      final userId = user.id.isNotEmpty ? user.id : (profileVal?.id ?? '1');
       final supabase = ref.read(supabaseClientProvider);
       final filePath = 'cv/$userId.pdf';
 
@@ -81,12 +84,16 @@ class CvUploadNotifier extends AutoDisposeAsyncNotifier<String?> {
         return;
       }
 
+      final user = ref.read(userProvider.notifier).user;
+      final profileVal = ref.read(profileInformationProvider).value;
+      final userId = user.id.isNotEmpty ? user.id : (profileVal?.id ?? '1');
+
       await ref
           .read(eventRepoProvider)
           .uploadCV(
             selectedFile,
             ref.read(supabaseClientProvider),
-            ref.read(profileInformationProvider).value!.id,
+            userId,
           );
 
       // After upload, update the URL in state
@@ -95,7 +102,7 @@ class CvUploadNotifier extends AutoDisposeAsyncNotifier<String?> {
           .storage
           .from('photos')
           .getPublicUrl(
-            'cv/${ref.read(profileInformationProvider).value!.id}.pdf',
+            'cv/$userId.pdf',
           );
 
       state = AsyncData(urlResponse);

@@ -12,7 +12,6 @@ import 'cv/company_cv_screen.dart';
 import 'cv/upload_cv_screen.dart';
 import 'home/guest_page.dart';
 import 'home/home_page.dart';
-import 'photos/capture_the_gala.dart';
 import 'profile/about_gala.dart';
 import 'profile/gallery_screen.dart';
 import 'profile/personal_information.dart';
@@ -67,12 +66,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             name: 'guests',
             path: '/guests',
             builder: (context, state) => const GuestPage(),
-          ),
-
-          GoRoute(
-            name: 'capture-the-gala',
-            path: '/capture-the-gala',
-            builder: (context, state) => const CaptureTheGalaScreen(),
           ),
           GoRoute(
             name: 'agenda',

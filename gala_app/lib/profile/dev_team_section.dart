@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../app_colors.dart';
 
 class DevTeamSection extends StatefulWidget {
   const DevTeamSection({super.key});
@@ -14,63 +16,117 @@ class _DevTeamSectionState extends State<DevTeamSection>
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ListTile(
-          leading: const Icon(Icons.developer_mode, color: Color(0xFFD9B453)),
-          title: const Text(
-            'Development Team',
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 18,
-              color: Color(0xFFE8E0C8),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.charcoal.withOpacity(0.02),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
-          ),
-          trailing: Icon(
-            _expanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-            color: const Color(0xFFE8E0C8),
-          ),
-          onTap: () {
-            setState(() {
-              _expanded = !_expanded;
-            });
-          },
+          ],
         ),
-        AnimatedSize(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-          child:
-              _expanded
-                  ? Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () {
+                setState(() {
+                  _expanded = !_expanded;
+                });
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: AppColors.goldLight,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.goldPrimary.withOpacity(0.4)),
+                      ),
+                      child: const Icon(
+                        Icons.code_rounded,
+                        color: AppColors.goldDark,
+                        size: 20,
+                      ),
                     ),
-                    child: Column(
-                      children: const [
-                        TeamMemberCard(
-                          name: 'Abdallah Mohellebi',
-                          role: 'Mobile Developer',
-                          imageUrl:
-                              'assets/logos/6f923dee-35d6-4136-b55f-5c9aab544529.jpeg',
-                          email: 'abdallah.mohellebi@g.enp.edu.dz',
-                          link: 'https://abdallah-mohellebi.netlify.app',
-                        ),
-                        SizedBox(height: 12),
-                        TeamMemberCard(
-                          name: 'Mohamed Amine Ouldkhaoua',
-                          role: 'Backend Developer',
-                          imageUrl: 'assets/logos/IMG_1804_result.jpg',
-                          email: 'mohamed_amine.oulkhaoua@g.enp.edu.dz',
-                          link: 'https://med-amine-portfolio.vercel.app',
-                        ),
-                      ],
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Engineering & Core Team',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14.5,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Meet the Gala application architects',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 11.5,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  )
-                  : const SizedBox.shrink(),
+                    Icon(
+                      _expanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                      color: AppColors.textSubtle,
+                      size: 20,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            AnimatedSize(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              child:
+                  _expanded
+                      ? Padding(
+                        padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+                        child: Column(
+                          children: const [
+                            Divider(color: AppColors.divider, height: 16),
+                            SizedBox(height: 6),
+                            TeamMemberCard(
+                              name: 'Abdallah Mohellebi',
+                              role: 'Mobile Lead & Flutter Architect',
+                              imageUrl:
+                                  'assets/logos/6f923dee-35d6-4136-b55f-5c9aab544529.jpeg',
+                              email: 'abdallah.mohellebi@g.enp.edu.dz',
+                              link: 'https://abdallah-mohellebi.netlify.app',
+                            ),
+                            SizedBox(height: 10),
+                            TeamMemberCard(
+                              name: 'Mohamed Amine Ouldkhaoua',
+                              role: 'Backend & Cloud Systems Engineer',
+                              imageUrl: 'assets/logos/IMG_1804_result.jpg',
+                              email: 'mohamed_amine.oulkhaoua@g.enp.edu.dz',
+                              link: 'https://med-amine-portfolio.vercel.app',
+                            ),
+                          ],
+                        ),
+                      )
+                      : const SizedBox.shrink(),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
@@ -105,73 +161,85 @@ class TeamMemberCard extends StatelessWidget {
 
     return InkWell(
       borderRadius: BorderRadius.circular(14),
-      onTap:
-          link != null
-              ? () => _launchLink(link!)
-              : null, // Whole card clickable
-      child: Card(
-        color: const Color(0xFF0A2C24),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        elevation: 4,
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 28,
-                backgroundImage:
-                    hasImage
-                        ? (isNetworkImage
-                            ? NetworkImage(imageUrl)
-                            : AssetImage(imageUrl) as ImageProvider)
-                        : null,
-                backgroundColor: const Color(0xFFD9B453).withOpacity(0.2),
-                child:
-                    !hasImage
-                        ? const Icon(
-                          Icons.person,
-                          color: Color(0xFFD9B453),
-                          size: 28,
-                        )
-                        : null,
+      onTap: link != null ? () => _launchLink(link!) : null,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceMuted,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 24,
+              backgroundImage:
+                  hasImage
+                      ? (isNetworkImage
+                          ? NetworkImage(imageUrl)
+                          : AssetImage(imageUrl) as ImageProvider)
+                      : null,
+              backgroundColor: AppColors.goldLight,
+              child:
+                  !hasImage
+                      ? const Icon(
+                        Icons.person,
+                        color: AppColors.goldDark,
+                        size: 24,
+                      )
+                      : null,
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: GoogleFonts.cinzel(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14.5,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    role,
+                    style: GoogleFonts.plusJakartaSans(
+                      color: AppColors.goldDark,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    email,
+                    style: GoogleFonts.plusJakartaSans(
+                      color: AppColors.textSecondary,
+                      fontSize: 11.5,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Color(0xFFE8E0C8),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      role,
-                      style: const TextStyle(
-                        color: Color(0xFFD9B453),
-                        fontSize: 13,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      email,
-                      style: TextStyle(
-                        color: const Color(0xFFE8E0C8).withOpacity(0.7),
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
+            ),
+            if (link != null)
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: AppColors.goldLight,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.open_in_new_rounded,
+                  color: AppColors.goldDark,
+                  size: 16,
                 ),
               ),
-              const Icon(Icons.link, color: Color(0xFFD9B453), size: 22),
-            ],
-          ),
+          ],
         ),
       ),
     );
   }
 }
+

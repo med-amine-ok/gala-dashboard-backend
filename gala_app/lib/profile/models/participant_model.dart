@@ -20,16 +20,34 @@ class Participant {
   });
 
   factory Participant.fromJson(Map<String, dynamic> json) {
+    String? ticketSerial;
+    final ticketObj = json['ticket'];
+    if (ticketObj != null) {
+      if (ticketObj is Map) {
+        ticketSerial = ticketObj['serial_number']?.toString();
+      } else if (ticketObj is String) {
+        ticketSerial = ticketObj;
+      }
+    }
+
+    final userData = json['user'] is Map ? json['user'] as Map : null;
+
+    final fName = (json['first_name'] ?? userData?['first_name'] ?? '').toString();
+    final lName = (json['last_name'] ?? userData?['last_name'] ?? '').toString();
+    final mail = (json['email'] ?? userData?['email'] ?? '').toString();
+    final phoneNum = (json['phone'] ?? '').toString();
+    final uni = (json['university'] ?? json['university_other'] ?? 'ENP Algiers').toString();
+    final field = (json['field_of_study'] ?? json['field_of_study_other'] ?? 'Engineering').toString();
+
     return Participant(
-      id: json['id'].toString(),
-      email: json['email'] ?? '',
-      phone: json['phone'] ?? '',
-      fieldOfStudy: json['field_of_study'] ?? '',
-      university: json['university'] ?? '',
-      ticketSerialNumber:
-          json['ticket']?['serial_number'] ?? 'No Ticket Assigned',
-      firstName: json['first_name'] ?? '',
-      lastName: json['last_name'] ?? '',
+      id: (json['id'] ?? '0').toString(),
+      email: mail,
+      phone: phoneNum,
+      fieldOfStudy: field.isNotEmpty ? field : 'Engineering',
+      university: uni.isNotEmpty ? uni : 'ENP Algiers',
+      ticketSerialNumber: (ticketSerial != null && ticketSerial.isNotEmpty) ? ticketSerial : 'No Ticket Assigned',
+      firstName: fName,
+      lastName: lName,
     );
   }
 

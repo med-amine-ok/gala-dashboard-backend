@@ -4,6 +4,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app_colors.dart';
@@ -66,10 +67,11 @@ class GalaApp extends ConsumerWidget {
                   color: AppColors.bg,
                   child: Center(
                     child: Text(
-                      'Please use a phone to view Gala app!',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        color: AppColors.white,
+                      'Please use a mobile device to experience the Gala App.',
+                      style: GoogleFonts.cinzel(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   ),

@@ -56,23 +56,24 @@ class ServerFailure extends Failure {
     if (statusCode == 400 || statusCode == 401 || statusCode == 403) {
       if (response is Map) {
         log('Error response: $response');
-        // DRF-style non_field_errors
-        if (response.containsKey('non_field_errors')) {
+        if (response['error'] != null) {
+          return ServerFailure(response['error'].toString());
+        }
+        if (response['detail'] != null) {
+          return ServerFailure(response['detail'].toString());
+        }
+        if (response['message'] != null) {
+          return ServerFailure(response['message'].toString());
+        }
+        if (response['non_field_errors'] != null) {
           final errors = response['non_field_errors'];
           if (errors is List && errors.isNotEmpty) {
-            return ServerFailure(errors[0].toString());
+            return ServerFailure(errors.join(', '));
           }
+          return ServerFailure(errors.toString());
         }
       }
-      // Defensive parsing: try to extract meaningful message
-      final message =
-          response is Map<String, dynamic>
-              ? (response['error'] ??
-                  response['non_field_errors'].join('') ??
-                  response['message'] ??
-                  'Unauthorized request')
-              : 'Unauthorized request';
-      return ServerFailure(message);
+      return const ServerFailure('Unauthorized request');
     } else if (statusCode == 404) {
       return const ServerFailure('Your request not found, Please try later!');
     } else if (statusCode == 500) {

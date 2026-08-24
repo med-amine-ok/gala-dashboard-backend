@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -21,43 +22,52 @@ class FileUploadSection extends ConsumerWidget {
     final uploadState = ref.watch(cvUploadProvider);
     final notifier = ref.read(cvUploadProvider.notifier);
 
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: uploadState.when(
-        data: (cvUrl) {
-          log(cvUrl ?? 'No CV URL found');
-          if (cvUrl == null) {
-            return UploadCard(notifier: notifier, isLoading: false);
-          } else {
-            return FileTileUrl(
-              url: cvUrl,
-              notifier: notifier,
-              isLoading: false,
-            );
-          }
-        },
-        loading:
-            () => const Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
+    return uploadState.when(
+      data: (cvUrl) {
+        log(cvUrl ?? 'No CV URL found');
+        if (cvUrl == null) {
+          return UploadCard(notifier: notifier, isLoading: false);
+        } else {
+          return FileTileUrl(
+            url: cvUrl,
+            notifier: notifier,
+            isLoading: false,
+          );
+        }
+      },
+      loading:
+          () => const Padding(
+            padding: EdgeInsets.all(32.0),
+            child: Center(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.goldPrimary),
+                ),
               ),
             ),
-        error:
-            (err, stack) => Column(
-              children: [
-                UploadCard(notifier: notifier, isLoading: false),
-                const SizedBox(height: 16),
-                Text(
+          ),
+      error:
+          (err, stack) => Column(
+            children: [
+              UploadCard(notifier: notifier, isLoading: false),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: Text(
                   err.toString(),
-                  style: const TextStyle(color: Colors.redAccent, fontSize: 14),
+                  style: GoogleFonts.plusJakartaSans(color: AppColors.error, fontSize: 13),
                   textAlign: TextAlign.center,
                 ),
-              ],
-            ),
-      ),
+              ),
+            ],
+          ),
     );
   }
 }
+
 
 // --- File Tile Widget ---
 
