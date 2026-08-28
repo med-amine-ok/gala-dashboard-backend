@@ -1,260 +1,221 @@
 "use client";
-import Image from "next/image";
-import { motion } from "framer-motion";
-import { useLanguage } from "../../context/LanguageContext";
+
 import { useState } from "react";
+import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
+import { QrCode, Calendar, Briefcase, Camera, ArrowUpRight } from "lucide-react";
+import { useLanguage } from "../../context/LanguageContext";
 
-export default function App() {
+export default function AppSection() {
   const { texts } = useLanguage();
-  const [activeTab, setActiveTab] = useState("features");
+  const [activeTab, setActiveTab] = useState<number>(0);
 
-  const features = texts.application?.features || [
+  const tabs = [
     {
-      title: "Agenda détaillé en temps réel",
-      description: "Accédez instantanément à l'agenda et aux activités",
+      id: "pass",
+      title: texts.app?.tabs?.[0]?.title || "Digital Invitation Pass",
+      desc:
+        texts.app?.tabs?.[0]?.desc ||
+        "Encrypted dynamic QR code for instant, seamless five-star check-in at the ballroom entrance.",
+      icon: QrCode,
+      screenHighlight: "PASS N° 2026-VIP-001 · CONFIRMED",
     },
     {
-      title: "Carte interactive",
-      description:
-        "Localisez les stands et zones clés sur la carte interactive",
+      id: "agenda",
+      title: texts.app?.tabs?.[1]?.title || "Live Interactive Agenda",
+      desc:
+        texts.app?.tabs?.[1]?.desc ||
+        "Real-time notifications for keynotes, speaker changes, and personalized roundtable schedules.",
+      icon: Calendar,
+      screenHighlight: "09:30 AM · KEYNOTE: INDUSTRIAL AI",
     },
     {
-      title: "Messagerie interne pour échanger avec les participants",
-      description:
-        "Participez aux discussions et panels directement depuis l'application",
+      id: "companies",
+      title: texts.app?.tabs?.[2]?.title || "Enterprise Matchmaking",
+      desc:
+        texts.app?.tabs?.[2]?.desc ||
+        "Explore corporate profiles, view job opportunities, and share your vetted CV with recruiters in one tap.",
+      icon: Briefcase,
+      screenHighlight: "32 MULTINATIONALS · 1-TAP CV DROP",
     },
     {
-      title: "Accès à du contenu exclusif",
-      description: "Recevez des notifications et mises à jour en temps réel",
+      id: "capture",
+      title: texts.app?.tabs?.[3]?.title || "Capture & Gallery",
+      desc:
+        texts.app?.tabs?.[3]?.desc ||
+        "Upload and discover high-resolution moments from the official event photographers in real time.",
+      icon: Camera,
+      screenHighlight: "OFFICIAL 4K GALA PHOTOGRAPHY",
     },
   ];
-
-  const tutorialSteps = texts.application?.tutorialSteps || [
-    "Téléchargez l'application depuis le lien officiel",
-    "Installez-la facilement sur votre smartphone",
-    "Connectez-vous ou créez votre compte",
-  ];
-
-  const fadeUp = {
-    hidden: { opacity: 0, y: 40 },
-    visible: { opacity: 1, y: 0 },
-  };
 
   return (
-    <main className="min-h-screen py-16 px-4 bg-[#F7F4EE] font-sans">
-      <div className="max-w-6xl mx-auto">
-        {/* Titre principal */}
-        <motion.div
-          className="text-center sm:text-6xl text-4xl font-serif font-bold mb-8 border-b border-[#EAE3D5] pb-4"
-          variants={fadeUp}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-        >
-          <span className="bg-gradient-to-r from-[#C5A880] via-[#DFC598] to-[#8C6F45] bg-clip-text text-transparent">
-            {texts.application?.title?.gradient || "Application officielle"}
+    <section
+      id="app"
+      className="relative min-h-screen w-full bg-[#F5F1E8] text-[#1E1E1E] flex flex-col justify-center py-24 sm:py-36 px-6 sm:px-12 overflow-hidden border-t border-[#E5DAC6]/60 font-sans"
+    >
+      {/* Soft Lavender Ambient Back-Light */}
+      <div className="absolute top-[20%] left-[50%] -translate-x-1/2 w-[700px] h-[700px] rounded-full bg-[radial-gradient(circle,#ECE5F8_0%,transparent_70%)] opacity-50 blur-3xl pointer-events-none" />
+
+      <div className="max-w-7xl w-full mx-auto">
+        {/* Section Header */}
+        <div className="text-center max-w-3xl mx-auto mb-16 sm:mb-20">
+          <span className="text-xs font-semibold uppercase tracking-[0.28em] text-[#B89A5E] block mb-4">
+            {texts.app?.label || "THE GALA COMPANION"}
           </span>
-          <span className="text-[#1A1A1A] ml-2 font-serif">
-            {texts.application?.title?.black || "du GALA"}
-          </span>
-        </motion.div>
+          <h2 className="font-cinzel text-4xl sm:text-6xl font-light text-[#1E1E1E] leading-tight mb-4 whitespace-pre-line">
+            {texts.app?.headline || "Everything,\nin your pocket."}
+          </h2>
+          <p className="text-base sm:text-lg text-[#6B665E] font-light leading-relaxed">
+            {texts.app?.description ||
+              "Your personal companion and digital concierge throughout the GALA experience."}
+          </p>
+        </div>
 
-        {/* Boutons sous le grand titre */}
-        <motion.div
-          variants={fadeUp}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          transition={{ delay: 0.2 }}
-          className="flex justify-center gap-4 mb-12"
-        >
-          <button
-            onClick={() => setActiveTab("features")}
-            className={`px-8 py-3 rounded-full text-sm font-semibold uppercase tracking-wider transition-all duration-300 cursor-pointer ${
-              activeTab === "features"
-                ? "bg-[#1A1A1A] text-[#F7F4EE] shadow-md"
-                : "bg-[#EAE3D5]/60 text-[#6B6862] hover:bg-[#EAE3D5] hover:text-[#1A1A1A]"
-            }`}
-          >
-            {texts.application?.featuresTab || "Fonctionnalités"}
-          </button>
-          <button
-            onClick={() => setActiveTab("tutorial")}
-            className={`px-8 py-3 rounded-full text-sm font-semibold uppercase tracking-wider transition-all duration-300 cursor-pointer ${
-              activeTab === "tutorial"
-                ? "bg-[#1A1A1A] text-[#F7F4EE] shadow-md"
-                : "bg-[#EAE3D5]/60 text-[#6B6862] hover:bg-[#EAE3D5] hover:text-[#1A1A1A]"
-            }`}
-          >
-            {texts.application?.tutorialTab || "Tutorielle"}
-          </button>
-        </motion.div>
+        {/* 3D Smartphone & Features Presentation */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+          {/* Left Column: Interactive Feature Selection */}
+          <div className="lg:col-span-6 space-y-4">
+            {tabs.map((tab, idx) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === idx;
 
-        <div className="flex flex-col lg:flex-row gap-12 items-start">
-          {/* Colonne gauche - Texte fixe */}
-          <div className="flex-1">
-            <motion.div
-              variants={fadeUp}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              transition={{ delay: 0.3 }}
-              className="mb-8"
-            >
-              <motion.div
-                className="text-left sm:text-4xl text-2xl font-serif font-bold mb-4"
-                variants={fadeUp}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-              >
-                <span className="text-[#1A1A1A]">
-                  {texts.application?.title?.black1 || "L'expérience "}
-                </span>
-                <span className="bg-gradient-to-r from-[#C5A880] via-[#DFC598] to-[#8C6F45] bg-clip-text text-transparent">
-                  {texts.application?.title?.gradient2 || " Engineers' GALA"}
-                </span>
-                <span className="text-[#1A1A1A]">
-                  {texts.application?.title?.black2 || " à portée de main"}
-                </span>
-              </motion.div>
-
-              <motion.div
-                variants={fadeUp}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                transition={{ delay: 0.3 }}
-                className="mb-6"
-              >
-                <p className="text-lg text-[#6B6862] leading-relaxed">
-                  {texts.application?.description1 ||
-                    "L'application officielle du GALA est conçue pour"}
-                </p>
-                <p className="text-lg text-[#6B6862] leading-relaxed">
-                  {texts.application?.description2 ||
-                    "accompagner chaque participant et optimiser son expérience"}
-                </p>
-              </motion.div>
-            </motion.div>
-
-            {/* Contenu dynamique */}
-            {activeTab === "features" ? (
-              <>
-                {/* Fonctionnalités */}
-                <motion.h3
-                  variants={fadeUp}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.4 }}
-                  className="text-xl font-serif text-[#1A1A1A] font-bold mb-6"
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(idx)}
+                  className={`w-full text-left p-6 rounded-2xl transition-all duration-300 cursor-pointer border ${
+                    isActive
+                      ? "bg-[#FAF9F6] border-[#B89A5E] shadow-[0_15px_30px_-10px_rgba(184,154,94,0.15)]"
+                      : "bg-transparent border-transparent hover:border-[#E5DAC6] hover:bg-[#FAF9F6]/50"
+                  }`}
                 >
-                  {texts.application?.featuresTitle || "Fonctionnalités clés :"}
-                </motion.h3>
-
-                <div className="space-y-4">
-                  {features.map((feature: any, index: number) => (
-                    <motion.div
-                      key={index}
-                      variants={fadeUp}
-                      initial="hidden"
-                      whileInView="visible"
-                      viewport={{ once: true }}
-                      transition={{ delay: 0.5 + index * 0.1 }}
-                      whileHover={{ scale: 1.01 }}
-                      className="bg-white rounded-2xl p-6 shadow-xs border border-[#EAE3D5] hover:border-[#C5A880]/40 hover:shadow-md transition-all duration-300"
+                  <div className="flex items-start gap-4">
+                    <div
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+                        isActive
+                          ? "bg-[#ECE5F8] text-[#6E4FA0] border border-[#DDD0F3]"
+                          : "bg-[#FAF9F6] text-[#969085] border border-[#E5DAC6]"
+                      }`}
                     >
-                      <h4 className="text-lg text-[#1A1A1A] font-serif font-bold mb-2">
-                        {feature.title}
+                      <Icon className="w-5 h-5" />
+                    </div>
+
+                    <div>
+                      <h4
+                        className={`font-cinzel text-lg sm:text-xl font-medium mb-1 transition-colors ${
+                          isActive ? "text-[#1E1E1E]" : "text-[#6B665E]"
+                        }`}
+                      >
+                        {tab.title}
                       </h4>
-                      <p className="text-sm md:text-base text-[#6B6862] leading-relaxed">
-                        {feature.description}
+                      <p className="text-xs sm:text-sm text-[#6B665E] font-light leading-relaxed">
+                        {tab.desc}
                       </p>
-                    </motion.div>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <>
-                {/* Tutorielle */}
-                <motion.h3
-                  variants={fadeUp}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.4 }}
-                  className="text-xl font-serif text-[#1A1A1A] font-bold mb-6"
-                >
-                  {texts.application?.tutorialTitle ||
-                    "Tutoriel d'installation et guide utilisateur"}
-                </motion.h3>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
 
-                <div className="space-y-4">
-                  {tutorialSteps.map((step: string, index: number) => (
-                    <motion.div
-                      key={index}
-                      variants={fadeUp}
-                      initial="hidden"
-                      whileInView="visible"
-                      viewport={{ once: true }}
-                      transition={{ delay: 0.5 + index * 0.1 }}
-                      whileHover={{ scale: 1.01 }}
-                      className="bg-white rounded-2xl p-6 shadow-xs border border-[#EAE3D5] hover:shadow-md transition-all duration-300"
-                    >
-                      <div className="flex items-start gap-4">
-                        <div className="w-8 h-8 rounded-full bg-[#ECE5F8] text-[#6E4FA0] border border-[#DDD0F3] flex items-center justify-center flex-shrink-0 font-bold text-xs">
-                          {index + 1}
-                        </div>
-                        <p className="text-base text-[#1A1A1A] pt-1 leading-relaxed">
-                          {step}
-                        </p>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </>
-            )}
+            {/* Launch App CTA */}
+            <div className="pt-6">
+              <a
+                href="https://gala-app.netlify.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-3 px-8 py-4 rounded-full bg-[#1E1E1E] text-[#FAF9F6] hover:bg-[#B89A5E] hover:text-[#1E1E1E] text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 shadow-md border border-[#1E1E1E] hover:border-[#B89A5E]"
+              >
+                <span>{texts.app?.downloadCTA || "LAUNCH COMPANION APP"}</span>
+                <ArrowUpRight className="w-4 h-4" />
+              </a>
+              <p className="text-[11px] text-[#969085] uppercase tracking-wider mt-3">
+                {texts.app?.subnote || "Available exclusively for GALA invitation holders."}
+              </p>
+            </div>
           </div>
 
-          {/* Colonne droite - Image téléphone */}
-          <div className="flex-1 flex justify-center lg:justify-end">
+          {/* Right Column: 3D Smartphone Device Mockup */}
+          <div className="lg:col-span-6 flex justify-center [perspective:1200px]">
             <motion.div
-              variants={fadeUp}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              transition={{ delay: 0.4 }}
-              className="relative p-4"
+              whileHover={{ rotateY: -8, rotateX: 4 }}
+              transition={{ duration: 0.5 }}
+              className="relative w-[300px] sm:w-[340px] rounded-[48px] bg-[#1E1E1E] p-4 shadow-[0_35px_70px_-20px_rgba(30,30,30,0.25)] border-[4px] border-[#2D2D2D] [transform-style:preserve-3d]"
             >
-              <Image
-                src="/images/tlf.svg"
-                alt="Application mobile GALA"
-                width={300}
-                height={600}
-                className="w-64 lg:w-80 drop-shadow-xl"
-              />
+              {/* Phone Speaker & Dynamic Island */}
+              <div className="w-28 h-5 rounded-full bg-[#121212] mx-auto mb-3 flex items-center justify-center">
+                <div className="w-2.5 h-2.5 rounded-full bg-[#1E1E1E] mr-2" />
+                <div className="w-2.5 h-2.5 rounded-full bg-[#2A2A2A]" />
+              </div>
+
+              {/* Phone Screen Canvas */}
+              <div className="relative rounded-[36px] bg-[#FAF9F6] p-6 h-[540px] flex flex-col justify-between overflow-hidden border border-[#E5DAC6]/60">
+                {/* Status Bar */}
+                <div className="flex items-center justify-between text-[10px] font-mono text-[#969085]">
+                  <span>09:41</span>
+                  <span className="text-[#B89A5E] font-bold">5G · GALA PASS</span>
+                </div>
+
+                {/* App Brand Header */}
+                <div className="text-center pt-2">
+                  <span className="font-cinzel text-xl font-bold tracking-[0.2em] text-[#1E1E1E]">
+                    GALA
+                  </span>
+                  <p className="text-[9px] uppercase tracking-[0.2em] text-[#B89A5E]">
+                    OFFICIAL COMPANION
+                  </p>
+                </div>
+
+                {/* Dynamic Screen Content Based on Active Tab */}
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeTab}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.3 }}
+                    className="p-5 rounded-2xl bg-[#F5F1E8] border border-[#E5DAC6] text-center space-y-3 shadow-xs"
+                  >
+                    <span className="text-[9px] uppercase font-mono tracking-widest text-[#B89A5E] block">
+                      FEATURE PREVIEW
+                    </span>
+                    <h5 className="font-cinzel text-base font-bold text-[#1E1E1E]">
+                      {tabs[activeTab].title}
+                    </h5>
+                    <div className="w-24 h-24 mx-auto rounded-xl bg-white border border-[#E5DAC6] flex items-center justify-center p-2">
+                      <Image
+                        src="/images/tlf.svg"
+                        alt="App interface"
+                        width={80}
+                        height={80}
+                        className="object-contain"
+                      />
+                    </div>
+                    <span className="inline-block text-[10px] font-semibold text-[#6E4FA0] px-3 py-1 rounded-full bg-[#ECE5F8] border border-[#DDD0F3]">
+                      {tabs[activeTab].screenHighlight}
+                    </span>
+                  </motion.div>
+                </AnimatePresence>
+
+                {/* Bottom App Navigation Bar */}
+                <div className="grid grid-cols-4 gap-1 p-2 rounded-2xl bg-[#1E1E1E] text-[#FAF9F6] text-center">
+                  {tabs.map((t, idx) => (
+                    <div
+                      key={t.id}
+                      onClick={() => setActiveTab(idx)}
+                      className={`p-1.5 rounded-lg cursor-pointer text-[9px] font-medium uppercase tracking-wider ${
+                        activeTab === idx ? "bg-[#B89A5E] text-[#121212]" : "text-[#969085]"
+                      }`}
+                    >
+                      {t.id}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </motion.div>
           </div>
         </div>
-
-        {/* Bouton Télécharger l'appli */}
-        <motion.div
-          variants={fadeUp}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          transition={{ delay: 0.8 }}
-          className="flex justify-center mt-16"
-        >
-          <a
-            href="https://gala-app.netlify.app/"
-            className="bg-gradient-to-r from-[#DFC598] via-[#C5A880] to-[#DFC598] text-[#1A1A1A] text-lg font-semibold uppercase tracking-wider px-10 py-4 rounded-full hover:scale-105 transition-transform duration-300 shadow-xl shadow-[#C5A880]/20 border border-[#E5DAC6]"
-          >
-            {texts.application?.downloadButton || "Télécharger l'appli"}
-          </a>
-        </motion.div>
       </div>
-    </main>
+    </section>
   );
 }

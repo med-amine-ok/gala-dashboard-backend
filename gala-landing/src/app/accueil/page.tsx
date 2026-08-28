@@ -1,191 +1,199 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
-import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import Image from "next/image";
+import { motion } from "framer-motion";
+import Link from "next/link";
+import { ArrowRight, ArrowDown } from "lucide-react";
 import { useLanguage } from "../../context/LanguageContext";
-import { ArrowUp } from "lucide-react";
 
-export default function Accueil() {
+export default function HeroSection() {
   const { texts } = useLanguage();
 
-  const eventDate = new Date("2025-11-08T09:00:00");
-
+  // Countdown to event
+  const eventDate = new Date("2026-11-08T09:00:00");
   const [timeLeft, setTimeLeft] = useState({
-    days: "00",
-    hours: "00",
-    minutes: "00",
+    days: "74",
+    hours: "14",
+    minutes: "38",
     seconds: "00",
   });
 
-  const [showButton, setShowButton] = useState(false);
-
-  // Countdown timer
   useEffect(() => {
-    const interval = setInterval(() => {
-      const now = new Date();
-      const diff = eventDate.getTime() - now.getTime();
-
-      if (diff <= 0) {
-        clearInterval(interval);
-        return;
-      }
-
+    const updateCountdown = () => {
+      const diff = eventDate.getTime() - new Date().getTime();
+      if (diff <= 0) return;
       const days = Math.floor(diff / (1000 * 60 * 60 * 24));
       const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
       const minutes = Math.floor((diff / (1000 * 60)) % 60);
       const seconds = Math.floor((diff / 1000) % 60);
-
       setTimeLeft({
         days: String(days).padStart(2, "0"),
         hours: String(hours).padStart(2, "0"),
         minutes: String(minutes).padStart(2, "0"),
         seconds: String(seconds).padStart(2, "0"),
       });
-    }, 1000);
+    };
 
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
     return () => clearInterval(interval);
-  }, [eventDate]);
-
-  // Show scroll-to-top button after some scroll
-  useEffect(() => {
-    const handleScroll = () => setShowButton(window.scrollY > 200);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const scrollToManifesto = () => {
+    const manifestoSection = document.getElementById("manifesto");
+    if (manifestoSection) {
+      manifestoSection.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   return (
-    <main
-      className="relative min-h-screen bg-cover bg-center text-[#F7F4EE] font-sans overflow-hidden rounded-bl-[70px] bg-[#121212]"
-      style={{
-        background: `linear-gradient(180deg, #121212 0%, #1A1A1A 60%, #161616 100%)`,
-      }}
+    <section
+      id="home"
+      className="relative min-h-screen w-full bg-[#F5F1E8] text-[#1E1E1E] flex flex-col justify-between pt-32 sm:pt-25 pb-12 px-6 sm:px-12 overflow-hidden font-sans"
     >
-      {/* Decorative Champagne & Lavender Ambient Glows */}
-      <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] rounded-full bg-radial from-[#DFC598]/15 via-[#ECE5F8]/10 to-transparent blur-3xl pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[550px] h-[550px] rounded-full bg-radial from-[#ECE5F8]/15 via-[#DFC598]/10 to-transparent blur-3xl pointer-events-none" />
+      {/* BACKGROUND PHOTOGRAPHY (DSCF7403.jpg) */}
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+        <Image
+          src="/AIMG_7652.jpg"
+          alt="GALA Ambience"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center scale-105 filter brightness-[0.92] contrast-[1.04]"
+        />
+        {/* Luxury Warm Ivory & Vignette Overlay */}
+        {/* <div className="absolute inset-0 bg-[#F5F1E8]/80 backdrop-blur-[2px]" /> */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#F5F1E8]/85 via-[#F5F1E8]/70 to-[#F5F1E8]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(18, 18, 17, 0.85)_80%)]" />
+      
+      </div>
 
-      {/* Floating background animation */}
-      <motion.div
-        className="absolute inset-0 opacity-10 bg-[radial-gradient(#C5A880_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none"
-        animate={{ scale: [1, 1.03, 1], opacity: [0.08, 0.14, 0.08] }}
-        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-      />
+      {/* Refined Ambient Luxury Glows */}
+      <div className="absolute top-[-10%] right-[-5%] w-[650px] h-[650px] rounded-full bg-[radial-gradient(circle,#DED3BD_0%,transparent_70%)] opacity-35 blur-3xl pointer-events-none z-1" />
+      <div className="absolute bottom-[-10%] left-[-5%] w-[550px] h-[550px] rounded-full bg-[radial-gradient(circle,#ECE5F8_0%,transparent_70%)] opacity-45 blur-3xl pointer-events-none z-1" />
 
-      <section className="relative flex flex-col items-center justify-center text-center px-4 py-20 min-h-screen translate-y-10 z-10">
-        {/* Logo animation */}
+      {/* Subtle Luxury Paper Texture / Grid */}
+      <div className="absolute inset-0 bg-[radial-gradient(#B89A5E_0.8px,transparent_0.8px)] [background-size:32px_32px] opacity-15 pointer-events-none z-1" />
+
+      {/* MAIN CENTERED HERO CONTENT */}
+      <div className="max-w-4xl w-full mx-auto text-center z-10 my-auto flex flex-col items-center">
+        {/* Top Edition & Venue Badge */}
         <motion.div
-          initial={{ scale: 0.9, opacity: 0, y: -20 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeInOut" }}
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8"
+        >
+          <span className="text-xs font-semibold uppercase tracking-[0.28em] text-[#B89A5E]">
+            {texts.hero?.edition || "ALGIERS · 2026"}
+          </span>
+          <span className="w-8 sm:w-12 h-[1px] bg-[#B89A5E]/40" />
+          <span className="text-xs uppercase tracking-[0.22em] text-[#969085]">
+            {texts.hero?.venue || "HOTEL MERCURE"}
+          </span>
+        </motion.div>
+
+        {/* Monumental Brand Logo */}
+        <motion.div
+          initial={{ opacity: 0, y: 25, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ delay: 0.15, duration: 1, ease: [0.16, 1, 0.3, 1] }}
+          className="flex justify-center mb-6 sm:mb-8"
         >
           <Image
-            src="/images/Isolation_Mode.svg"
-            alt="Logo Gala"
-            width={450}
-            height={250}
+            src="/GALA.png"
+            alt="GALA"
+            width={580}
+            height={190}
             priority
+            className="w-[280px] sm:w-[420px] md:w-[520px] lg:w-[580px] h-auto object-contain select-none drop-shadow-sm"
           />
         </motion.div>
 
-        {/* Description animation */}
-        <motion.p
-          className="text-lg sm:text-xl mt-6 mb-4 text-[#D5CEC0] max-w-4xl leading-relaxed whitespace-pre-line font-medium"
-          initial={{ opacity: 0, y: 10 }}
+        {/* Architectural Headline */}
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.6, ease: "easeInOut" }}
+          transition={{ delay: 0.3, duration: 1, ease: [0.16, 1, 0.3, 1] }}
+          className="font-cinzel text-3xl sm:text-5xl xl:text-6xl font-light text-[#1E1E1E] leading-[1.15] mb-6 max-w-3xl whitespace-pre-line"
         >
-          {texts.accueil?.description}
+          {texts.hero?.headline || "Where ambition\nmeets opportunity."}
+        </motion.h2>
+
+        {/* Editorial Subtitle */}
+        <motion.p
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="text-base sm:text-lg text-[#6B665E] max-w-2xl font-light leading-relaxed mb-10 sm:mb-12"
+        >
+          {texts.hero?.subheadline ||
+            "An exclusive evening uniting elite engineers, pioneering organizations, and visionary leaders in a five-star luxury setting."}
         </motion.p>
 
-        {/* Time & Place animation */}
+        {/* Call to Actions */}
         <motion.div
-          className="flex flex-col md:flex-row gap-6 mt-6 text-base md:text-lg text-[#EAE3D5] font-semibold"
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8, duration: 0.6, ease: "easeInOut" }}
-        >
-          <div className="flex items-center justify-center gap-2.5 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-xs">
-            <Image src="/images/time.png" alt="Heure" width={20} height={20} />
-            <span>{texts.accueil?.date}</span>
-          </div>
-          <div className="flex items-center justify-center gap-2.5 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-xs">
-            <Image src="/images/place.png" alt="Lieu" width={20} height={20} />
-            <span>{texts.accueil?.place}</span>
-          </div>
-        </motion.div>
-
-        {/* Button with hover/tap animation */}
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 1.2, duration: 0.6, ease: "easeInOut" }}
+          transition={{ delay: 0.6, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 w-full sm:w-auto"
         >
           <Link href="/register">
-            <motion.button
-              whileHover={{
-                scale: 1.05,
-                boxShadow: "0 0 35px rgba(223, 197, 152, 0.4)",
-              }}
-              whileTap={{ scale: 0.96 }}
-              className="cursor-pointer mt-8 bg-gradient-to-r from-[#DFC598] via-[#C5A880] to-[#DFC598] text-[#1A1A1A] font-bold text-xl md:text-2xl px-10 py-3.5 rounded-full transition-transform duration-300 shadow-xl shadow-[#C5A880]/20 border border-[#E5DAC6]"
-            >
-              {texts.accueil?.button}
-            </motion.button>
+            <button className="group flex items-center justify-center gap-3 px-8 sm:px-10 py-4 rounded-full bg-[#1E1E1E] text-[#FAF9F6] hover:bg-[#B89A5E] hover:text-[#1E1E1E] text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 shadow-md cursor-pointer border border-[#1E1E1E] hover:border-[#B89A5E]">
+              <span>{texts.hero?.requestCTA || "REQUEST INVITATION"}</span>
+              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+            </button>
           </Link>
-        </motion.div>
 
-        {/* Countdown with animated pulse */}
-        <motion.div
-          className="mt-16 px-6 sm:px-10 md:px-16"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.5, duration: 0.6, ease: "easeInOut" }}
-        >
-          <div className="uppercase tracking-widest text-xs sm:text-sm font-semibold mb-4 text-[#C5A880] text-center">
-            {texts.accueil?.remaining}
-          </div>
-          <div className="flex justify-center gap-3 sm:gap-6 text-center flex-wrap">
-            {texts.accueil?.countdown?.map((label: string, index: number) => {
-              const keys = ["days", "hours", "minutes", "seconds"] as const;
-              const value = timeLeft[keys[index]];
-              return (
-                <motion.div
-                  key={label}
-                  animate={{ scale: [1, 1.03, 1] }}
-                  transition={{
-                    repeat: Infinity,
-                    duration: 2 + index * 0.2,
-                    ease: "easeInOut",
-                  }}
-                  className="flex flex-col items-center min-w-[65px] sm:min-w-[85px] p-3 rounded-2xl bg-white/5 border border-[#EAE3D5]/10 backdrop-blur-xs"
-                >
-                  <div className="text-3xl sm:text-5xl md:text-6xl font-bold text-[#DFC598] drop-shadow-[0_0_15px_rgba(223,197,152,0.3)]">
-                    {value}
-                  </div>
-                  <div className="text-xs sm:text-xs mt-1 text-[#96928B] uppercase tracking-wider font-medium">
-                    {label}
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
+          <button
+            onClick={scrollToManifesto}
+            className="group flex items-center justify-center gap-2 px-6 sm:px-8 py-4 rounded-full bg-transparent hover:bg-[#ECE5F8] text-xs font-medium uppercase tracking-[0.2em] text-[#6B665E] hover:text-[#6E4FA0] transition-colors cursor-pointer border border-[#E5DAC6]/80 hover:border-[#DDD0F3]"
+          >
+            <span>{texts.hero?.discoverCTA || "DISCOVER GALA"}</span>
+            <ArrowDown className="w-3.5 h-3.5 transition-transform group-hover:translate-y-0.5" />
+          </button>
         </motion.div>
-      </section>
+      </div>
 
-      {/* Scroll to top button */}
-      {showButton && (
-        <motion.button
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed z-200 bottom-8 right-8 bg-gradient-to-r from-[#DFC598] to-[#C5A880] text-[#1A1A1A] p-3.5 rounded-full shadow-xl hover:scale-110 transition-transform duration-300 border border-[#E5DAC6] cursor-pointer"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          aria-label="Scroll to top"
-        >
-          <ArrowUp className="w-5 h-5 font-bold" />
-        </motion.button>
-      )}
-    </main>
+      {/* FOOTER COUNTDOWN BAR */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.8, duration: 1 }}
+        className="max-w-7xl w-full mx-auto pt-8 border-t border-[#E5DAC6]/70 flex flex-col sm:flex-row items-center justify-between gap-4 z-10"
+      >
+        <p className="text-[11px] uppercase tracking-[0.22em] text-[#969085] font-medium">
+          {texts.hero?.countdownLabel || "INVITATION WINDOW CLOSES IN"}
+        </p>
+
+        <div className="flex items-center gap-4 sm:gap-8">
+          {[
+            { label: texts.hero?.countdown?.[0] || "DAYS", val: timeLeft.days },
+            {
+              label: texts.hero?.countdown?.[1] || "HOURS",
+              val: timeLeft.hours,
+            },
+            {
+              label: texts.hero?.countdown?.[2] || "MINUTES",
+              val: timeLeft.minutes,
+            },
+            {
+              label: texts.hero?.countdown?.[3] || "SECONDS",
+              val: timeLeft.seconds,
+            },
+          ].map((item, idx) => (
+            <div key={idx} className="flex items-baseline gap-1.5">
+              <span className="font-cinzel text-xl sm:text-2xl font-bold text-[#1E1E1E]">
+                {item.val}
+              </span>
+              <span className="text-[9px] uppercase tracking-wider text-[#B89A5E] font-medium">
+                {item.label}
+              </span>
+            </div>
+          ))}
+        </div>
+      </motion.div>
+    </section>
   );
 }

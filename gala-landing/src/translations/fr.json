@@ -1,230 +1,306 @@
 {
   "nav": {
-    "menu": [
-      { "label": "Accueil", "id": "home" },
-      { "label": "Historique", "id": "historique" },
-      { "label": "Cette année", "id": "cetteannee" },
-      { "label": "Agenda", "id": "agenda" },
-      { "label": "Tarif", "id": "tarification" },
-      { "label": "App", "id": "app" },
-      { "label": "À propos", "id": "apropos" },
-      { "label": "Contact", "id": "contact" }
-    ],
-    "register": "S'inscrire"
+    "brand": "GALA",
+    "menuLabel": "MENU",
+    "closeLabel": "FERMER",
+    "requestInvitation": "DEMANDER UNE INVITATION",
+    "menuItems": [
+      { "label": "L'Expérience", "id": "home", "subtitle": "Là où l'ambition rencontre l'opportunité" },
+      { "label": "Le Manifeste", "id": "manifesto", "subtitle": "Une soirée. Les bonnes personnes." },
+      { "label": "Les Archives", "id": "historique", "subtitle": "Des chapitres d'excellence" },
+      { "label": "Cette Année · 2026", "id": "cetteannee", "subtitle": "La prochaine édition" },
+      { "label": "Billet Officiel", "id": "tarification", "subtitle": "Pass d'admission (1 000 DA)" },
+      { "label": "L'Application", "id": "app", "subtitle": "Tout dans votre poche" },
+      { "label": "Notre Histoire", "id": "apropos", "subtitle": "Héritage et vision" }
+    ]
   },
-  "accueil": {
-    "description": "Une soirée exceptionnelle pour célébrer l'excellence et l'innovation dans le domaine de l'ingénierie. Rejoignez-nous pour une journée inoubliable de networking, de divertissement et d'inspiration.",
-    "date": "08 Novembre 2025",
-    "place": "Hôtel Mercure",
-    "button": "S'inscrire maintenant",
-    "remaining": "Temps restant avant l'événement",
-    "countdown": ["Jours", "Heures", "Minutes", "Secondes"]
+  "hero": {
+    "edition": "ALGER · 2026",
+    "headline": "Là où l'ambition\nrencontre l'opportunité.",
+    "subheadline": "Une soirée exclusive réunissant l'élite des ingénieurs, des entreprises pionnières et des leaders visionnaires.",
+    "requestCTA": "DEMANDER UNE INVITATION",
+    "discoverCTA": "DÉCOUVRIR LE GALA",
+    "date": "08 Novembre 2026",
+    "venue": "Hôtel Mercure · Grande Salle de Bal",
+    "countdownLabel": "CLÔTURE DES INVITATIONS DANS",
+    "countdown": ["JOURS", "HEURES", "MINUTES", "SECONDES"]
   },
-  "pricing": {
-    "title": {
-      "part1": "Frais d’entrée",
-      "highlighted": "Unique"
-    },
-    "subtitle": "Accès réservé aux participants inscrits",
-    "description": "Une journée pour apprendre, échanger et s’inspirer. Votre ticket vous ouvre les portes du Engineers’ Gala : conférences, expositions, discussions et bien plus encore. Réservé exclusivement aux participants inscrits et confirmés..",
-    "ticketName": "Entrée Générale",
-    "note": "Un tarif unique pour vivre l’expérience VIC — conférences, stands et espaces d’échanges réservés aux participants confirmés."
+  "manifesto": {
+    "label": "L'EXPÉRIENCE GALA",
+    "headline": "Une soirée.\nLes bonnes personnes.\nDes opportunités infinies.",
+    "paragraph1": "GALA n'est pas un simple événement annuel. C'est un sanctuaire conçu avec intention pour faire converger les esprits d'ingénierie les plus brillants et les décideurs d'entreprises avant-gardistes.",
+    "paragraph2": "Nous orchestrons un environnement où le dialogue authentique remplace les discours convenus, et où un échange unique peut transformer une carrière ou façonner l'avenir d'une organisation.",
+    "quote": "« Des connexions qui comptent. Des conversations qui créent l'opportunité. »",
+    "stats": [
+      { "value": "100%", "label": "Sélection Rigoureuse" },
+      { "value": "1:1", "label": "Accès Dirigeants" },
+      { "value": "5 Étoiles", "label": "Hospitalité d'Exception" }
+    ]
   },
-  "historique": {
-    "title": "Éditions précédentes",
-    "subtitle": "historique de Engineers' GALA",
-    "description": "Depuis sa première édition, Engineers' GALA s'est imposé comme un rendez-vous incontournable de l'ingénierie en Algérie. Chaque édition est marquée par des conférences de qualité, des invités prestigieux et une atmosphère unique d'innovation et de networking.",
-    "events": [
-      {
-        "year": "Édition 2017 – La Première",
-        "text": "La première édition en 2017 a marqué le début d’une tradition pour le Vision & Innovation Club, symbolisant la rencontre entre l’élégance, l’excellence et l’innovation.",
-        "img": "/images/lowla.png",
-        "reverse": false
+  "archives": {
+    "label": "LES ARCHIVES",
+    "headline": "Chaque édition\nlaisse une histoire.",
+    "subheadline": "Explorez les chapitres précédents d'excellence technique, de partenariats et de prestige.",
+    "exploreCTA": "DÉCOUVRIR CETTE ÉDITION",
+    "editions": {
+      "2025": {
+        "year": "2025",
+        "title": "GALA 2025 · La Renaissance",
+        "story": "L'édition 2025 a marqué une étape historique dans le networking de haut niveau, rassemblant plus de mille délégués triés sur le volet, 32 entreprises internationales et des conférenciers de premier plan en énergie, IA et industrie.",
+        "stats": [
+          { "value": "1 200", "label": "INVITÉS" },
+          { "value": "32", "label": "ENTREPRISES" },
+          { "value": "01", "label": "SOIRÉE INOUBLIABLE" }
+        ],
+        "image": "/DSCF7403.jpg"
       },
-      {
-        "year": "Édition 2019 – Plus de succès",
-        "text": "L’édition 2019 a été un véritable succès, le Gala des Ingénieurs célébrant la réussite. Une soirée marquée par la créativité et le renforcement des liens entre générations.",
-        "img": "/images/deuxième.png",
-        "reverse": true
+      "2024": {
+        "year": "2024",
+        "title": "GALA 2024 · Horizons d'Innovation",
+        "story": "Célébrée avec élégance, l'édition 2024 a réuni 176 diplômés d'élite, des partenaires recruteurs d'envergure et des panels d'experts sur les transitions industrielles.",
+        "stats": [
+          { "value": "850", "label": "INVITÉS" },
+          { "value": "24", "label": "ENTREPRISES" },
+          { "value": "16", "label": "CONFÉRENCES & PANELS" }
+        ],
+        "image": "/images/troisième.png"
       },
-      {
-        "year": "Édition 2024 – Dernière édition",
-        "text": "L’édition 2024 a réuni 40 invités, 176 participants, 60 membres de l’équipe organisatrice (OT) et 12 stands.",
-        "img": "/images/troisième.png",
-        "reverse": false
+      "2019": {
+        "year": "2019",
+        "title": "GALA 2019 · Énergie & Synergie",
+        "story": "Un rassemblement d'envergure réunissant figures de l'ingénierie et géants de l'énergie, établissant le GALA comme la référence entre université et industrie.",
+        "stats": [
+          { "value": "500+", "label": "PARTICIPANTS" },
+          { "value": "18", "label": "PARTENAIRES" },
+          { "value": "100%", "label": "SATISFACTION" }
+        ],
+        "image": "/images/deuxième.png"
+      },
+      "2017": {
+        "year": "2017",
+        "title": "2017 · L'Inception",
+        "story": "La genèse d'un héritage : le Vision & Innovation Club organise le premier GALA à l'École Nationale Polytechnique d'Alger, posant les fondations d'élégance et d'excellence.",
+        "stats": [
+          { "value": "300", "label": "PIONNIERS" },
+          { "value": "10", "label": "FONDATEURS" },
+          { "value": "01", "label": "TRADITION NÉE" }
+        ],
+        "image": "/images/lowla.png"
       }
-    ]
-  },
-  "annee": {
-    "title": "Cette année",
-    "subtitle": "8ème édition",
-    "description": "Pour cette 8ème édition, nous visons à aller encore plus loin en proposant des espaces interactifs, des conférences enrichissantes et des opportunités inédites pour les étudiants et jeunes diplômés.",
-    "cards": [
-      {
-        "src": "/images/lema.svg",
-        "title": "Startup Pitch",
-        "text": "Une scène pour les étudiants et jeunes entrepreneurs afin de présenter leurs projets à un panel d’experts, suivie de discussions ouvertes et feedback constructif.",
-        "badge": "NOUVEAU!",
-        "delay": 0.05
-      },
-      {
-        "src": "/images/gpt.svg",
-        "title": "CV review corner",
-        "text": "Un espace dédié à l'analyse et au conseil sur les CV des étudiants, animé par des professionnels. Une surprise attendra nos invités le jour J.",
-        "badge": "NOUVEAU!",
-        "delay": 0.18
-      },
-      {
-        "src": "/images/host.svg",
-        "title": "TED-Style Talks",
-        "text": "Des interventions dynamiques de 15 à 20 minutes animées par des conférenciers et experts sur des thématiques variées liées à l'innovation, à la technologie et au développement personnel.",
-        "badge": "NOUVEAU!",
-        "delay": 0.31
-      }
-    ]
-  },
-  "agenda": {
-    "title": {
-      "part1": "Engineers' GALA ",
-      "highlighted": "Agenda officielle"
-    },
-    "footer": "Rejoignez-nous pour une journée mémorable d'innovation et de networking",
-    "items": [
-      { "id": 1, "time": "9:00-9:30", "title": "Check-in" },
-      { "id": 2, "time": "9:30-12:00", "title": "Stands et expositions" },
-      { "id": 3, "time": "13:00-13:30", "title": "Check-in 2" },
-      { "id": 4, "time": "13:30-14:00", "title": "Cérémonie d'ouverture" },
-      { "id": 5, "time": "14:00-14:30", "title": "1ère Conférence" },
-      { "id": 6, "time": "14:30-15:30", "title": "Table ronde interactive" },
-      { "id": 7, "time": "15:30-16:00", "title": "Pause café & Networking" },
-      { "id": 8, "time": "16:00-16:30", "title": "2ème Conférence" },
-      { "id": 9, "time": "16:30-17:30", "title": "Table ronde thématique" },
-      { "id": 10, "time": "17:30-18:00", "title": "Panel de discussion" },
-      { "id": 11, "time": "18:00-18:20", "title": "Cérémonie de clôture" }
-    ]
-  },
-  "apropos": {
-    "title": {
-      "part1": "À propos du",
-      "highlighted": "Vision & Innovation Club"
-    },
-    "description": "Créé en 2014 sous la tutelle de l'association « EL-MAARIFA », le Vision & Innovation Club (VIC) est un club scientifique actif à l'École Nationale Polytechnique d'Alger.",
-    "stats": {
-      "title": "Statistiques:",
-      "items": ["Événements majeurs", "Membres actifs", "Alumnis"]
-    },
-    "mission": {
-      "title": "Notre mission:",
-      "items": [
-        {
-          "icon": "/images/enrichir-icon.svg",
-          "text": "Enrichir les perspectives des étudiants"
-        },
-        {
-          "icon": "/images/ofrir-icon.svg",
-          "text": "Offrir une plateforme d'échange et d'interaction"
-        },
-        {
-          "icon": "/images/organiser-icon.svg",
-          "text": "Organiser compétitions, conférences, workshops et actions caritatives."
-        }
-      ]
     }
   },
-  "application": {
-    "title": {
-      "gradient": "Application officielle",
-      "black": "du GALA",
-      "gradient2": "GALA des Ingénieurs"
-    },
-    "downloadButton": "Télécharger l’application",
-    "subtitle": "Fonctionnalités",
-    "tutorial": "Tutoriel",
-    "experience": "L’expérience du GALA des Ingénieurs au bout des doigts",
-    "description": "L’application officielle du GALA vous accompagne tout au long de l’événement —",
-    "description2": "du réseautage avec les entreprises à la capture de vos meilleurs moments.",
-    "featuresTitle": "Fonctionnalités principales :",
-    "features": [
+  "thisYear": {
+    "label": "CETTE ANNÉE",
+    "headline": "Voici\nGALA 2026.",
+    "intro": "Une soirée d'exception structurée autour de quatre piliers majeurs de luxe et d'opportunités.",
+    "chapters": [
       {
-        "title": "Capturez et partagez le GALA",
-        "description": "Prenez des photos, partagez vos moments et vivez l’expérience du GALA avec la communauté."
+        "id": "people",
+        "number": "01",
+        "title": "Les Talents",
+        "subtitle": "Excellence Sélectionnée",
+        "description": "Diplômés d'élite, chercheurs de pointe et jeunes ingénieurs prometteurs issus des plus grandes écoles polytechniques d'Algérie.",
+        "image": "/images/sora jama3ia 1.svg"
       },
       {
-        "title": "Découvrez des opportunités",
-        "description": "Déposez votre CV, explorez les entreprises participantes et entrez en contact avec les recruteurs."
+        "id": "companies",
+        "number": "02",
+        "title": "Les Entreprises",
+        "subtitle": "Institutions Majeures",
+        "description": "Multinationales prestigieuses, leaders de l'énergie, acteurs de l'innovation technologique et cabinets de conseil recherchant les futurs dirigeants.",
+        "image": "/images/lema.svg"
       },
       {
-        "title": "Restez informé",
-        "description": "Consultez le programme, découvrez les intervenants et suivez toutes les actualités du GALA."
+        "id": "conversations",
+        "number": "03",
+        "title": "Les Conversations",
+        "subtitle": "Salons Privés & Conférences",
+        "description": "Interventions inspirantes de style TED, salons privés de revue de CV et tables rondes traitant des révolutions industrielles et de l'IA.",
+        "image": "/images/host.svg"
+      },
+      {
+        "id": "experience",
+        "number": "04",
+        "title": "L'Expérience",
+        "subtitle": "Hospitalité 5 Étoiles",
+        "description": "Une scénographie lumineuse tamisée, un service gastronomique raffiné, une application compagnon dédiée et une hospitalité mémorable.",
+        "image": "/images/gpt.svg"
+      }
+    ],
+    "closingTitle": "Plus qu'une soirée.\nUne salle pleine de possibilités.",
+    "featuredCompanies": [
+      "Sonatrach",
+      "Schlumberger",
+      "TotalEnergies",
+      "Siemens",
+      "Baker Hughes",
+      "Sonelgaz",
+      "KPMG",
+      "PwC"
+    ]
+  },
+  "invitations": {
+    "label": "BILLET D'ADMISSION OFFICIEL",
+    "headline": "Votre entrée\nvers l'exception.",
+    "description": "Un tarif unique symbolique donnant accès à l'ensemble des activités, conférences, stands entreprises, salon de revue de CV et cocktail de networking.",
+    "selectCTA": "RÉSERVER VOTRE BILLET D'ADMISSION",
+    "ticketName": "BILLET D'ADMISSION OFFICIEL",
+    "price": "1 000 DA",
+    "date": "Samedi 08 Novembre 2026",
+    "venue": "Hôtel Mercure, Bab Ezzouar",
+    "serial": "GL-2026-0881",
+    "tagline": "WHERE THE NEXT CHAPTER OF ENGINEERING BEGINS",
+    "inclusionsTitle": "PRIVILÈGES D'ADMISSION INCLUS",
+    "inclusions": [
+      "Accès à l'ensemble des conférences plénières et talks inspirants",
+      "Entrée directe aux stands d'entreprises et job corners de recrutement",
+      "Espace dédié et personnalisé de revue de CV avec des professionnels",
+      "Dossier officiel de l'événement et cocktail de networking",
+      "Pass numérique avec QR code sécurisé sur l'application compagnon"
+    ]
+  },
+  "app": {
+    "label": "L'APPLICATION COMPAGNON",
+    "headline": "Tout,\ndans votre poche.",
+    "description": "Votre concierge digital et guide personnel tout au long de votre expérience au GALA.",
+    "downloadCTA": "LANCER L'APPLICATION",
+    "subnote": "Accessible exclusivement aux détenteurs d'une invitation confirmée.",
+    "tabs": [
+      {
+        "id": "pass",
+        "title": "Pass d'Invitation Numérique",
+        "desc": "QR Code dynamique crypté pour un enregistrement fluide et instantané à l'entrée de la salle de bal."
+      },
+      {
+        "id": "agenda",
+        "title": "Agenda Interactif en Direct",
+        "desc": "Notifications en temps réel sur les plénières, les intervenants et vos créneaux de tables rondes."
+      },
+      {
+        "id": "companies",
+        "title": "Mise en Relation Entreprises",
+        "desc": "Découvrez les profils corporate, consultez les offres d'emploi et transmettez votre CV en un clic."
+      },
+      {
+        "id": "capture",
+        "title": "Capture & Galerie",
+        "desc": "Prenez part à la galerie collaborative et retrouvez les clichés officiels en haute résolution."
       }
     ]
   },
-  "register": {
-    "register": {
-      "closed": {
-        "title": "Inscriptions fermées",
-        "message": "Nous vous remercions de votre intérêt, mais les inscriptions sont désormais fermées.",
-        "subtitle": "Restez à l'écoute pour notre prochain événement !"
-      }
-    },
-
-    "steps": {
-      "step1": {
-        "title": "Partie 01",
-        "subtitle": "Informations personnelles"
+  "story": {
+    "label": "NOTRE HISTOIRE",
+    "headline": "L'histoire\nderrière la nuit.",
+    "lead": "GALA a été créé autour d'une conviction profonde :\nUne rencontre décisive peut transformer un destin.",
+    "paragraph1": "Fondé en 2014 sous l'égide de l'association EL-MAARIFA, le Vision & Innovation Club (VIC) à l'École Nationale Polytechnique d'Alger a bâti une institution dédiée à l'ambition et au dépassement.",
+    "paragraph2": "Plus d'une décennie plus tard, GALA est le rendez-vous incontournable où la rigueur technique rencontre le leadership industriel dans un cadre d'une élégance rare.",
+    "stats": [
+      { "value": "10+", "label": "Années de Tradition" },
+      { "value": "200+", "label": "Membres Actifs" },
+      { "value": "800+", "label": "Alumni Remarquables" }
+    ],
+    "pillars": [
+      { "title": "Élever l'Ambition", "desc": "Donner aux futurs ingénieurs le réseau, la visibilité et la confiance nécessaires pour diriger." },
+      { "title": "Connecter l'Industrie", "desc": "Créer des synergies authentiques et directes entre grands groupes et talents de premier ordre." },
+      { "title": "Excellence Pérenne", "desc": "Garantir des standards d'organisation, d'hospitalité et de transmission sans compromis." }
+    ]
+  },
+  "concierge": {
+    "label": "CONCIERGERIE & CONTACT",
+    "headline": "Comment pouvons-nous\nvous assister ?",
+    "subheadline": "Notre équipe de conciergerie privée se tient à votre entière disposition.",
+    "channels": [
+      {
+        "id": "attending",
+        "title": "Participer au GALA",
+        "desc": "Questions relatives à l'approbation d'invitations, dress code, accès au salon et hospitalité."
       },
-      "step2": { "title": "Partie 02", "subtitle": "Vos plans et motivation" },
-      "step3": { "title": "Partie 03", "subtitle": "Votre vision du Gala" },
-      "step4": { "title": "Partie 04", "subtitle": "Confirmation" }
+      {
+        "id": "corporate",
+        "title": "Représenter une Entreprise",
+        "desc": "Participation corporate, stands de recrutement, formules de sponsoring et pass exécutifs."
+      },
+      {
+        "id": "press",
+        "title": "Presse & Partenariats",
+        "desc": "Accréditations médias, propositions d'interventions et partenariats institutionnels."
+      }
+    ],
+    "form": {
+      "name": "Nom Complet *",
+      "email": "Adresse E-mail *",
+      "topic": "Nature de la Demande",
+      "message": "En quoi pouvons-nous vous assister ? *",
+      "submit": "ENVOYER LA DEMANDE",
+      "sending": "TRANSMISSION...",
+      "successTitle": "Demande Transmise",
+      "successMessage": "Merci. Notre équipe de conciergerie vous répondra sous 24 heures."
+    }
+  },
+  "register": {
+    "headline": "Votre soirée\ncommence ici.",
+    "subheadline": "Complétez vos coordonnées pour solliciter votre pass d'admission au GALA (1 000 DA).",
+    "steps": {
+      "step1": { "title": "01 PERSONNEL", "subtitle": "Identité et coordonnées de contact" },
+      "step2": { "title": "02 PARCOURS", "subtitle": "Formation académique et spécialité" },
+      "step3": { "title": "03 VISION", "subtitle": "Motivations, ambitions et attentes" },
+      "step4": { "title": "04 CONFIRMATION", "subtitle": "Vérification et transmission" }
     },
     "fields": {
       "firstName": "Prénom *",
-      "lastName": "Nom *",
-      "email": "Adresse e-mail *",
-      "phone": "Téléphone *",
-      "university": "Université *",
-      "universityOther": "Précisez votre université *",
+      "lastName": "Nom de famille *",
+      "email": "Adresse E-mail *",
+      "phone": "Numéro de Téléphone *",
+      "university": "Université / Grande École *",
+      "universityOther": "Précisez votre établissement *",
+      "fieldOfStudy": "Spécialité d'Ingénierie *",
+      "fieldOfStudyOther": "Précisez votre spécialité *",
+      "academicLevel": "Niveau d'Études *",
+      "academicLevelOther": "Précisez le niveau *",
+      "graduationYear": "Année de Diplomation *",
+      "graduationYearOther": "Précisez l'année *",
+      "plansNextYear": "Quels sont vos projets majeurs pour l'année à venir ? *",
+      "personalDescription": "Brève présentation personnelle ou motivation",
+      "perspectiveGala": "Quelle est votre perception de l'expérience GALA ? *",
+      "benefitFromEvent": "En quoi votre présence au GALA sera-t-elle déterminante ? *",
+      "attendedBefore": "Avez-vous déjà participé à une édition précédente ? *",
+      "heardAbout": "Comment avez-vous découvert le GALA ? *",
+      "heardAboutOther": "Précisez la source *",
+      "additionalComments": "Notes particulières, préférences alimentaires ou requêtes",
       "universities": {
-        "ENP": "ENP",
+        "ENP": "École Nationale Polytechnique (ENP)",
         "ENSTA": "ENSTA",
         "USTHB": "USTHB",
         "ESAA": "ESAA",
         "ENSTP": "ENSTP",
-        "OTHER": "Autre"
+        "OTHER": "Autre Établissement"
       },
-      "fieldOfStudy": "Spécialité *",
-      "fieldOfStudyOther": "Précisez votre spécialité *",
       "fieldOfStudies": {
-        "hydraulics": "Hydraulique",
-        "green_hydrogen": "Hydrogène vert",
-        "civil": "Génie civil",
-        "chemical": "Génie chimique",
-        "materials": "Génie des matériaux",
-        "mining": "Génie minier",
-        "industrial": "Génie industriel",
-        "mechanical": "Génie mécanique",
-        "automotive": "Génie automobile",
-        "environmental": "Génie environnemental",
-        "electrical": "Génie électrique",
+        "hydraulics": "Génie Hydraulique",
+        "green_hydrogen": "Hydrogène Vert & Énergies Propres",
+        "civil": "Génie Civil",
+        "chemical": "Génie Chimique",
+        "materials": "Sciences & Génie des Matériaux",
+        "mining": "Génie Minier",
+        "industrial": "Génie Industriel",
+        "mechanical": "Génie Mécanique",
+        "automotive": "Génie Automobile",
+        "environmental": "Génie de l'Environnement",
+        "electrical": "Génie Électrique",
         "electronics": "Électronique",
-        "qhse": "QHSE (Qualité, Santé, Sécurité & Environnement)",
-        "automation": "Automatisation & Contrôle",
-        "datascience_ai": "Data Science & IA",
-        "OTHER": "Autre"
+        "qhse": "QHSE & Sécurité Industrielle",
+        "automation": "Automatique & Robotique",
+        "datascience_ai": "Data Science & Intelligence Artificielle",
+        "OTHER": "Autre Spécialité"
       },
-      "academicLevel": "Niveau académique *",
-      "academicLevelOther": "Précisez votre niveau académique *",
       "academicLevels": {
         "bachelor": "Licence",
         "master": "Master",
-        "engineering": "Diplôme d’ingénieur",
-        "phd": "Doctorat",
-        "pgs": "Études Postgraduées (PGS)",
+        "engineering": "Ingéniorat d'État",
+        "phd": "Doctorat / PhD",
+        "pgs": "Post-Graduation Spécialisée (PGS)",
         "other": "Autre"
       },
-      "currentYear": "Année d'étude *",
-      "graduationYear": "Année de diplomation *",
-      "graduationYearOther": "Précisez votre année de diplomation *",
       "graduationYears": {
         "2023": "2023",
         "2024": "2024",
@@ -232,49 +308,41 @@
         "2026": "2026",
         "2027": "2027",
         "2028": "2028",
-        "OTHER": "Autre"
+        "OTHER": "Autre Année"
       },
-      "plansNextYear": "Quels sont vos projets pour l'année à venir ? *",
-      "personalDescription": "Courte description personnelle / Motivation",
-      "perspectiveGala": "Que savez-vous du Engineers' Gala ? *",
-      "benefitFromEvent": "En quoi votre participation vous sera bénéfique ? *",
-      "attendedBefore": "Avez-vous déjà assisté à une édition précédente ? *",
-      "heardAbout": "Comment avez-vous entendu parler du Gala ? *",
-      "heardAboutOther": "Précisez comment *",
       "heardAboutOptions": {
         "Facebook": "Facebook",
         "Instagram": "Instagram",
-        "throughAFriend": "Par un ami",
+        "throughAFriend": "Recommandation d'un Confrère",
         "LinkedIn": "LinkedIn",
-        "OTHER": "Autre"
-      },
-      "additionalComments": "Commentaires additionnels"
+        "OTHER": "Autre Canal"
+      }
     },
     "options": { "yes": "Oui", "no": "Non" },
     "buttons": {
-      "previous": "Précédent",
-      "next": "Suivant",
-      "submit": "Soumettre",
-      "submitting": "Soumission..."
-    },
-    "confirmation": {
-      "message": "Vérifiez vos informations avant de soumettre votre inscription."
+      "previous": "PRÉCÉDENT",
+      "next": "CONTINUER",
+      "submit": "TRANSMETTRE LA DEMANDE",
+      "submitting": "TRANSMISSION EN COURS..."
     },
     "success": {
-      "title": "Inscription réussie !",
-      "message": "Merci pour votre participation à l'Engineers' Gala."
+      "title": "Votre demande a été enregistrée.",
+      "message": "Notre comité d'admission examinera votre dossier. Une confirmation officielle vous sera adressée par e-mail.",
+      "journey": ["DEMANDE ENVOYÉE", "EXAMEN DU DOSSIER", "CONFIRMATION", "VOTRE INVITATION"]
     },
     "errors": {
-      "submit": "Échec de l'inscription. Veuillez réessayer.",
-      "network": "Impossible de se connecter au serveur. Réessayez."
+      "submit": "La demande n'a pas pu aboutir. Veuillez vérifier vos informations.",
+      "network": "Connexion impossible avec le serveur sécurisé. Veuillez réessayer."
     }
   },
   "footer": {
-    "description": "Engineer's Gala réunit chaque année les esprits les plus brillants pour célébrer la créativité, la technologie et l'entrepreneuriat.",
-    "quickLinks": "Liens rapides",
-    "contact": "Contact",
-    "address": "École Nationale Polytechnique d'Alger, Algérie",
-    "emailLabel": "Email :",
-    "copyright": "Engineer's Gala — Tous droits réservés."
+    "brand": "GALA",
+    "tagline": "UNE SOIRÉE D'AMBITION · DE CONNEXION · D'OPPORTUNITÉ",
+    "description": "Le rendez-vous d'exception où se rencontrent l'ingénierie d'élite et le leadership industriel.",
+    "linksLabel": "RÉPERTOIRE",
+    "contactLabel": "CONCIERGERIE",
+    "address": "École Nationale Polytechnique d'Alger, 10 Avenue Hassen Badi, El Harrach, Alger",
+    "email": "vic@g.enp.edu.dz",
+    "copyright": "GALA. Tous droits réservés. Vision & Innovation Club."
   }
 }

@@ -13,6 +13,10 @@ const cinzel = Cinzel({
 export const metadata: Metadata = {
   title: "GALA HR Admin Dashboard",
   description: "Enterprise Event Management Panel for GALA",
+  icons: {
+    icon: "/GALA.png",
+    apple: "/GALA.png",
+  },
 };
 
 export default function RootLayout({

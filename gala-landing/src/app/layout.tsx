@@ -1,33 +1,38 @@
 import { LanguageProvider } from "../context/LanguageContext";
 import "./globals.css";
-import { Playfair_Display, Raleway, Cinzel, Plus_Jakarta_Sans } from "next/font/google";
+import {
+  Cinzel,
+  Plus_Jakarta_Sans,
+  Cormorant_Garamond,
+} from "next/font/google";
 
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-playfair",
-});
-const raleway = Raleway({ 
-  subsets: ["latin"], 
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-raleway",
-});
 const cinzel = Cinzel({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800", "900"],
   variable: "--font-cinzel",
+  display: "swap",
 });
+
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["300", "400", "500", "600", "700"],
   variable: "--font-plus-jakarta",
+  display: "swap",
+});
+
+const cormorant = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-cormorant",
+  display: "swap",
 });
 
 export const metadata = {
-  title: "Engineers' GALA",
-  description: "Page d'accueil de l'événement Engineers' Gala",
+  title: "GALA — Where Ambition Meets Opportunity",
+  description: "A prestigious, invitation-only corporate, networking, and engineering experience. Algiers 2026.",
   icons: {
-    icon: "/favicon.svg",
+    icon: "/GALA.png",
+    apple: "/GALA.png",
   },
 };
 
@@ -37,16 +42,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="En" className={`h-full ${cinzel.variable} ${playfair.variable} ${raleway.variable} ${plusJakarta.variable}`}>
+    <html
+      lang="en"
+      className={`${cinzel.variable} ${plusJakarta.variable} ${cormorant.variable}`}
+    >
       <head>
-        <link
-          rel="icon"
-          href="/images/Isolation_Mode.svg"
-          type="images/<generated>"
-          sizes="<generated>"
-        />
+        <link rel="icon" href="/GALA.png" />
       </head>
-      <body className={`min-h-full flex flex-col bg-[#F7F4EE] text-[#1A1A1A] antialiased selection:bg-[#ECE5F8] selection:text-[#6E4FA0]`}>
+      <body
+        className={`min-h-full flex flex-col bg-[#F5F1E8] text-[#1E1E1E] antialiased selection:bg-[#ECE5F8] selection:text-[#6E4FA0] font-sans`}
+      >
         <LanguageProvider>{children}</LanguageProvider>
       </body>
     </html>

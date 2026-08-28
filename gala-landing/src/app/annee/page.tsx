@@ -1,147 +1,208 @@
 "use client";
 
+import { useState, useRef } from "react";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { Users, Building2, MessageSquare, Sparkles } from "lucide-react";
 import { useLanguage } from "../../context/LanguageContext";
 
-export default function CetteAnnee() {
+export default function ThisYearSection() {
   const { texts } = useLanguage();
+  const [activeChapter, setActiveChapter] = useState<number>(0);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Simple non-function variants
-  const fadeUp = {
-    hidden: { opacity: 0, y: 40 },
-    visible: { opacity: 1, y: 0 },
+  // Mouse parallax for company 3D gallery
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  const springConfig = { damping: 30, stiffness: 100 };
+  const parallaxX = useSpring(useTransform(mouseX, [-0.5, 0.5], [-20, 20]), springConfig);
+  const parallaxY = useSpring(useTransform(mouseY, [-0.5, 0.5], [-15, 15]), springConfig);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    mouseX.set(x);
+    mouseY.set(y);
   };
 
-  // Simple parent for stagger if you prefer (optional)
-  const titleParent = {
-    hidden: {},
-    visible: { transition: { staggerChildren: 0.12 } },
-  };
-
-  const cards = texts.annee?.cards || [
+  const chapters = texts.thisYear?.chapters || [
     {
-      src: "/images/lema.svg",
-      title: "Stands et Job Corners",
-      text: "Des entreprises et startups pour orienter, recruter et échanger directement avec les participants.",
-      delay: 0.05,
+      id: "people",
+      number: "01",
+      title: "The People",
+      subtitle: "Curated Excellence",
+      description:
+        "Selected graduates, high-achieving researchers, and rising engineering leaders representing Algeria's foremost institutions.",
+      image: "/images/sora jama3ia 1.svg",
+      icon: Users,
     },
     {
-      src: "/images/gpt.svg",
-      title: "CV review corner",
-      text: "Un espace dédié à l'analyse et au conseil sur les CV des étudiants, animé par des professionnels. Une surprise attendra nos invités le jour J.",
-      badge: "NOUVEAU!",
-      delay: 0.18,
+      id: "companies",
+      number: "02",
+      title: "The Companies",
+      subtitle: "Pioneering Institutions",
+      description:
+        "Prestigious multinational corporations, energy giants, technology pioneers, and top consulting firms actively seeking tomorrow's leadership.",
+      image: "/images/lema.svg",
+      icon: Building2,
     },
     {
-      src: "/images/host.svg",
-      title: "TED-Style Talks",
-      text: "Des interventions dynamiques de 15 à 20 minutes animées par des conférenciers et experts sur des thématiques variées liées à l'innovation, à la technologie et au développement personnel.",
-      badge: "NOUVEAU!",
-      delay: 0.31,
+      id: "conversations",
+      number: "03",
+      title: "The Conversations",
+      subtitle: "Private Salons & Talks",
+      description:
+        "Intimate TED-style keynotes, 1-on-1 executive review salons, and roundtables tackling the forefront of engineering and AI.",
+      image: "/images/host.svg",
+      icon: MessageSquare,
+    },
+    {
+      id: "experience",
+      number: "04",
+      title: "The Experience",
+      subtitle: "Five-Star Hospitality",
+      description:
+        "A refined atmosphere featuring ambient classical lighting, curated dining, personalized companion app access, and unforgettable hospitality.",
+      image: "/images/gpt.svg",
+      icon: Sparkles,
     },
   ];
 
+  const featuredCompanies = [
+    { name: "Sonatrach", sector: "Energy & Hydrocarbons" },
+    { name: "Schlumberger", sector: "Global Energy Tech" },
+    { name: "TotalEnergies", sector: "Clean Energies & Power" },
+    { name: "Siemens", sector: "Industrial Automation & AI" },
+    { name: "Baker Hughes", sector: "Energy Technology" },
+    { name: "Sonelgaz", sector: "Power Grid & Renewable" },
+    { name: "KPMG", sector: "Advisory & Transformation" },
+    { name: "PwC", sector: "Strategic Consulting" },
+  ];
+
   return (
-    <main
-      className="w-full min-h-screen flex flex-col items-center p-5 px-4 py-16 overflow-hidden bg-[#141414] relative"
-      style={{
-        background: `linear-gradient(180deg, #121212 0%, #1A1A1A 50%, #141414 100%)`,
-      }}
+    <section
+      id="cetteannee"
+      ref={containerRef}
+      onMouseMove={handleMouseMove}
+      className="relative min-h-screen w-full bg-[#F5F1E8] text-[#1E1E1E] flex flex-col justify-center py-24 sm:py-36 px-6 sm:px-12 overflow-hidden border-t border-[#E5DAC6]/60"
     >
-      {/* Decorative Champagne & Lavender Ambient Glows */}
-      <div className="absolute top-[20%] left-[-5%] w-[500px] h-[500px] rounded-full bg-radial from-[#DFC598]/10 via-[#ECE5F8]/10 to-transparent blur-3xl pointer-events-none" />
-      <div className="absolute bottom-[10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-radial from-[#ECE5F8]/10 via-[#DFC598]/10 to-transparent blur-3xl pointer-events-none" />
+      {/* Ambient Lavender & Gold Glows */}
+      <div className="absolute top-[10%] right-[-10%] w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle,#DED3BD_0%,transparent_70%)] opacity-30 blur-3xl pointer-events-none" />
+      <div className="absolute bottom-[10%] left-[-10%] w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle,#ECE5F8_0%,transparent_70%)] opacity-40 blur-3xl pointer-events-none" />
 
-      {/* SECTION TITRE */}
-      <motion.div
-        className="w-full max-w-5xl text-center z-10"
-        variants={titleParent}
-        initial="hidden"
-        animate="visible"
-      >
-        <motion.h1
-          variants={fadeUp}
-          initial="hidden"
-          animate="visible"
-          transition={{ delay: 0.04, duration: 0.8, ease: "easeOut" }}
-          className="text-5xl md:text-7xl font-serif bg-gradient-to-r from-[#DFC598] via-[#C5A880] to-[#DFC598] bg-clip-text text-transparent font-bold"
-        >
-          {texts.annee?.title || "Cette année"}
-        </motion.h1>
+      <div className="max-w-7xl w-full mx-auto">
+        {/* Section Header */}
+        <div className="max-w-3xl mb-16">
+          <span className="text-xs font-semibold uppercase tracking-[0.28em] text-[#B89A5E] block mb-4">
+            {texts.thisYear?.label || "THIS YEAR"}
+          </span>
+          <h2 className="font-cinzel text-4xl sm:text-6xl font-light text-[#1E1E1E] leading-tight mb-6 whitespace-pre-line">
+            {texts.thisYear?.headline || "This is\nGALA 2026."}
+          </h2>
+          <p className="text-base sm:text-lg text-[#6B665E] font-light leading-relaxed">
+            {texts.thisYear?.intro ||
+              "A transcendent evening built around four core pillars of luxury, leadership, and opportunity."}
+          </p>
+        </div>
 
-        <motion.h2
-          variants={fadeUp}
-          initial="hidden"
-          animate="visible"
-          transition={{ delay: 0.18, duration: 0.8, ease: "easeOut" }}
-          className="mt-6 text-2xl md:text-3xl font-serif text-[#F7F4EE] font-semibold"
-        >
-          {texts.annee?.subtitle || "8ème édition"}
-        </motion.h2>
+        {/* 4 Interactive Chapters Tabs */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-12 border-b border-[#E5DAC6] pb-8">
+          {chapters.map((ch: any, idx: number) => {
+            const isActive = activeChapter === idx;
+            return (
+              <button
+                key={ch.id}
+                onClick={() => setActiveChapter(idx)}
+                className={`group text-left p-4 sm:p-6 rounded-2xl transition-all duration-300 cursor-pointer bg-transparent border ${
+                  isActive
+                    ? "bg-[#FAF9F6] border-[#B89A5E] shadow-[0_10px_25px_-10px_rgba(184,154,94,0.15)]"
+                    : "border-transparent hover:border-[#E5DAC6] hover:bg-[#FAF9F6]/50"
+                }`}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <span
+                    className={`font-mono text-xs font-semibold ${
+                      isActive ? "text-[#B89A5E]" : "text-[#969085]"
+                    }`}
+                  >
+                    {ch.number || `0${idx + 1}`}
+                  </span>
+                  <span
+                    className={`w-2 h-2 rounded-full transition-colors ${
+                      isActive ? "bg-[#B89A5E]" : "bg-transparent"
+                    }`}
+                  />
+                </div>
+                <p className="font-cinzel text-lg sm:text-xl font-medium text-[#1E1E1E] mb-1">
+                  {ch.title}
+                </p>
+                <p className="text-xs text-[#969085] tracking-wide">{ch.subtitle}</p>
+              </button>
+            );
+          })}
+        </div>
 
-        <motion.p
-          variants={fadeUp}
-          initial="hidden"
-          animate="visible"
-          transition={{ delay: 0.32, duration: 0.9, ease: "easeOut" }}
-          className="mt-6 text-base md:text-lg text-[#D5CEC0] text-center max-w-3xl mx-auto leading-relaxed"
-        >
-          {texts.annee?.description ||
-            "Pour cette 8ème édition, nous visons à aller encore plus loin en proposant des espaces interactifs, des conférences enrichissantes et des opportunités inédites pour les étudiants et jeunes diplômés."}
-        </motion.p>
-      </motion.div>
+        {/* Active Chapter Presentation */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center mb-24">
+          {/* Chapter Description */}
+          <div className="lg:col-span-6 space-y-6">
+            <span className="text-xs uppercase tracking-[0.25em] text-[#B89A5E] font-semibold">
+              PILLAR {chapters[activeChapter].number}
+            </span>
+            <h3 className="font-cinzel text-3xl sm:text-4xl text-[#1E1E1E] font-medium leading-snug">
+              {chapters[activeChapter].title}
+            </h3>
+            <p className="text-base sm:text-lg text-[#6B665E] font-light leading-relaxed">
+              {chapters[activeChapter].description}
+            </p>
 
-      {/* SECTION CARTES */}
-      <section className="flex flex-col md:flex-row justify-center items-start gap-10 md:gap-12 text-[#1A1A1A] mt-16 z-10">
-        {cards.map((card: any, idx: number) => (
-          <motion.div
-            key={idx}
-            variants={fadeUp}
-            initial="hidden"
-            animate="visible"
-            transition={{
-              delay: card.delay,
-              duration: 0.8,
-              type: "spring",
-              stiffness: 120,
-              damping: 16,
-            }}
-            whileHover={{
-              scale: 1.03,
-              boxShadow: "0 20px 40px -8px rgba(0,0,0,0.3)",
-            }}
-            className="flex flex-col items-start bg-white rounded-3xl shadow-2xl p-7 w-80 h-[500px] text-left cursor-pointer border border-[#EAE3D5] hover:border-[#C5A880]/60 transition-all"
-          >
+            {/* Special Highlight for Chapter 2 (Companies) */}
+            {activeChapter === 1 && (
+              <div className="pt-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-[#969085] font-medium mb-3">
+                  PARTICIPATING INDUSTRY LEADERS
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {featuredCompanies.map((c, i) => (
+                    <span
+                      key={i}
+                      className="text-xs px-3.5 py-1.5 rounded-full bg-[#FAF9F6] border border-[#E5DAC6] text-[#1E1E1E] font-medium"
+                    >
+                      {c.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Chapter Visual Showcase with 3D Parallax */}
+          <div className="lg:col-span-6 relative [perspective:1000px]">
             <motion.div
-              whileHover={{ y: -6 }}
-              transition={{ type: "spring", stiffness: 220, damping: 18 }}
-              className="w-full flex items-center justify-center p-4 bg-[#FAF7F2] rounded-2xl mb-5"
+              style={{ x: parallaxX, y: parallaxY }}
+              className="relative h-[320px] sm:h-[420px] rounded-2xl bg-[#FAF9F6] border border-[#E5DAC6] p-6 shadow-[0_25px_50px_-15px_rgba(30,30,30,0.06)] overflow-hidden flex items-center justify-center"
             >
-              <Image
-                src={card.src}
-                alt={card.title}
-                width={400}
-                height={400}
-                className="w-full h-36 object-contain"
-              />
+              {/* Inner Decorative Champagne Gold Frame */}
+              <div className="absolute inset-4 border border-[#B89A5E]/20 rounded-xl pointer-events-none" />
+
+              <div className="relative w-full h-full p-4 flex items-center justify-center">
+                <Image
+                  src={chapters[activeChapter].image}
+                  alt={chapters[activeChapter].title}
+                  width={460}
+                  height={300}
+                  className="max-h-full w-auto object-contain drop-shadow-md"
+                />
+              </div>
             </motion.div>
+          </div>
+        </div>
 
-            <div className="flex items-center gap-2 mb-3">
-              <h3 className="text-xl md:text-2xl font-serif font-bold text-[#1A1A1A] mb-1">
-                {card.title}
-              </h3>
-              {card.badge && (
-                <span className="px-2.5 py-0.5 text-xs font-sans font-semibold rounded-full bg-[#ECE5F8] text-[#6E4FA0] border border-[#DDD0F3]">
-                  {card.badge}
-                </span>
-              )}
-            </div>
-
-            <p className="text-sm md:text-base text-[#6B6862] leading-relaxed">{card.text}</p>
-          </motion.div>
-        ))}
-      </section>
-    </main>
+        
+      </div>
+    </section>
   );
 }

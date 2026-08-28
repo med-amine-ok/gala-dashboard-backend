@@ -1,117 +1,202 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Raleway:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
 :root {
-  /* Warm Off-White Quiet Luxury Palette */
-  --background: #F7F4EE;
-  --surface: #FFFFFF;
-  --surface-muted: #F3EFE6;
-  --surface-border: #EAE3D5;
-  
-  /* Deep Charcoal Palette */
-  --foreground: #1A1A1A;
-  --foreground-muted: #6B6862;
-  --foreground-subtle: #96928B;
-  --charcoal-dark: #121212;
-  --charcoal-surface: #1E1E1E;
-  --charcoal-border: #2D2D2D;
+  /* Warm Off-White / Ivory Luxury Palette */
+  --bg-ivory: #F5F1E8;
+  --bg-ivory-light: #FAF9F6;
+  --bg-ivory-surface: #FFFFFF;
+  --bg-ivory-muted: #EDE7DA;
+  --border-ivory: #E5DAC6;
+  --border-ivory-light: #EFE8DC;
 
-  /* Champagne Gold Palette - Understated Details */
-  --color-gold-primary: #C5A880;
-  --color-gold-light: #F7F1E6;
-  --color-gold-hover: #B08F63;
-  --color-gold-dark: #8C6F45;
-  --color-gold-gradient: linear-gradient(135deg, #DFC598 0%, #C4A77D 100%);
-  
-  /* Soft Lavender Accent Palette - Interactive States & Highlights */
-  --color-lavender-accent: #C8B6E2;
-  --color-lavender-light: #ECE5F8;
-  --color-lavender-subtle: #F6F2FC;
-  --color-lavender-border: #DDD0F3;
-  --color-lavender-dark: #6E4FA0;
-  
-  /* Status Colors */
-  --color-brand-success: #2E5A36;
-  --color-brand-success-bg: #EBF2EC;
-  --color-brand-warning: #C5A880;
-  --color-brand-warning-bg: #FAF5EB;
-  --color-brand-danger: #8B2635;
-  --color-brand-danger-bg: #F9ECEF;
+  /* Deep Charcoal Typography */
+  --text-charcoal: #1E1E1E;
+  --text-charcoal-dark: #121212;
+  --text-charcoal-muted: #6B665E;
+  --text-charcoal-subtle: #969085;
+
+  /* Champagne Gold Primary Accent */
+  --gold-primary: #B89A5E;
+  --gold-light: #DED3BD;
+  --gold-warm: #C5A880;
+  --gold-deep: #8C6F45;
+  --gold-shimmer: linear-gradient(135deg, #DFC598 0%, #B89A5E 50%, #C4A77D 100%);
+  --gold-border: rgba(184, 154, 94, 0.35);
+
+  /* Soft Lavender Modern Signature Accent */
+  --lavender-accent: #B8AED4;
+  --lavender-light: #ECE5F8;
+  --lavender-subtle: #F6F3FA;
+  --lavender-border: #DDD0F3;
+  --lavender-dark: #6E4FA0;
+
+  /* Black Edition Contrast */
+  --black-edition: #181818;
+  --black-edition-surface: #222222;
+  --black-edition-border: #333333;
 }
 
 @theme {
-  --color-warm-bg: #F7F4EE;
-  --color-warm-surface: #FFFFFF;
-  --color-warm-muted: #F3EFE6;
-  --color-warm-border: #EAE3D5;
+  --color-ivory: #F5F1E8;
+  --color-ivory-light: #FAF9F6;
+  --color-ivory-surface: #FFFFFF;
+  --color-ivory-muted: #EDE7DA;
+  --color-ivory-border: #E5DAC6;
 
-  --color-charcoal: #1A1A1A;
+  --color-charcoal: #1E1E1E;
   --color-charcoal-dark: #121212;
-  --color-charcoal-surface: #1E1E1E;
-  --color-charcoal-border: #2D2D2D;
+  --color-charcoal-muted: #6B665E;
+  --color-charcoal-subtle: #969085;
 
-  --color-champagne: #C5A880;
-  --color-champagne-light: #F7F1E6;
-  --color-champagne-hover: #B08F63;
-  --color-champagne-dark: #8C6F45;
-  
-  --color-lavender: #C8B6E2;
+  --color-gold: #B89A5E;
+  --color-gold-light: #DED3BD;
+  --color-gold-warm: #C5A880;
+  --color-gold-deep: #8C6F45;
+
+  --color-lavender: #B8AED4;
   --color-lavender-light: #ECE5F8;
-  --color-lavender-subtle: #F6F2FC;
+  --color-lavender-subtle: #F6F3FA;
   --color-lavender-border: #DDD0F3;
   --color-lavender-dark: #6E4FA0;
 
-  --color-gold-primary: var(--color-gold-primary);
-  --color-gold-light: var(--color-gold-light);
-  --color-gold-hover: var(--color-gold-hover);
-  
-  --color-brand-success: var(--color-brand-success);
-  --color-brand-success-bg: var(--color-brand-success-bg);
-  --color-brand-warning: var(--color-brand-warning);
-  --color-brand-warning-bg: var(--color-brand-warning-bg);
-  --color-brand-danger: var(--color-brand-danger);
-  --color-brand-danger-bg: var(--color-brand-danger-bg);
-
-  --font-sans: 'Cinzel', 'Plus Jakarta Sans', 'Raleway', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-serif: 'Cinzel', 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
   --font-cinzel: 'Cinzel', serif;
+  --font-serif: 'Cinzel', 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-html, body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: 'Cinzel', 'Plus Jakarta Sans', 'Raleway', sans-serif;
-  min-height: 100vh;
-  margin: 0;
+html {
+  scroll-behavior: smooth;
+  background-color: #F5F1E8;
+  color: #1E1E1E;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Quiet Luxury Utilities */
-.luxury-card {
-  background-color: #FFFFFF;
-  border: 1px solid rgba(239, 232, 220, 0.9);
-  border-radius: 24px;
-  box-shadow: 0 4px 20px -2px rgba(26, 26, 26, 0.025);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+body {
+  background-color: #F5F1E8;
+  color: #1E1E1E;
+  margin: 0;
+  overflow-x: hidden;
 }
 
-.luxury-card:hover {
-  border-color: rgba(197, 168, 128, 0.35);
-  box-shadow: 0 8px 30px -4px rgba(26, 26, 26, 0.04);
+/* Luxury Typography Utilities */
+.font-cinzel {
+  font-family: 'Cinzel', serif;
 }
 
-.bg-champagne-gradient {
-  background: linear-gradient(135deg, #DFC598 0%, #C4A77D 100%);
+.tracking-luxury {
+  letter-spacing: 0.22em;
 }
 
-.interactive-lavender {
-  transition: all 0.2s ease-in-out;
+.tracking-wide-label {
+  letter-spacing: 0.18em;
 }
 
-.interactive-lavender:hover {
-  background-color: #F4EFFF;
-  border-color: #DDD0F3;
-  color: #7A5F9E;
+/* Gold Foil & Luxury Accents */
+.gold-foil-text {
+  background: linear-gradient(135deg, #DFC598 0%, #B89A5E 50%, #8C6F45 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gold-foil-border {
+  border-color: rgba(184, 154, 94, 0.4);
+}
+
+.gold-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #B89A5E 20%, #DED3BD 50%, #B89A5E 80%, transparent);
+}
+
+.gold-line-solid {
+  height: 1px;
+  background-color: rgba(184, 154, 94, 0.35);
+}
+
+/* Physical Card & Invitation Utilities */
+.luxury-invitation-card {
+  background: #FAF9F6;
+  border: 1px solid #E5DAC6;
+  box-shadow: 0 20px 40px -15px rgba(30, 30, 30, 0.05), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.luxury-invitation-card:hover {
+  border-color: #B89A5E;
+  box-shadow: 0 30px 60px -20px rgba(184, 154, 94, 0.15), 0 0 0 1px rgba(184, 154, 94, 0.2) inset;
+}
+
+.luxury-black-card {
+  background: #181818;
+  border: 1px solid #333333;
+  box-shadow: 0 25px 50px -15px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(184, 154, 94, 0.2) inset;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.luxury-black-card:hover {
+  border-color: #B89A5E;
+  box-shadow: 0 35px 70px -20px rgba(184, 154, 94, 0.3), 0 0 0 1px rgba(184, 154, 94, 0.4) inset;
+}
+
+/* Ticket Perforation effect */
+.ticket-perforation-left {
+  position: relative;
+}
+.ticket-perforation-left::before {
+  content: '';
+  position: absolute;
+  left: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #F5F1E8;
+}
+
+.ticket-perforation-right {
+  position: relative;
+}
+.ticket-perforation-right::after {
+  content: '';
+  position: absolute;
+  right: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #F5F1E8;
+}
+
+/* Minimal Underline Input */
+.luxury-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #E5DAC6;
+  border-radius: 0;
+  padding: 0.75rem 0;
+  color: #1E1E1E;
+  font-size: 1rem;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  outline: none;
+}
+
+.luxury-input:focus {
+  border-bottom-color: #B89A5E;
+  box-shadow: 0 1px 0 0 #B89A5E;
+}
+
+.luxury-input::placeholder {
+  color: #969085;
+}
+
+/* Subtle Film Grain */
+.luxury-grain {
+  background-image: radial-gradient(rgba(30, 30, 30, 0.04) 1px, transparent 0);
+  background-size: 24px 24px;
 }
 
 /* Custom Refined Scrollbar */
@@ -119,13 +204,16 @@ html, body {
   width: 5px;
   height: 5px;
 }
+
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: #F5F1E8;
 }
+
 ::-webkit-scrollbar-thumb {
-  background: #E5DAC6;
+  background: #DED3BD;
   border-radius: 9999px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
-  background: #C5A880;
+  background: #B89A5E;
 }

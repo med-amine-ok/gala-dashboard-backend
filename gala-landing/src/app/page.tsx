@@ -1,67 +1,68 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
-import Historique from "./historique/page";
-import Accueil from "./accueil/page";
-import Apropos from "./apropos/page";
 import NavBar from "./components/NavBar";
+import Accueil from "./accueil/page";
+import Manifesto from "./manifesto/page";
+import Historique from "./historique/page";
 import CetteAnnee from "./annee/page";
-import Agenda from "./agenda/page";
-//Import Mixpanel SDK
-import mixpanel from "mixpanel-browser";
-import RegistrationPage from "./register/page";
-import Footer from "./footer/page";
 import Pricing from "./ticket/page";
 import App from "./app/page";
+import Apropos from "./apropos/page";
+import Footer from "./footer/page";
+import mixpanel from "mixpanel-browser";
 
-// Create an instance of the Mixpanel object, your token is already added to this snippet
-mixpanel.init(process.env.NEXT_PUBLIC_MIXPANEL_TOKEN!, {
-  autocapture: true,
-  record_sessions_percent: 100,
-  api_host: "https://api-eu.mixpanel.com",
-});
+// Initialize Mixpanel if token is provided
+if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_MIXPANEL_TOKEN) {
+  mixpanel.init(process.env.NEXT_PUBLIC_MIXPANEL_TOKEN, {
+    autocapture: true,
+    record_sessions_percent: 100,
+    api_host: "https://api-eu.mixpanel.com",
+  });
+}
 
 export default function Home() {
   return (
-    <div>
-      <main className="w-full overflow-x-hidden bg-[#F7F4EE] text-[#1A1A1A]">
-        <div className="fixed top-0 left-0 w-full z-50">
-          <NavBar />
-        </div>
+    <div className="w-full min-h-screen bg-[#F5F1E8] text-[#1E1E1E]">
+      <NavBar />
 
-        <section id="home" className="min-h-screen scroll-mt-16">
+      <main className="w-full overflow-x-hidden">
+        {/* 01 — HERO */}
+        <section id="home">
           <Accueil />
         </section>
-        <section id="historique" className="min-h-screen scroll-mt-16">
+
+        {/* 02 — THE MANIFESTO */}
+        <section id="manifesto">
+          <Manifesto />
+        </section>
+
+        {/* 03 — GALA ARCHIVES */}
+        <section id="historique">
           <Historique />
         </section>
-        <section id="cetteannee" className="min-h-screen scroll-mt-16">
+
+        {/* 04 — THIS YEAR (GALA 2026) */}
+        <section id="cetteannee">
           <CetteAnnee />
         </section>
-        {/* <section id="agenda" className="min-h-screen scroll-mt-16">
-          <Agenda />
-        </section> */}
-        {/* Add other sections like Apropos, CetteAnnee, Contact here */}
-        {/* Historique section */}
-        <section id="tarification" className="min-h-screen scroll-mt-16 ">
+
+        {/* 05 — INVITATION / TICKET */}
+        <section id="tarification">
           <Pricing />
         </section>
-        <section id="app" className="min-h-screen scroll-mt-16 ">
+
+        {/* 06 — THE GALA COMPANION APP */}
+        <section id="app">
           <App />
         </section>
-        <section id="apropos" className="min-h-screen scroll-mt-16 ">
+
+        {/* 07 — THE STORY (HERITAGE & VIC) */}
+        <section id="apropos">
           <Apropos />
         </section>
 
-        {/*
-
-        
-         <section id="register">
-          <RegistrationPage />
-        </section>
-        */}
-        <section id="contact">
+        {/* 08 — FOOTER */}
+        <section id="footer">
           <Footer />
         </section>
       </main>

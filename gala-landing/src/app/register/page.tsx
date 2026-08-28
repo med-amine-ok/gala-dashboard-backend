@@ -1,19 +1,21 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { useForm, FormProvider, useFormContext } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle, Loader2 } from "lucide-react";
+import { CheckCircle2, Loader2, ArrowRight, ArrowLeft } from "lucide-react";
+import Link from "next/link";
 import * as z from "zod";
 import { useLanguage } from "../../context/LanguageContext";
 
 const fieldOfStudyOptions = [
-  { value: "hydraulics", label: "Hydraulics" },
-  { value: "green_hydrogen", label: "Green Hydrogen" },
+  { value: "hydraulics", label: "Hydraulics Engineering" },
+  { value: "green_hydrogen", label: "Green Hydrogen & Clean Energy" },
   { value: "civil", label: "Civil Engineering" },
   { value: "chemical", label: "Chemical Engineering" },
-  { value: "materials", label: "Materials Engineering" },
+  { value: "materials", label: "Materials Science & Engineering" },
   { value: "mining", label: "Mining Engineering" },
   { value: "industrial", label: "Industrial Engineering" },
   { value: "mechanical", label: "Mechanical Engineering" },
@@ -21,25 +23,25 @@ const fieldOfStudyOptions = [
   { value: "environmental", label: "Environmental Engineering" },
   { value: "electrical", label: "Electrical Engineering" },
   { value: "electronics", label: "Electronics Engineering" },
-  { value: "qhse", label: "QHSE (Quality, Health, Safety & Environment)" },
-  { value: "automation", label: "Automation & Control" },
-  { value: "datascience_ai", label: "Data Science & AI" },
-  { value: "OTHER", label: "Other" },
+  { value: "qhse", label: "QHSE & Industrial Safety" },
+  { value: "automation", label: "Automation & Robotics" },
+  { value: "datascience_ai", label: "Data Science & Artificial Intelligence" },
+  { value: "OTHER", label: "Other Discipline" },
 ];
 
 const createRegistrationSchema = (lang: "fr" | "en") => {
   const messages = {
     fr: {
       invalidEmail: "Adresse e-mail invalide",
-      required: "Champ obligatoire",
+      required: "Ce champ est obligatoire",
     },
     en: {
       invalidEmail: "Invalid email address",
       required: "This field is required",
     },
   }[lang] || {
-    invalidEmail: "Adresse e-mail invalide",
-    required: "Champ obligatoire",
+    invalidEmail: "Invalid email address",
+    required: "This field is required",
   };
 
   return z.object({
@@ -47,10 +49,8 @@ const createRegistrationSchema = (lang: "fr" | "en") => {
     first_name: z.string().min(1, messages.required),
     last_name: z.string().min(1, messages.required),
     phone: z.string().min(1, messages.required),
-
     participant_type: z.enum(["ST", "G"]).default("ST"),
 
-    job_title: z.string().optional(),
     university: z.enum(["ENP", "ENSTA", "USTHB", "ESAA", "ENSTP", "OTHER"]),
     university_other: z.string().optional(),
 
@@ -100,7 +100,7 @@ const createRegistrationSchema = (lang: "fr" | "en") => {
     personal_description: z.string().optional(),
     perspective_gala: z.string().min(1, messages.required),
     benefit_from_event: z.string().min(1, messages.required),
-    attended_before: z.boolean(),
+    attended_before: z.boolean().default(false),
     heard_about: z.enum([
       "Facebook",
       "Instagram",
@@ -110,24 +110,25 @@ const createRegistrationSchema = (lang: "fr" | "en") => {
     ]),
     heard_about_other: z.string().optional(),
     additional_comments: z.string().optional(),
-    linkedin_url: z.string().optional(),
   });
 };
 
 type RegistrationData = z.infer<ReturnType<typeof createRegistrationSchema>>;
 
-// ----------------- MAIN COMPONENT -----------------
-export default function RegistrationPage() {
-  const [step, setStep] = useState(1);
-  const [done, setDone] = useState(false);
-  const [loading, setLoading] = useState(false);
+function RegistrationContent() {
+  const searchParams = useSearchParams();
+  const requestedTier = searchParams.get("tier") || "signature";
+
+  const [step, setStep] = useState<number>(1);
+  const [done, setDone] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const language = useLanguage();
-  const { texts } = language;
+
+  const { lang, texts } = useLanguage();
 
   const registrationSchema = useMemo(() => {
-    return createRegistrationSchema(language.lang as "fr" | "en");
-  }, [language.lang]);
+    return createRegistrationSchema(lang as "fr" | "en");
+  }, [lang]);
 
   const methods = useForm<RegistrationData>({
     resolver: zodResolver(registrationSchema) as never,
@@ -135,6 +136,11 @@ export default function RegistrationPage() {
       attended_before: false,
       participant_type: "ST",
       current_year: "1",
+      university: "ENP",
+      field_of_study: "datascience_ai",
+      academic_level: "Engineering Degree",
+      graduation_year: "2026",
+      heard_about: "LinkedIn",
     },
   });
 
@@ -144,7 +150,6 @@ export default function RegistrationPage() {
     setSubmitError(null);
     setLoading(true);
 
-    // Clean up conditional other fields before sending
     const payload = {
       ...data,
       university_other:
@@ -160,14 +165,12 @@ export default function RegistrationPage() {
     };
 
     try {
-      // Primary: try internal Next.js API route proxy
       let response = await fetch("/api/participants/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
-      // Fallback: direct to API base URL if internal route is unreachable
       if (!response.ok && response.status === 404) {
         const apiBaseUrl =
           process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
@@ -188,45 +191,33 @@ export default function RegistrationPage() {
               : String(resJson.email);
             setError("email", { message: emailMsg });
             setSubmitError(emailMsg);
-            setStep(1); // Jump back to step 1 so user can see and change email
+            setStep(1);
             return;
           }
-
           if (resJson.error || resJson.detail || resJson.details) {
             setSubmitError(resJson.error || resJson.detail || resJson.details);
             return;
           }
-
-          // Handle generic field error dictionary
-          const errorEntries = Object.entries(resJson);
-          if (errorEntries.length > 0) {
-            const [field, errVal] = errorEntries[0];
-            const msg = Array.isArray(errVal) ? errVal.join(" ") : String(errVal);
-            setSubmitError(`${field}: ${msg}`);
-            return;
-          }
         }
-
         setSubmitError(
           texts.register?.errors?.submit ||
-            "Échec de l'inscription. Veuillez vérifier vos informations."
+            "Failed to submit request. Please verify your details."
         );
         return;
       }
 
       setDone(true);
     } catch (err) {
-      console.error("❌ Network error:", err);
+      console.error("Submission error:", err);
       setSubmitError(
         texts.register?.errors?.network ||
-          "Impossible de se connecter au serveur backend. Veuillez réessayer."
+          "Unable to connect to the secure server. Please try again."
       );
     } finally {
       setLoading(false);
     }
   };
 
-  // Validate before moving to next step
   const nextStep = async () => {
     let fieldsToValidate: (keyof RegistrationData)[] = [];
 
@@ -244,11 +235,7 @@ export default function RegistrationPage() {
     } else if (step === 2) {
       fieldsToValidate = ["plans_next_year"];
     } else if (step === 3) {
-      fieldsToValidate = [
-        "perspective_gala",
-        "benefit_from_event",
-        "heard_about",
-      ];
+      fieldsToValidate = ["perspective_gala", "benefit_from_event", "heard_about"];
     }
 
     const valid = await trigger(fieldsToValidate);
@@ -257,108 +244,187 @@ export default function RegistrationPage() {
 
   const prevStep = () => setStep((s) => Math.max(1, s - 1));
 
+  // Success Celebration View
   if (done) {
     return (
-      <main className="min-h-screen bg-[#F7F4EE] flex items-center justify-center py-16 px-4 text-[#1A1A1A] font-sans relative overflow-hidden">
-        <div className="absolute top-[-20%] left-[-10%] w-[550px] h-[550px] rounded-full bg-radial from-[#DFC598]/15 via-[#ECE5F8]/20 to-transparent blur-3xl pointer-events-none" />
-        <div className="absolute bottom-[-15%] right-[-10%] w-[500px] h-[500px] rounded-full bg-radial from-[#ECE5F8]/20 via-[#DFC598]/10 to-transparent blur-3xl pointer-events-none" />
-
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-2xl bg-white rounded-3xl p-10 shadow-xl shadow-[#1A1A1A]/5 border border-[#EAE3D5] text-center z-10"
-        >
-          <div className="w-20 h-20 mx-auto rounded-full bg-[#ECE5F8] border border-[#DDD0F3] flex items-center justify-center mb-6">
-            <CheckCircle size={48} className="text-[#6E4FA0]" />
+      <main className="min-h-screen bg-[#F5F1E8] flex items-center justify-center py-20 px-6 text-[#1E1E1E] font-sans relative overflow-hidden">
+        <div className="max-w-2xl w-full p-8 sm:p-14 rounded-3xl bg-[#FAF9F6] border border-[#E5DAC6] shadow-[0_30px_60px_-15px_rgba(30,30,30,0.08)] text-center relative z-10">
+          <div className="w-16 h-16 mx-auto rounded-full bg-[#ECE5F8] border border-[#DDD0F3] flex items-center justify-center mb-6 text-[#6E4FA0]">
+            <CheckCircle2 className="w-8 h-8" />
           </div>
-          <h1 className="text-3xl font-serif text-[#1A1A1A] font-bold">
-            {texts.register?.success?.title || "Inscription réussie !"}
+
+          <span className="text-[11px] uppercase tracking-[0.25em] text-[#B89A5E] font-semibold block mb-2">
+            REGISTRATION TRANSMITTED
+          </span>
+
+          <h1 className="font-cinzel text-3xl sm:text-4xl font-bold text-[#1E1E1E] mb-4">
+            {texts.register?.success?.title || "Your request has been received."}
           </h1>
-          <p className="text-[#6B6862] mt-3 leading-relaxed">
+
+          <p className="text-sm sm:text-base text-[#6B665E] font-light leading-relaxed max-w-md mx-auto mb-10">
             {texts.register?.success?.message ||
-              "Merci pour votre participation à l'Engineers' Gala. Votre inscription a été enregistrée avec succès."}
+              "Our admissions committee will carefully review your credentials. You will receive an official invitation update via email."}
           </p>
-        </motion.div>
+
+          {/* Luxury Journey Milestone Progress */}
+          <div className="py-6 border-y border-[#E5DAC6] mb-8">
+            <p className="text-[10px] uppercase tracking-[0.22em] text-[#969085] font-semibold mb-4">
+              ADMISSION JOURNEY
+            </p>
+            <div className="grid grid-cols-4 gap-2 text-center text-[10px] font-mono">
+              <div className="text-[#B89A5E] font-bold">1. REQUESTED</div>
+              <div className="text-[#969085]">2. REVIEW</div>
+              <div className="text-[#969085]">3. APPROVAL</div>
+              <div className="text-[#969085]">4. INVITATION</div>
+            </div>
+          </div>
+
+          <Link href="/">
+            <button className="px-8 py-3.5 rounded-full bg-[#1E1E1E] text-[#FAF9F6] hover:bg-[#B89A5E] hover:text-[#1E1E1E] text-xs font-semibold uppercase tracking-[0.2em] transition-all cursor-pointer border border-[#1E1E1E]">
+              RETURN TO GALA →
+            </button>
+          </Link>
+        </div>
       </main>
     );
   }
 
-  const progress = (step / 4) * 100;
+  const stepLabels = [
+    { num: "01", title: texts.register?.steps?.step1?.title || "PERSONAL" },
+    { num: "02", title: texts.register?.steps?.step2?.title || "PROFILE" },
+    { num: "03", title: texts.register?.steps?.step3?.title || "VISION" },
+    { num: "04", title: texts.register?.steps?.step4?.title || "REVIEW" },
+  ];
 
   return (
     <FormProvider {...methods}>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <main className="min-h-screen bg-[#F7F4EE] flex items-center justify-center py-16 px-4 text-[#1A1A1A] font-sans relative overflow-hidden">
-          {/* Ambient Glows */}
-          <div className="absolute top-[-20%] left-[-10%] w-[550px] h-[550px] rounded-full bg-radial from-[#DFC598]/15 via-[#ECE5F8]/20 to-transparent blur-3xl pointer-events-none" />
-          <div className="absolute bottom-[-15%] right-[-10%] w-[500px] h-[500px] rounded-full bg-radial from-[#ECE5F8]/20 via-[#DFC598]/10 to-transparent blur-3xl pointer-events-none" />
+        <main className="min-h-screen bg-[#F5F1E8] flex flex-col justify-center py-20 px-6 sm:px-12 text-[#1E1E1E] font-sans relative overflow-hidden">
+          <div className="max-w-4xl w-full mx-auto my-auto z-10">
+            {/* Header */}
+            <div className="mb-10 text-center sm:text-left flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#E5DAC6] pb-6">
+              <div>
+                <Link href="/" className="inline-block font-cinzel text-xl font-bold tracking-[0.2em] text-[#1E1E1E] hover:text-[#B89A5E] mb-2 transition-colors">
+                  GALA · ALGIERS 2026
+                </Link>
+                <h1 className="font-cinzel text-3xl sm:text-4xl font-light text-[#1E1E1E]">
+                  {texts.register?.headline || "Your evening\nbegins here."}
+                </h1>
+              </div>
 
-          <div className="w-full max-w-3xl bg-white rounded-3xl p-8 sm:p-10 shadow-xl shadow-[#1A1A1A]/5 border border-[#EAE3D5] z-10">
-            {/* Progress bar */}
-            <div className="w-full bg-[#EAE3D5] rounded-full h-2 mb-10 overflow-hidden">
-              <motion.div
-                className="h-2 bg-gradient-to-r from-[#DFC598] via-[#C5A880] to-[#6E4FA0]"
-                animate={{ width: `${progress}%` }}
-                transition={{ duration: 0.5 }}
-              />
+              {/* Admission Pass Pill */}
+              <div className="text-xs uppercase tracking-widest text-[#B89A5E] px-4 py-2 rounded-full bg-[#FAF9F6] border border-[#E5DAC6] self-start sm:self-auto font-mono font-bold">
+                ADMISSION PASS · 1,000 DA
+              </div>
             </div>
 
-            <AnimatePresence mode="wait">
-              {step === 1 && <Step1 texts={texts} />}
-              {step === 2 && <Step2 texts={texts} />}
-              {step === 3 && <Step3 texts={texts} />}
-              {step === 4 && <Step4 data={watch()} texts={texts} />}
-            </AnimatePresence>
+            {/* Refined Horizontal Step Progress */}
+            <div className="grid grid-cols-4 gap-2 mb-10">
+              {stepLabels.map((s, idx) => {
+                const stepNum = idx + 1;
+                const isCurrent = step === stepNum;
+                const isPassed = step > stepNum;
 
-            {submitError && (
-              <div className="mt-6 p-4 rounded-xl bg-[#F9ECEF] border border-[#F2C2CB] text-[#8B2635] text-xs font-semibold text-center">
-                {submitError}
+                return (
+                  <div key={idx} className="space-y-2">
+                    <div
+                      className={`h-[2px] transition-all duration-500 ${
+                        isCurrent
+                          ? "bg-[#B89A5E]"
+                          : isPassed
+                          ? "bg-[#1E1E1E]"
+                          : "bg-[#E5DAC6]"
+                      }`}
+                    />
+                    <p
+                      className={`text-[10px] uppercase tracking-widest font-mono ${
+                        isCurrent
+                          ? "text-[#B89A5E] font-bold"
+                          : isPassed
+                          ? "text-[#1E1E1E]"
+                          : "text-[#969085]"
+                      }`}
+                    >
+                      {s.num} {s.title}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Form Card */}
+            <div className="p-8 sm:p-12 rounded-3xl bg-[#FAF9F6] border border-[#E5DAC6] shadow-[0_25px_50px_-15px_rgba(30,30,30,0.06)]">
+              <AnimatePresence mode="wait">
+                {step === 1 && <Step1 texts={texts} />}
+                {step === 2 && <Step2 texts={texts} />}
+                {step === 3 && <Step3 texts={texts} />}
+                {step === 4 && <Step4 data={watch()} requestedTier={requestedTier} texts={texts} />}
+              </AnimatePresence>
+
+              {submitError && (
+                <div className="mt-6 p-4 rounded-xl bg-[#F9ECEF] border border-[#F2C2CB] text-[#8B2635] text-xs font-semibold text-center">
+                  {submitError}
+                </div>
+              )}
+
+              {/* Step Navigation Controls */}
+              <div className="mt-12 pt-6 border-t border-[#E5DAC6] flex items-center justify-between">
+                {step > 1 ? (
+                  <button
+                    type="button"
+                    onClick={prevStep}
+                    disabled={loading}
+                    className="flex items-center gap-2 px-6 py-3 rounded-full border border-[#E5DAC6] text-[#6B665E] hover:text-[#1E1E1E] hover:bg-[#F5F1E8] text-xs font-semibold uppercase tracking-[0.18em] transition-all cursor-pointer"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>{texts.register?.buttons?.previous || "PREVIOUS"}</span>
+                  </button>
+                ) : (
+                  <Link href="/">
+                    <button
+                      type="button"
+                      className="px-6 py-3 rounded-full border border-transparent text-[#969085] hover:text-[#1E1E1E] text-xs font-semibold uppercase tracking-[0.18em] transition-all cursor-pointer"
+                    >
+                      CANCEL
+                    </button>
+                  </Link>
+                )}
+
+                {step < 4 ? (
+                  <button
+                    type="button"
+                    onClick={nextStep}
+                    className="flex items-center gap-2 px-8 py-3.5 rounded-full bg-[#1E1E1E] text-[#FAF9F6] hover:bg-[#B89A5E] hover:text-[#1E1E1E] text-xs font-semibold uppercase tracking-[0.2em] transition-all cursor-pointer border border-[#1E1E1E] hover:border-[#B89A5E]"
+                  >
+                    <span>{texts.register?.buttons?.next || "CONTINUE"}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const valid = await trigger();
+                      if (valid) {
+                        handleSubmit(onSubmit)();
+                      }
+                    }}
+                    disabled={loading}
+                    className="flex items-center gap-2 px-10 py-3.5 rounded-full bg-[#1E1E1E] text-[#FAF9F6] hover:bg-[#B89A5E] hover:text-[#1E1E1E] text-xs font-semibold uppercase tracking-[0.2em] transition-all cursor-pointer border border-[#1E1E1E] hover:border-[#B89A5E] disabled:opacity-50"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="animate-spin h-4 w-4" />
+                        <span>{texts.register?.buttons?.submitting || "SUBMITTING REQUEST..."}</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>{texts.register?.buttons?.submit || "SUBMIT INVITATION REQUEST"}</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
-            )}
-
-            {/* Navigation */}
-            <div className="mt-12 flex justify-end gap-4">
-              {step > 1 && (
-                <button
-                  type="button"
-                  onClick={prevStep}
-                  className="cursor-pointer border border-[#E5DAC6] text-[#6B6862] rounded-2xl px-8 py-3 hover:bg-[#F7F4EE] hover:text-[#1A1A1A] transition-all text-xs font-semibold uppercase tracking-wider"
-                  disabled={loading}
-                >
-                  {texts.register?.buttons?.previous || "Précédent"}
-                </button>
-              )}
-              {step < 4 ? (
-                <button
-                  type="button"
-                  onClick={nextStep}
-                  className="cursor-pointer rounded-2xl px-8 py-3 text-xs font-semibold uppercase tracking-wider text-[#6E4FA0] bg-[#ECE5F8] border border-[#DDD0F3] hover:bg-[#DDD0F3] hover:shadow-md hover:shadow-[#C8B6E2]/25 transition-all shadow-2xs"
-                  disabled={loading}
-                >
-                  {texts.register?.buttons?.next || "Suivant"}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={async () => {
-                    const valid = await trigger();
-                    if (valid) {
-                      handleSubmit(onSubmit)();
-                    }
-                  }}
-                  disabled={loading}
-                  className="cursor-pointer flex items-center justify-center gap-2 rounded-2xl px-8 py-3 text-xs font-semibold uppercase tracking-wider text-[#6E4FA0] bg-[#ECE5F8] border border-[#DDD0F3] hover:bg-[#DDD0F3] hover:shadow-md hover:shadow-[#C8B6E2]/25 transition-all disabled:opacity-50 shadow-2xs"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="animate-spin -ml-1 mr-1 h-4 w-4" />
-                      {texts.register?.buttons?.submitting || "Soumission..."}
-                    </>
-                  ) : (
-                    texts.register?.buttons?.submit || "Soumettre"
-                  )}
-                </button>
-              )}
             </div>
           </div>
         </main>
@@ -367,7 +433,21 @@ export default function RegistrationPage() {
   );
 }
 
-// ----------------- STEP COMPONENTS -----------------
+export default function RegistrationPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#F5F1E8] flex items-center justify-center font-cinzel text-xl text-[#B89A5E]">
+          LOADING GALA INVITATION...
+        </div>
+      }
+    >
+      <RegistrationContent />
+    </Suspense>
+  );
+}
+
+// ----------------- STEP 1: PERSONAL & ACADEMIC -----------------
 function Step1({ texts }: { texts: any }) {
   const {
     register,
@@ -377,695 +457,327 @@ function Step1({ texts }: { texts: any }) {
 
   const showUniversityOther = watch("university") === "OTHER";
   const showFieldOfStudyOther = watch("field_of_study") === "OTHER";
-  const showAcademicLevelOther = watch("academic_level") === "OTHER";
-  const showGraduationYearOther = watch("graduation_year") === "OTHER";
-
-  const universityOptions = [
-    { value: "ENP", label: texts.register?.fields?.universities?.ENP || "ENP" },
-    {
-      value: "ENSTA",
-      label: texts.register?.fields?.universities?.ENSTA || "ENSTA",
-    },
-    {
-      value: "USTHB",
-      label: texts.register?.fields?.universities?.USTHB || "USTHB",
-    },
-    {
-      value: "ESAA",
-      label: texts.register?.fields?.universities?.ESAA || "ESAA",
-    },
-    {
-      value: "ENSTP",
-      label: texts.register?.fields?.universities?.ENSTP || "ENSTP",
-    },
-    {
-      value: "OTHER",
-      label: texts.register?.fields?.universities?.OTHER || "Other",
-    },
-  ];
-
-  const fieldOfStudyOptionsTranslated = fieldOfStudyOptions.map((opt) => ({
-    value: opt.value,
-    label: texts.register?.fields?.fieldOfStudies?.[opt.value] || opt.label,
-  }));
-
-  const academicLevelOptions = [
-    {
-      value: "Bachelor’s Degree",
-      label:
-        texts.register?.fields?.academicLevels?.bachelor || "Bachelor’s Degree",
-    },
-    {
-      value: "Master’s Degree",
-      label:
-        texts.register?.fields?.academicLevels?.master || "Master’s Degree",
-    },
-    {
-      value: "Engineering Degree",
-      label:
-        texts.register?.fields?.academicLevels?.engineering ||
-        "Engineering Degree",
-    },
-    {
-      value: "PhD",
-      label: texts.register?.fields?.academicLevels?.phd || "PhD",
-    },
-    {
-      value: "Postgraduate Studies (PGS)",
-      label:
-        texts.register?.fields?.academicLevels?.pgs ||
-        "Postgraduate Studies (PGS)",
-    },
-    {
-      value: "OTHER",
-      label: texts.register?.fields?.academicLevels?.other || "Other",
-    },
-  ];
-
-  const graduationYearOptions = [
-    "2023",
-    "2024",
-    "2025",
-    "2026",
-    "2027",
-    "2028",
-    "OTHER",
-  ].map((year) => ({
-    value: year,
-    label: texts.register?.fields?.graduationYears?.[year] || year,
-  }));
 
   return (
     <motion.div
       key="step1"
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -30 }}
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      className="space-y-6"
     >
-      <Header
-        title={texts.register?.steps?.step1?.title || "Partie 01"}
-        subtitle={
-          texts.register?.steps?.step1?.subtitle || "Informations personnelles"
-        }
-      />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <TextField
-          name="first_name"
-          label={texts.register?.fields?.firstName || "Prénom *"}
-          error={errors.first_name?.message}
-        />
-        <TextField
-          name="last_name"
-          label={texts.register?.fields?.lastName || "Nom *"}
-          error={errors.last_name?.message}
-        />
-        <TextField
-          name="email"
-          type="email"
-          label={texts.register?.fields?.email || "Adresse e-mail *"}
-          error={errors.email?.message}
-        />
-        <TextField
-          name="phone"
-          label={texts.register?.fields?.phone || "Téléphone *"}
-          error={errors.phone?.message}
-        />
+      <div>
+        <h3 className="font-cinzel text-xl sm:text-2xl font-medium text-[#1E1E1E] mb-1">
+          {texts.register?.steps?.step1?.subtitle || "Identity & Credentials"}
+        </h3>
+        <p className="text-xs text-[#969085]">Please provide your official information.</p>
+      </div>
 
-        <SelectField
-          name="university"
-          label={texts.register?.fields?.university || "Université *"}
-          error={errors.university?.message}
-          options={universityOptions}
-        />
-
-        {showUniversityOther && (
-          <TextField
-            name="university_other"
-            label={
-              texts.register?.fields?.universityOther ||
-              "Précisez votre université *"
-            }
-            error={errors.university_other?.message}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-[11px] uppercase tracking-[0.2em] text-[#969085] font-semibold mb-1">
+            {texts.register?.fields?.firstName || "First Name *"}
+          </label>
+          <input
+            {...register("first_name")}
+            className="w-full bg-transparent border-b border-[#E5DAC6] focus:border-[#B89A5E] focus:outline-none py-2.5 text-base text-[#1E1E1E]"
           />
-        )}
+          {errors.first_name && (
+            <p className="text-xs text-red-600 mt-1">{errors.first_name.message}</p>
+          )}
+        </div>
 
-        <SelectMajor
-          name="field_of_study"
-          label={texts.register?.fields?.fieldOfStudy || "Spécialité *"}
-          error={errors.field_of_study?.message}
-          options={fieldOfStudyOptionsTranslated}
-        />
-
-        {showFieldOfStudyOther && (
-          <TextField
-            name="field_of_study_other"
-            label={
-              texts.register?.fields?.fieldOfStudyOther ||
-              "Précisez votre spécialité *"
-            }
-            error={errors.field_of_study_other?.message}
+        <div>
+          <label className="block text-[11px] uppercase tracking-[0.2em] text-[#969085] font-semibold mb-1">
+            {texts.register?.fields?.lastName || "Last Name *"}
+          </label>
+          <input
+            {...register("last_name")}
+            className="w-full bg-transparent border-b border-[#E5DAC6] focus:border-[#B89A5E] focus:outline-none py-2.5 text-base text-[#1E1E1E]"
           />
-        )}
+          {errors.last_name && (
+            <p className="text-xs text-red-600 mt-1">{errors.last_name.message}</p>
+          )}
+        </div>
 
-        <SelectField
-          name="academic_level"
-          label={texts.register?.fields?.academicLevel || "Niveau académique *"}
-          error={errors.academic_level?.message}
-          options={academicLevelOptions}
-        />
-
-        {showAcademicLevelOther && (
-          <TextField
-            name="academic_level_other"
-            label={
-              texts.register?.fields?.academicLevelOther ||
-              "Précisez votre niveau académique *"
-            }
-            error={errors.academic_level_other?.message}
+        <div>
+          <label className="block text-[11px] uppercase tracking-[0.2em] text-[#969085] font-semibold mb-1">
+            {texts.register?.fields?.email || "Email Address *"}
+          </label>
+          <input
+            type="email"
+            {...register("email")}
+            className="w-full bg-transparent border-b border-[#E5DAC6] focus:border-[#B89A5E] focus:outline-none py-2.5 text-base text-[#1E1E1E]"
           />
-        )}
+          {errors.email && (
+            <p className="text-xs text-red-600 mt-1">{errors.email.message}</p>
+          )}
+        </div>
 
-        <SelectField
-          name="graduation_year"
-          label={
-            texts.register?.fields?.graduationYear || "Année de diplomation *"
-          }
-          error={errors.graduation_year?.message}
-          options={graduationYearOptions}
-        />
-
-        {showGraduationYearOther && (
-          <TextField
-            name="graduation_year_other"
-            label={
-              texts.register?.fields?.graduationYearOther ||
-              "Précisez votre année de diplomation *"
-            }
-            error={errors.graduation_year_other?.message}
+        <div>
+          <label className="block text-[11px] uppercase tracking-[0.2em] text-[#969085] font-semibold mb-1">
+            {texts.register?.fields?.phone || "Phone Number *"}
+          </label>
+          <input
+            {...register("phone")}
+            className="w-full bg-transparent border-b border-[#E5DAC6] focus:border-[#B89A5E] focus:outline-none py-2.5 text-base text-[#1E1E1E]"
           />
-        )}
+          {errors.phone && (
+            <p className="text-xs text-red-600 mt-1">{errors.phone.message}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-[11px] uppercase tracking-[0.2em] text-[#969085] font-semibold mb-1">
+            {texts.register?.fields?.university || "University / Grande École *"}
+          </label>
+          <select
+            {...register("university")}
+            className="w-full bg-transparent border-b border-[#E5DAC6] focus:border-[#B89A5E] focus:outline-none py-2.5 text-base text-[#1E1E1E] cursor-pointer"
+          >
+            <option value="ENP">École Nationale Polytechnique (ENP)</option>
+            <option value="ENSTA">ENSTA</option>
+            <option value="USTHB">USTHB</option>
+            <option value="ESAA">ESAA</option>
+            <option value="ENSTP">ENSTP</option>
+            <option value="OTHER">Other Institution</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-[11px] uppercase tracking-[0.2em] text-[#969085] font-semibold mb-1">
+            {texts.register?.fields?.fieldOfStudy || "Engineering Specialization *"}
+          </label>
+          <select
+            {...register("field_of_study")}
+            className="w-full bg-transparent border-b border-[#E5DAC6] focus:border-[#B89A5E] focus:outline-none py-2.5 text-base text-[#1E1E1E] cursor-pointer"
+          >
+            {fieldOfStudyOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {texts.register?.fields?.fieldOfStudies?.[opt.value] || opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
     </motion.div>
   );
 }
 
+// ----------------- STEP 2: PROFILE & AMBITIONS -----------------
 function Step2({ texts }: { texts: any }) {
   const {
+    register,
     formState: { errors },
   } = useFormContext<RegistrationData>();
 
   return (
     <motion.div
       key="step2"
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -30 }}
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      className="space-y-6"
     >
-      <Header
-        title={texts.register?.steps?.step2?.title || "Partie 02"}
-        subtitle={
-          texts.register?.steps?.step2?.subtitle || "Vos plans et motivation"
-        }
-      />
-      <div className="space-y-4">
-        <TextAreaField
-          name="plans_next_year"
-          label={
-            texts.register?.fields?.plansNextYear ||
-            "Quels sont vos projets pour l'année à venir ? *"
-          }
-          error={errors.plans_next_year?.message}
-        />
-        <TextAreaField
-          name="personal_description"
-          label={
-            texts.register?.fields?.personalDescription ||
-            "Courte description personnelle / Motivation"
-          }
-          error={errors.personal_description?.message}
-        />
+      <div>
+        <h3 className="font-cinzel text-xl sm:text-2xl font-medium text-[#1E1E1E] mb-1">
+          {texts.register?.steps?.step2?.subtitle || "Ambitions & Trajectory"}
+        </h3>
+        <p className="text-xs text-[#969085]">Share your goals for the upcoming year.</p>
+      </div>
+
+      <div className="space-y-6">
+        <div>
+          <label className="block text-[11px] uppercase tracking-[0.2em] text-[#969085] font-semibold mb-1">
+            {texts.register?.fields?.plansNextYear || "What are your primary ambitions for the coming year? *"}
+          </label>
+          <textarea
+            rows={3}
+            {...register("plans_next_year")}
+            placeholder="e.g. Seeking graduate engineering roles in energy transition or AI systems..."
+            className="w-full bg-transparent border-b border-[#E5DAC6] focus:border-[#B89A5E] focus:outline-none py-2.5 text-base text-[#1E1E1E] resize-none"
+          />
+          {errors.plans_next_year && (
+            <p className="text-xs text-red-600 mt-1">{errors.plans_next_year.message}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-[11px] uppercase tracking-[0.2em] text-[#969085] font-semibold mb-1">
+            {texts.register?.fields?.personalDescription || "Short personal statement or executive summary"}
+          </label>
+          <textarea
+            rows={3}
+            {...register("personal_description")}
+            placeholder="Key achievements, technical passions, or project leadership..."
+            className="w-full bg-transparent border-b border-[#E5DAC6] focus:border-[#B89A5E] focus:outline-none py-2.5 text-base text-[#1E1E1E] resize-none"
+          />
+        </div>
       </div>
     </motion.div>
   );
 }
 
+// ----------------- STEP 3: VISION & DETAILS -----------------
 function Step3({ texts }: { texts: any }) {
   const {
+    register,
+    formState: { errors },
     setValue,
     watch,
-    formState: { errors },
   } = useFormContext<RegistrationData>();
-
-  const showHeardAboutOther = watch("heard_about") === "OTHER";
 
   return (
     <motion.div
       key="step3"
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -30 }}
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      className="space-y-6"
     >
-      <Header
-        title={texts.register?.steps?.step3?.title || "Partie 03"}
-        subtitle={
-          texts.register?.steps?.step3?.subtitle || "Votre vision du Gala"
-        }
-      />
-      <div className="space-y-4">
-        <TextAreaField
-          name="perspective_gala"
-          label={
-            texts.register?.fields?.perspectiveGala ||
-            "Que savez-vous du Engineers' Gala ? *"
-          }
-          error={errors.perspective_gala?.message}
-        />
-        <TextAreaField
-          name="benefit_from_event"
-          label={
-            texts.register?.fields?.benefitFromEvent ||
-            "En quoi votre participation vous sera bénéfique ? *"
-          }
-          error={errors.benefit_from_event?.message}
-        />
+      <div>
+        <h3 className="font-cinzel text-xl sm:text-2xl font-medium text-[#1E1E1E] mb-1">
+          {texts.register?.steps?.step3?.subtitle || "GALA Perspective & Synergy"}
+        </h3>
+        <p className="text-xs text-[#969085]">How your presence elevates the collective experience.</p>
+      </div>
 
-        <div className="mt-4 p-4 rounded-xl bg-[#FAF7F2] border border-[#E5DAC6]">
-          <label className="block mb-2 text-xs font-semibold text-[#6B6862] uppercase tracking-wider">
-            {texts.register?.fields?.attendedBefore ||
-              "Avez-vous déjà assisté à une édition précédente ? *"}
+      <div className="space-y-6">
+        <div>
+          <label className="block text-[11px] uppercase tracking-[0.2em] text-[#969085] font-semibold mb-1">
+            {texts.register?.fields?.perspectiveGala || "What is your vision of the GALA experience? *"}
           </label>
-          <div className="flex gap-6 mt-2 text-[#1A1A1A] text-sm">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                value="true"
-                checked={watch("attended_before") === true}
-                onChange={() => setValue("attended_before", true)}
-                className="accent-[#6E4FA0]"
-              />{" "}
-              {texts.register?.options?.yes || "Oui"}
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                value="false"
-                checked={watch("attended_before") === false}
-                onChange={() => setValue("attended_before", false)}
-                className="accent-[#6E4FA0]"
-              />{" "}
-              {texts.register?.options?.no || "Non"}
-            </label>
-          </div>
+          <textarea
+            rows={3}
+            {...register("perspective_gala")}
+            className="w-full bg-transparent border-b border-[#E5DAC6] focus:border-[#B89A5E] focus:outline-none py-2.5 text-base text-[#1E1E1E] resize-none"
+          />
+          {errors.perspective_gala && (
+            <p className="text-xs text-red-600 mt-1">{errors.perspective_gala.message}</p>
+          )}
         </div>
 
-        <SelectField
-          name="heard_about"
-          label={
-            texts.register?.fields?.heardAbout ||
-            "Comment avez-vous entendu parler du Gala ? *"
-          }
-          error={errors.heard_about?.message}
-          options={[
-            {
-              value: "Facebook",
-              label:
-                texts.register?.fields?.heardAboutOptions?.Facebook || "Facebook",
-            },
-            {
-              value: "Instagram",
-              label:
-                texts.register?.fields?.heardAboutOptions?.Instagram ||
-                "Instagram",
-            },
-            {
-              value: "Through a Friend",
-              label:
-                texts.register?.fields?.heardAboutOptions?.throughAFriend ||
-                "Through a Friend",
-            },
-            {
-              value: "LinkedIn",
-              label:
-                texts.register?.fields?.heardAboutOptions?.LinkedIn || "LinkedIn",
-            },
-            {
-              value: "OTHER",
-              label: texts.register?.fields?.heardAboutOptions?.OTHER || "Other",
-            },
-          ]}
-        />
-        {showHeardAboutOther && (
-          <TextField
-            name="heard_about_other"
-            label={
-              texts.register?.fields?.heardAboutOther || "Précisez comment *"
-            }
-            error={errors.heard_about_other?.message}
+        <div>
+          <label className="block text-[11px] uppercase tracking-[0.2em] text-[#969085] font-semibold mb-1">
+            {texts.register?.fields?.benefitFromEvent || "How will participating in GALA accelerate your career? *"}
+          </label>
+          <textarea
+            rows={3}
+            {...register("benefit_from_event")}
+            className="w-full bg-transparent border-b border-[#E5DAC6] focus:border-[#B89A5E] focus:outline-none py-2.5 text-base text-[#1E1E1E] resize-none"
           />
-        )}
+          {errors.benefit_from_event && (
+            <p className="text-xs text-red-600 mt-1">{errors.benefit_from_event.message}</p>
+          )}
+        </div>
 
-        <TextAreaField
-          name="additional_comments"
-          label={
-            texts.register?.fields?.additionalComments ||
-            "Commentaires additionnels"
-          }
-          error={errors.additional_comments?.message}
-        />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
+          <div>
+            <label className="block text-[11px] uppercase tracking-[0.2em] text-[#969085] font-semibold mb-2">
+              {texts.register?.fields?.attendedBefore || "Attended Previous Edition?"}
+            </label>
+            <div className="flex gap-6 text-sm">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  value="true"
+                  checked={watch("attended_before") === true}
+                  onChange={() => setValue("attended_before", true)}
+                  className="accent-[#B89A5E]"
+                />
+                <span>{texts.register?.options?.yes || "Yes"}</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  value="false"
+                  checked={watch("attended_before") === false}
+                  onChange={() => setValue("attended_before", false)}
+                  className="accent-[#B89A5E]"
+                />
+                <span>{texts.register?.options?.no || "No"}</span>
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[11px] uppercase tracking-[0.2em] text-[#969085] font-semibold mb-1">
+              {texts.register?.fields?.heardAbout || "Discovery Channel"}
+            </label>
+            <select
+              {...register("heard_about")}
+              className="w-full bg-transparent border-b border-[#E5DAC6] focus:border-[#B89A5E] focus:outline-none py-2.5 text-base text-[#1E1E1E] cursor-pointer"
+            >
+              <option value="LinkedIn">LinkedIn</option>
+              <option value="Facebook">Facebook</option>
+              <option value="Instagram">Instagram</option>
+              <option value="Through a Friend">Colleague Recommendation</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </div>
+        </div>
       </div>
     </motion.div>
   );
 }
 
-function Step4({ data, texts }: { data: RegistrationData; texts: any }) {
-  const getLabel = (field: keyof RegistrationData, value: string) => {
-    if (!value) return "";
-
-    switch (field) {
-      case "university": {
-        const options = [
-          {
-            value: "ENP",
-            label: texts.register?.fields?.universities?.ENP || "ENP",
-          },
-          {
-            value: "ENSTA",
-            label: texts.register?.fields?.universities?.ENSTA || "ENSTA",
-          },
-          {
-            value: "USTHB",
-            label: texts.register?.fields?.universities?.USTHB || "USTHB",
-          },
-          {
-            value: "ESAA",
-            label: texts.register?.fields?.universities?.ESAA || "ESAA",
-          },
-          {
-            value: "ENSTP",
-            label: texts.register?.fields?.universities?.ENSTP || "ENSTP",
-          },
-          {
-            value: "OTHER",
-            label:
-              data.university_other ||
-              texts.register?.fields?.universities?.OTHER ||
-              "Other",
-          },
-        ];
-        return options.find((o) => o.value === value)?.label || value;
-      }
-      case "field_of_study": {
-        const options = fieldOfStudyOptions.map((opt) => ({
-          value: opt.value,
-          label:
-            texts.register?.fields?.fieldOfStudies?.[opt.value] || opt.label,
-        }));
-        if (value === "OTHER") return data.field_of_study_other || "Other";
-        return options.find((o) => o.value === value)?.label || value;
-      }
-      case "academic_level": {
-        const options = [
-          {
-            value: "Bachelor’s Degree",
-            label:
-              texts.register?.fields?.academicLevels?.bachelor ||
-              "Bachelor’s Degree",
-          },
-          {
-            value: "Master’s Degree",
-            label:
-              texts.register?.fields?.academicLevels?.master ||
-              "Master’s Degree",
-          },
-          {
-            value: "Engineering Degree",
-            label:
-              texts.register?.fields?.academicLevels?.engineering ||
-              "Engineering Degree",
-          },
-          {
-            value: "PhD",
-            label: texts.register?.fields?.academicLevels?.phd || "PhD",
-          },
-          {
-            value: "Postgraduate Studies (PGS)",
-            label:
-              texts.register?.fields?.academicLevels?.pgs || "PGS",
-          },
-          {
-            value: "OTHER",
-            label:
-              data.academic_level_other ||
-              texts.register?.fields?.academicLevels?.other ||
-              "Other",
-          },
-        ];
-        return options.find((o) => o.value === value)?.label || value;
-      }
-      case "graduation_year": {
-        if (value === "OTHER") return data.graduation_year_other || "Other";
-        return value;
-      }
-      case "current_year": {
-        const yearsMap: Record<string, string> = {
-          "1": "1ère année",
-          "2": "2ème année",
-          "3": "3ème année",
-          "4": "4ème année",
-          "5": "5ème année",
-          GRADUATED: "Diplômé(e)",
-        };
-        return yearsMap[value] || value;
-      }
-      case "heard_about": {
-        const options = [
-          {
-            value: "Facebook",
-            label:
-              texts.register?.fields?.heardAboutOptions?.Facebook || "Facebook",
-          },
-          {
-            value: "Instagram",
-            label:
-              texts.register?.fields?.heardAboutOptions?.Instagram ||
-              "Instagram",
-          },
-          {
-            value: "Through a Friend",
-            label:
-              texts.register?.fields?.heardAboutOptions?.throughAFriend ||
-              "Through a Friend",
-          },
-          {
-            value: "LinkedIn",
-            label:
-              texts.register?.fields?.heardAboutOptions?.LinkedIn || "LinkedIn",
-          },
-          {
-            value: "OTHER",
-            label:
-              data.heard_about_other ||
-              texts.register?.fields?.heardAboutOptions?.OTHER ||
-              "Other",
-          },
-        ];
-        return options.find((o) => o.value === value)?.label || value;
-      }
-      default:
-        return value;
-    }
-  };
-
+// ----------------- STEP 4: EDITORIAL REVIEW -----------------
+function Step4({
+  data,
+  requestedTier,
+  texts,
+}: {
+  data: RegistrationData;
+  requestedTier: string;
+  texts: any;
+}) {
   return (
     <motion.div
       key="step4"
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -30 }}
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      className="space-y-6"
     >
-      <Header
-        title={texts.register?.steps?.step4?.title || "Partie 04"}
-        subtitle={texts.register?.steps?.step4?.subtitle || "Confirmation"}
-      />
-      <p className="text-[#6B6862] mb-8 text-center text-sm">
-        {texts.register?.confirmation?.message ||
-          "Vérifiez vos informations avant de soumettre votre inscription."}
-      </p>
-      <div className="p-6 rounded-2xl bg-[#FAF7F2] border border-[#E5DAC6] text-left text-[#1A1A1A] space-y-2 text-sm">
-        <p className="flex justify-between border-b border-[#EAE3D5] pb-1.5">
-          <span className="text-[#6B6862]">{(texts.register?.fields?.firstName || "Prénom").replace("*", "")}</span>
-          <span className="font-semibold">{data.first_name}</span>
-        </p>
-        <p className="flex justify-between border-b border-[#EAE3D5] pb-1.5">
-          <span className="text-[#6B6862]">{(texts.register?.fields?.lastName || "Nom").replace("*", "")}</span>
-          <span className="font-semibold">{data.last_name}</span>
-        </p>
-        <p className="flex justify-between border-b border-[#EAE3D5] pb-1.5">
-          <span className="text-[#6B6862]">{(texts.register?.fields?.email || "Email").replace("*", "")}</span>
-          <span className="font-semibold">{data.email}</span>
-        </p>
-        <p className="flex justify-between border-b border-[#EAE3D5] pb-1.5">
-          <span className="text-[#6B6862]">{(texts.register?.fields?.university || "Université").replace("*", "")}</span>
-          <span className="font-semibold">{getLabel("university", data.university)}</span>
-        </p>
-        <p className="flex justify-between border-b border-[#EAE3D5] pb-1.5">
-          <span className="text-[#6B6862]">{(texts.register?.fields?.fieldOfStudy || "Spécialité").replace("*", "")}</span>
-          <span className="font-semibold">{getLabel("field_of_study", data.field_of_study)}</span>
-        </p>
-        <p className="flex justify-between border-b border-[#EAE3D5] pb-1.5">
-          <span className="text-[#6B6862]">{(texts.register?.fields?.academicLevel || "Niveau académique").replace("*", "")}</span>
-          <span className="font-semibold">{getLabel("academic_level", data.academic_level)}</span>
-        </p>
-        <p className="flex justify-between border-b border-[#EAE3D5] pb-1.5">
-          <span className="text-[#6B6862]">{(texts.register?.fields?.graduationYear || "Année de diplomation").replace("*", "")}</span>
-          <span className="font-semibold">{getLabel("graduation_year", data.graduation_year)}</span>
-        </p>
-        <p className="flex justify-between">
-          <span className="text-[#6B6862]">{(texts.register?.fields?.heardAbout || "Comment avez-vous entendu parler du Gala ?").replace("*", "")}</span>
-          <span className="font-semibold">{getLabel("heard_about", data.heard_about)}</span>
-        </p>
+      <div>
+        <h3 className="font-cinzel text-xl sm:text-2xl font-medium text-[#1E1E1E] mb-1">
+          {texts.register?.steps?.step4?.subtitle || "Review & Confirmation"}
+        </h3>
+        <p className="text-xs text-[#969085]">Please verify your dossier before final transmission.</p>
+      </div>
+
+      <div className="space-y-4 text-sm text-[#1E1E1E]">
+        <div className="p-4 rounded-2xl bg-[#F5F1E8] border border-[#E5DAC6] flex justify-between items-center">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-[#969085]">ADMISSION PASS</p>
+            <p className="font-cinzel text-base font-bold text-[#1E1E1E]">
+              OFFICIAL ADMISSION TICKET · 1,000 DA
+            </p>
+          </div>
+          <span className="text-xs font-mono font-semibold text-[#B89A5E]">
+            ALGIERS · 08 NOV 2026
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 p-4 rounded-2xl bg-[#F5F1E8] border border-[#E5DAC6]">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-[#969085]">CANDIDATE</p>
+            <p className="font-semibold">{data.first_name} {data.last_name}</p>
+          </div>
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-[#969085]">EMAIL</p>
+            <p className="font-semibold">{data.email}</p>
+          </div>
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-[#969085]">INSTITUTION</p>
+            <p className="font-semibold">{data.university}</p>
+          </div>
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-[#969085]">SPECIALTY</p>
+            <p className="font-semibold">{data.field_of_study}</p>
+          </div>
+        </div>
       </div>
     </motion.div>
-  );
-}
-
-// ----------------- SMALL COMPONENTS -----------------
-function Header({ title, subtitle }: { title: string; subtitle: string }) {
-  return (
-    <div className="text-center mb-8">
-      <h2 className="text-[#C5A880] text-xs font-semibold uppercase tracking-wider font-sans">
-        {title}
-      </h2>
-      <h1 className="text-2xl sm:text-3xl font-semibold text-[#1A1A1A] mt-1 font-serif">
-        {subtitle}
-      </h1>
-    </div>
-  );
-}
-
-function TextField({
-  name,
-  label,
-  error,
-  type = "text",
-}: {
-  name: keyof RegistrationData;
-  label: string;
-  error?: string;
-  type?: string;
-}) {
-  const { register } = useFormContext<RegistrationData>();
-  return (
-    <div>
-      <label className="block mb-2 text-xs font-semibold text-[#6B6862] uppercase tracking-wider">
-        {label}
-      </label>
-      <input
-        {...register(name)}
-        type={type}
-        className="w-full rounded-xl border border-[#E5DAC6] bg-[#FAF7F2] px-4 py-2.5 text-sm placeholder-[#A0A0A0] text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C5A880] focus:border-[#C5A880] transition-colors"
-      />
-      {error && <p className="text-red-600 text-xs mt-1.5">{error}</p>}
-    </div>
-  );
-}
-
-function TextAreaField({
-  name,
-  label,
-  error,
-}: {
-  name: keyof RegistrationData;
-  label: string;
-  error?: string;
-}) {
-  const { register } = useFormContext<RegistrationData>();
-  return (
-    <div className="mt-4">
-      <label className="block mb-2 text-xs font-semibold text-[#6B6862] uppercase tracking-wider">
-        {label}
-      </label>
-      <textarea
-        {...register(name)}
-        rows={3}
-        className="w-full rounded-xl border border-[#E5DAC6] bg-[#FAF7F2] px-4 py-2.5 text-sm placeholder-[#A0A0A0] text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C5A880] focus:border-[#C5A880] transition-colors"
-      />
-      {error && <p className="text-red-600 text-xs mt-1.5">{error}</p>}
-    </div>
-  );
-}
-
-type Option = {
-  value: string;
-  label: string;
-};
-
-function SelectField({
-  name,
-  label,
-  options,
-  error,
-}: {
-  name: keyof RegistrationData;
-  label: string;
-  options: Option[];
-  error?: string;
-}) {
-  const { register } = useFormContext<RegistrationData>();
-  return (
-    <div>
-      <label className="block mb-2 text-xs font-semibold text-[#6B6862] uppercase tracking-wider">
-        {label}
-      </label>
-      <select
-        {...register(name)}
-        className="w-full rounded-xl border border-[#E5DAC6] bg-[#FAF7F2] px-4 py-2.5 text-sm text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C5A880] focus:border-[#C5A880] transition-colors"
-      >
-        <option value="">
-          {label.includes("*") ? "Sélectionner *" : "Sélectionner"}
-        </option>
-        {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
-      {error && <p className="text-red-600 text-xs mt-1.5">{error}</p>}
-    </div>
-  );
-}
-
-function SelectMajor({
-  name,
-  label,
-  options,
-  error,
-}: {
-  name: keyof RegistrationData;
-  label: string;
-  options: Option[];
-  error?: string;
-}) {
-  const { register } = useFormContext<RegistrationData>();
-  return (
-    <div>
-      <label className="block mb-2 text-xs font-semibold text-[#6B6862] uppercase tracking-wider">
-        {label}
-      </label>
-      <select
-        {...register(name)}
-        className="w-full rounded-xl border border-[#E5DAC6] bg-[#FAF7F2] px-4 py-2.5 text-sm text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C5A880] focus:border-[#C5A880] transition-colors"
-      >
-        <option value="">
-          {label.includes("*") ? "Sélectionner *" : "Sélectionner"}
-        </option>
-        {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
-      {error && <p className="text-red-600 text-xs mt-1.5">{error}</p>}
-    </div>
   );
 }
