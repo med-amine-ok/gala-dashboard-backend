@@ -85,6 +85,9 @@ class LoginView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
+                user = None
+               
+
             logger.info(f"User authenticated successfully: {user.email} (ID: {user.id})")
             
             # Generate JWT tokens
