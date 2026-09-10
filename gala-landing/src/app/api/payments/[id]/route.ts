@@ -5,10 +5,15 @@ import { payments, ticketsTicket } from "../../../../../drizzle/schema";
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
-  const { id } = params;
-  const url = "https://pay.chargily.net/api/v2/checkouts";
+  const { id } = await Promise.resolve(params);
+  const chargilyBaseUrl =
+    process.env.CHARGILY_API_URL ||
+    (process.env.CHARGILY_API_KEY?.startsWith("test_")
+      ? "https://pay.chargily.net/test/api/v2"
+      : "https://pay.chargily.net/api/v2");
+  const url = `${chargilyBaseUrl}/checkouts`;
 
   try {
     const now = new Date().toISOString();

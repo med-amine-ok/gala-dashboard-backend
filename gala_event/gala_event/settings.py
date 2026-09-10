@@ -104,6 +104,7 @@ raw_cors = env.list('CORS_ALLOWED_ORIGINS', default=[
     "https://gala-xady.vercel.app",
     "https://vitreous-sheree-devvv-team-7eaaa976.koyeb.app",
     "https://gala.vic-enp.com",
+    "https://gala-vic.vercel.app/",
 ])
 # Strip any trailing slashes or whitespace so Django CORS check never fails
 CORS_ALLOWED_ORIGINS = [origin.strip().rstrip('/') for origin in raw_cors if origin.strip()]
