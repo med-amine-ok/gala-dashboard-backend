@@ -1,7 +1,11 @@
 import { db } from "@/db/client";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { payments, ticketsTicket } from "../../../../../drizzle/schema";
+import {
+  participantsParticipant,
+  payments,
+  ticketsTicket,
+} from "@/db/schema";
 
 export async function POST(
   request: Request,
@@ -17,6 +21,25 @@ export async function POST(
 
   try {
     const now = new Date().toISOString();
+
+    // Check participant
+    const participant = await db.query.participantsParticipant.findFirst({
+      where: eq(participantsParticipant.id, +id),
+    });
+
+    if (!participant) {
+      return NextResponse.json(
+        { message: "Participant not found" },
+        { status: 404 }
+      );
+    }
+
+    if (participant.paymentStatus === "paid") {
+      return NextResponse.json(
+        { message: "Payment already completed" },
+        { status: 400 }
+      );
+    }
 
     const ticket = await db.query.ticketsTicket.findFirst({
       where: eq(ticketsTicket.participantId, +id),
@@ -60,6 +83,13 @@ export async function POST(
       paymentRecord = newPayment;
     }
 
+    const origin =
+      process.env.NEXT_PUBLIC_APP_URL ||
+      request.headers.get("origin") ||
+      "https://gala.vic-enp.com";
+    const webhookEndpoint =
+      process.env.WEBHOOK_URL || `${origin}/api/webhook`;
+
     // Create a checkout on Chargily
     const response = await fetch(url, {
       method: "POST",
@@ -70,9 +100,9 @@ export async function POST(
       body: JSON.stringify({
         amount: 1000,
         currency: "dzd",
-        success_url: "https://gala.vic-enp.com/",
-        failure_url: "https://gala.vic-enp.com/",
-        webhook_endpoint: "https://gala.vic-enp.com/api/webhook",
+        success_url: `${origin}/payment/success?participant_id=${id}`,
+        failure_url: `${origin}/payment/${id}?failed=true`,
+        webhook_endpoint: webhookEndpoint,
         metadata: {
           participantId: id,
           paymentId: paymentRecord.id,
@@ -88,15 +118,26 @@ export async function POST(
 
     const data = await response.json();
 
-    // Trigger Inngest event for notification or further automation
+    // Save checkout_id to payment record for easy lookup
+    if (data.id && paymentRecord.id) {
+      await db
+        .update(payments)
+        .set({
+          updatedAt: now,
+        })
+        .where(eq(payments.id, paymentRecord.id));
+    }
 
     console.log("Chargily checkout created:", data);
 
     return NextResponse.json(data);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Payment creation failed:", error);
     return NextResponse.json(
-      { error: "Payment creation failed" },
+      {
+        message: error?.message || "Payment creation failed",
+        cause: error?.cause || null,
+      },
       { status: 500 }
     );
   }

@@ -322,7 +322,7 @@ class DigitalBusinessCardScreen extends ConsumerWidget {
                           Expanded(
                             child: Text(
                               isHR
-                                  ? 'Official Organizing Committee Pass with full administrative access for Gala 2025.'
+                                  ? 'Official Organizing Committee Pass with full administrative access for Gala 2026.'
                                   : 'Present during networking sessions to exchange contact details with partners.',
                               style: GoogleFonts.plusJakartaSans(
                                 color: AppColors.textSecondary,

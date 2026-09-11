@@ -75,7 +75,7 @@ class AboutGalaScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Engineers’ Gala 2025',
+                    'Engineers’ Gala 2026',
                     style: GoogleFonts.cinzel(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,

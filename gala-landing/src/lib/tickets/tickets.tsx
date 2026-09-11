@@ -1,4 +1,5 @@
 import fs from "fs";
+import path from "path";
 import { PDFDocument } from "pdf-lib";
 import QRCode from "qrcode";
 import inngest from "@/lib/inngest/inngest-client";
@@ -17,8 +18,21 @@ export async function generateAndSendTicket(p: TicketData) {
       throw new Error("Participant data is required");
     }
 
-    // Load the ticket template
-    const existingPdfBytes = fs.readFileSync("public/tickets.pdf");
+    // Load the ticket template reliably across environments
+    let pdfPath = path.join(process.cwd(), "public", "tickets.pdf");
+    if (!fs.existsSync(pdfPath)) {
+      pdfPath = path.resolve(
+        process.cwd(),
+        "gala-landing",
+        "public",
+        "tickets.pdf",
+      );
+    }
+    if (!fs.existsSync(pdfPath)) {
+      pdfPath = "public/tickets.pdf";
+    }
+
+    const existingPdfBytes = fs.readFileSync(pdfPath);
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
     const page = pdfDoc.getPage(0);
 
@@ -33,7 +47,7 @@ export async function generateAndSendTicket(p: TicketData) {
     const qrDataUrl = await QRCode.toDataURL(qrData);
     const qrImageBytes = Buffer.from(
       qrDataUrl.replace(/^data:image\/png;base64,/, ""),
-      "base64"
+      "base64",
     );
     const qrImage = await pdfDoc.embedPng(qrImageBytes);
 
@@ -53,7 +67,7 @@ export async function generateAndSendTicket(p: TicketData) {
     //       name: "test/email.sent",
     //       data: {
     //         to: [p.email],
-    //         subject: "Your Engineers Gala 2025 Ticket",
+    //         subject: "Your Engineers Gala 2026 Ticket",
     //         text: `Hello ${p.firstName},
 
     // Your ticket is attached. Please present it at the event.
@@ -71,7 +85,7 @@ export async function generateAndSendTicket(p: TicketData) {
 
     await sendEmail({
       to: p.email,
-      subject: "Your Ticket – Engineers Gala 2025",
+      subject: "Your Ticket – Engineers Gala 2026",
       text: `Hello ${p.firstName},
 
     Your ticket is attached. Please present it at the event.

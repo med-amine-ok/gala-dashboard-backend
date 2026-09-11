@@ -282,7 +282,7 @@ class GalaLuxuryHeroCard extends StatelessWidget {
 
                 // Main Title
                 Text(
-                  "Engineers' Gala 2025",
+                  "Engineers' Gala 2026",
                   style: GoogleFonts.cinzel(
                     color: AppColors.white,
                     fontSize: 24,

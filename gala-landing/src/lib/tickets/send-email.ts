@@ -11,7 +11,7 @@ export interface SendEmailOptions {
 }
 
 export async function sendEmail({
-  from = `"Engineers Gala Dev Team" <dev-team@gala.vic-enp.com>`,
+  from = process.env.MAIL_FROM || `"Engineers Gala Team" <vic@g.enp.edu.dz>`,
   to,
   subject = "No subject",
   text = "",

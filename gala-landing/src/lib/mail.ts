@@ -1,20 +1,14 @@
 import nodemailer from "nodemailer";
 
+const port = Number(process.env.MAIL_PORT) || 2525;
+const host = process.env.MAIL_HOST || "sandbox.smtp.mailtrap.io";
+
 export const mailService = nodemailer.createTransport({
-  // host: "sandbox.smtp.mailtrap.io",
-  // host: "mail.vic-polymaze.com",
-
-  host: "live.smtp.mailtrap.io", // bulk.smtp.mailtrap.io
-  port: 587,
-
-  // host: "bulk.smtp.mailtrap.io",
-  // port: 587,
-
-  // port: 2525,
-
-  // port: 465,
+  host,
+  port,
+  secure: port === 465,
   auth: {
-    user: process.env.MAILTRAP_USER,
-    pass: process.env.MAILTRAP_PASS,
+    user: process.env.MAIL_USER || process.env.MAILTRAP_USER || "c6a3766cb9d0ea",
+    pass: process.env.MAIL_PASS || process.env.MAILTRAP_PASS || "a43a10d571528f",
   },
 });

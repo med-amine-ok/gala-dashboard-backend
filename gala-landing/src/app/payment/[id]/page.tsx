@@ -44,7 +44,7 @@ export default function PaymentPage() {
       });
 
       if (!res.ok) {
-        throw new Error(json?.message || "Failed to create payment link");
+        throw new Error(json?.message || json?.error || "Failed to create payment link");
       }
 
       if (!json.checkout_url) {

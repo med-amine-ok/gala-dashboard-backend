@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     if (!Array.isArray(emails) || emails.length === 0) {
       return NextResponse.json(
         { ok: false, error: "Emails must be a non-empty array" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -37,10 +37,10 @@ export async function POST(req: Request) {
         name: "test/email.sent",
         data: {
           to: [email],
-          subject: "Secure Your Spot – Engineers Gala 2025 Payment Link",
+          subject: "Secure Your Spot – Engineers Gala 2026 Payment Link",
           text: `Hello ${participant.firstName},
 
-We’re thrilled to have you joining us for the Engineers Gala 2025!
+We’re thrilled to have you joining us for the Engineers Gala 2026!
 
 To confirm your participation, please complete your payment at the link below:
 https://gala.vic-enp.com/payment/${participant.id}
@@ -60,7 +60,7 @@ See you soon at Engineers Gala!`,
     console.error("Error notifying participants:", error);
     return NextResponse.json(
       { ok: false, error: error.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

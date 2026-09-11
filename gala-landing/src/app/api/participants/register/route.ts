@@ -3,10 +3,16 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const apiBaseUrl =
+    const defaultUrl =
+      process.env.NODE_ENV === "production"
+        ? "https://gala-dashboard-backend.onrender.com"
+        : "http://127.0.0.1:8000";
+
+    const apiBaseUrl = (
       process.env.NEXT_PUBLIC_API_BASE_URL ||
       process.env.API_BASE_URL ||
-      "http://127.0.0.1:8000";
+      defaultUrl
+    ).replace(/\/$/, "");
 
     const response = await fetch(`${apiBaseUrl}/api/participants/register/`, {
       method: "POST",
@@ -26,10 +32,13 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json(data, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Participant registration proxy error:", error);
     return NextResponse.json(
-      { error: "Internal server error connecting to backend" },
+      {
+        error: "Internal server error connecting to backend",
+        details: error?.message || String(error),
+      },
       { status: 500 }
     );
   }

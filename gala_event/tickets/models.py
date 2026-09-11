@@ -47,12 +47,12 @@ class Ticket(models.Model):
     @property
     def is_valid(self):
         """Check if ticket is valid for use"""
-        return self.status in ['active', 'checked_in']
+        return self.status in ['active', 'assigned', 'checked_in']
     
     @property
     def is_assigned(self):
         """Check if ticket has been assigned"""
-        return self.status in ['assigned', 'checked_in']
+        return self.status in ['assigned', 'checked_in'] or self.participant_id is not None
     
     def mark_as_assigned(self, user=None):
         """Mark ticket as assigned"""

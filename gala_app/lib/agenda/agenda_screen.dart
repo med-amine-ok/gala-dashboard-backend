@@ -86,7 +86,7 @@ class AgendaScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Saturday, May 2025',
+                        'Saturday, May 2026',
                         style: GoogleFonts.cinzel(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,

@@ -119,7 +119,7 @@ class TicketViewSet(viewsets.ModelViewSet):
     #     qr_data = {
     #         'serial_number': ticket.serial_number,
     #         'participant_id': ticket.participant.id,
-    #         'event': 'Gala Event 2025'
+    #         'event': 'Gala Event 2026'
     #     }
         
     #     # Generate QR code
