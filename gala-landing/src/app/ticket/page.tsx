@@ -37,22 +37,22 @@ export default function TicketPricing() {
   return (
     <section
       id="tarification"
-      className="relative min-h-screen w-full bg-[#F5F1E8] text-[#1E1E1E] flex flex-col justify-center py-20 sm:py-32 px-4 sm:px-12 overflow-hidden border-t border-[#E5DAC6]/60 font-sans"
+      className="relative min-h-screen w-full bg-[var(--color-primary)] text-[var(--color-cream)] flex flex-col justify-center py-20 sm:py-32 px-4 sm:px-12 overflow-hidden border-t border-[var(--color-silver)]/20 font-sans"
     >
       {/* Ambient Luxury Glows */}
-      <div className="absolute top-[10%] left-[-10%] w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle,#DED3BD_0%,transparent_70%)] opacity-35 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-[10%] right-[-10%] w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle,#ECE5F8_0%,transparent_70%)] opacity-40 blur-3xl pointer-events-none" />
+      <div className="absolute top-[10%] left-[-10%] w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle,rgba(91,15,26,0.45)_0%,transparent_70%)] opacity-35 blur-3xl pointer-events-none" />
+      <div className="absolute bottom-[10%] right-[-10%] w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle,rgba(192,192,192,0.12)_0%,transparent_70%)] opacity-30 blur-3xl pointer-events-none" />
 
       <div className="max-w-5xl w-full mx-auto">
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-8 sm:mb-12">
-          <span className="text-xs font-semibold uppercase tracking-[0.28em] text-[#B89A5E] block mb-3">
+          <span className="text-xs font-semibold uppercase tracking-[0.28em] text-[var(--color-silver)] block mb-3">
             {texts.invitations?.label || "OFFICIAL ADMISSION PASS"}
           </span>
-          <h2 className="font-cinzel text-3xl sm:text-5xl font-light text-[#1E1E1E] leading-tight mb-3 whitespace-pre-line">
+          <h2 className="font-cinzel text-3xl sm:text-5xl font-light text-[var(--color-cream)] leading-tight mb-3 whitespace-pre-line">
             {texts.invitations?.headline || "Your entrance\nto the evening."}
           </h2>
-          <p className="text-sm sm:text-base text-[#6B665E] font-light leading-relaxed">
+          <p className="text-sm sm:text-base text-[var(--color-cream)]/85 font-light leading-relaxed">
             {texts.invitations?.description ||
               "A single symbolic pass granting full access to the complete GALA experience, conferences, corporate exhibition stands, CV review corner, and networking cocktail."}
           </p>
@@ -85,7 +85,7 @@ export default function TicketPricing() {
                 backfaceVisibility: "hidden",
                 transform: "rotateY(0deg)",
               }}
-              className="absolute inset-0 w-full h-full rounded-xl sm:rounded-2xl overflow-hidden shadow-[0_20px_50px_-15px_rgba(30,30,30,0.15)] border border-[#DED3BD]/70 bg-[#FAF9F6]"
+              className="absolute inset-0 w-full h-full rounded-xl sm:rounded-2xl overflow-hidden shadow-[0_20px_50px_-15px_rgba(45,7,13,0.7)] border border-[var(--color-silver)]/60 bg-[var(--color-cream)]"
             >
               <Image
                 src="/tickets-01.svg"
@@ -103,7 +103,7 @@ export default function TicketPricing() {
                 backfaceVisibility: "hidden",
                 transform: "rotateY(180deg)",
               }}
-              className="absolute inset-0 w-full h-full rounded-xl sm:rounded-2xl overflow-hidden shadow-[0_20px_50px_-15px_rgba(0,0,0,0.5)] border border-[#333333] bg-[#121212]"
+              className="absolute inset-0 w-full h-full rounded-xl sm:rounded-2xl overflow-hidden shadow-[0_20px_50px_-15px_rgba(45,7,13,0.85)] border border-[var(--color-silver)]/40 bg-[var(--color-dark)]"
             >
               <Image
                 src="/back-ticket.jpg"
@@ -119,7 +119,7 @@ export default function TicketPricing() {
 
         {/* Subtle Flip Hint */}
         <div className="text-center mb-10">
-          <p className="text-[10px] sm:text-xs uppercase tracking-[0.22em] font-mono text-[#969085]">
+          <p className="text-[10px] sm:text-xs uppercase tracking-[0.22em] font-mono text-[var(--color-silver)]">
             ✦ CLICK THE TICKET TO FLIP ✦
           </p>
         </div>
@@ -127,7 +127,7 @@ export default function TicketPricing() {
         {/* Action Button */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link href="/register">
-            <button className="flex items-center justify-center gap-3 px-8 sm:px-10 py-4 rounded-full bg-[#1E1E1E] text-[#FAF9F6] hover:bg-[#B89A5E] hover:text-[#1E1E1E] text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 shadow-md cursor-pointer border border-[#1E1E1E] hover:border-[#B89A5E]">
+            <button className="flex items-center justify-center gap-3 px-8 sm:px-10 py-4 rounded-full bg-[var(--color-maroon)] text-[var(--color-cream)] hover:bg-[var(--color-dark)] hover:text-[var(--color-silver)] text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 shadow-md cursor-pointer border border-[var(--color-silver)] hover:border-[var(--color-silver-light)]">
               <span>{texts.invitations?.selectCTA || "REQUEST YOUR ADMISSION PASS (1,000 DA)"}</span>
               <ArrowRight className="w-4 h-4" />
             </button>

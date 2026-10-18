@@ -2,63 +2,31 @@
 @import "tailwindcss";
 
 :root {
-  /* Warm Off-White / Ivory Luxury Palette */
-  --bg-ivory: #F5F1E8;
-  --bg-ivory-light: #FAF9F6;
-  --bg-ivory-surface: #FFFFFF;
-  --bg-ivory-muted: #EDE7DA;
-  --border-ivory: #E5DAC6;
-  --border-ivory-light: #EFE8DC;
+  /* Brand Luxury Palette Tokens */
+  --color-primary: #8B1E2D;        /* Burgundy / Wine Red (Primary) */
+  --color-maroon: #5B0F1A;         /* Deep Maroon (Alternating Sections & Hover) */
+  --color-dark: #2D070D;           /* Near-Black Maroon (Darkest Base, Shadows & Overlays) */
+  --color-silver: #C0C0C0;         /* Silver (Metallic Accent & Highlights) */
+  --color-silver-light: #E5E5E5;   /* Metallic Silver highlight */
+  --color-silver-dark: #A8A8A8;    /* Metallic Silver shadow */
+  --color-cream: #F2E8D8;          /* Cream / Off-white (Text & Light surfaces) */
 
-  /* Deep Charcoal Typography */
-  --text-charcoal: #1E1E1E;
-  --text-charcoal-dark: #121212;
-  --text-charcoal-muted: #6B665E;
-  --text-charcoal-subtle: #969085;
-
-  /* Champagne Gold Primary Accent */
-  --gold-primary: #B89A5E;
-  --gold-light: #DED3BD;
-  --gold-warm: #C5A880;
-  --gold-deep: #8C6F45;
-  --gold-shimmer: linear-gradient(135deg, #DFC598 0%, #B89A5E 50%, #C4A77D 100%);
-  --gold-border: rgba(184, 154, 94, 0.35);
-
-  /* Soft Lavender Modern Signature Accent */
-  --lavender-accent: #B8AED4;
-  --lavender-light: #ECE5F8;
-  --lavender-subtle: #F6F3FA;
-  --lavender-border: #DDD0F3;
-  --lavender-dark: #6E4FA0;
-
-  /* Black Edition Contrast */
-  --black-edition: #181818;
-  --black-edition-surface: #222222;
-  --black-edition-border: #333333;
+  /* Metallic Accents & Lines */
+  --silver-gradient: linear-gradient(135deg, #C0C0C0 0%, #E5E5E5 50%, #A8A8A8 100%);
+  --silver-border: rgba(192, 192, 192, 0.35);
+  --silver-border-subtle: rgba(192, 192, 192, 0.18);
+  --silver-glow: rgba(192, 192, 192, 0.2);
+  --dark-shadow: rgba(45, 7, 13, 0.55);
 }
 
 @theme {
-  --color-ivory: #F5F1E8;
-  --color-ivory-light: #FAF9F6;
-  --color-ivory-surface: #FFFFFF;
-  --color-ivory-muted: #EDE7DA;
-  --color-ivory-border: #E5DAC6;
-
-  --color-charcoal: #1E1E1E;
-  --color-charcoal-dark: #121212;
-  --color-charcoal-muted: #6B665E;
-  --color-charcoal-subtle: #969085;
-
-  --color-gold: #B89A5E;
-  --color-gold-light: #DED3BD;
-  --color-gold-warm: #C5A880;
-  --color-gold-deep: #8C6F45;
-
-  --color-lavender: #B8AED4;
-  --color-lavender-light: #ECE5F8;
-  --color-lavender-subtle: #F6F3FA;
-  --color-lavender-border: #DDD0F3;
-  --color-lavender-dark: #6E4FA0;
+  --color-primary: #8B1E2D;
+  --color-maroon: #5B0F1A;
+  --color-dark: #2D070D;
+  --color-silver: #C0C0C0;
+  --color-silver-light: #E5E5E5;
+  --color-silver-dark: #A8A8A8;
+  --color-cream: #F2E8D8;
 
   --font-cinzel: 'Cinzel', serif;
   --font-serif: 'Cinzel', 'Cormorant Garamond', Georgia, serif;
@@ -67,16 +35,16 @@
 
 html {
   scroll-behavior: smooth;
-  background-color: #F5F1E8;
-  color: #1E1E1E;
+  background-color: var(--color-primary);
+  color: var(--color-cream);
   font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  background-color: #F5F1E8;
-  color: #1E1E1E;
+  background-color: var(--color-primary);
+  color: var(--color-cream);
   margin: 0;
   overflow-x: hidden;
 }
@@ -94,50 +62,50 @@ body {
   letter-spacing: 0.18em;
 }
 
-/* Gold Foil & Luxury Accents */
-.gold-foil-text {
-  background: linear-gradient(135deg, #DFC598 0%, #B89A5E 50%, #8C6F45 100%);
+/* Metallic Silver Foil & Luxury Accents */
+.silver-foil-text {
+  background: linear-gradient(135deg, #E5E5E5 0%, #C0C0C0 50%, #A8A8A8 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-.gold-foil-border {
-  border-color: rgba(184, 154, 94, 0.4);
+.silver-foil-border {
+  border-color: rgba(192, 192, 192, 0.35);
 }
 
-.gold-line {
+.silver-line {
   height: 1px;
-  background: linear-gradient(90deg, transparent, #B89A5E 20%, #DED3BD 50%, #B89A5E 80%, transparent);
+  background: linear-gradient(90deg, transparent, #C0C0C0 20%, #E5E5E5 50%, #A8A8A8 80%, transparent);
 }
 
-.gold-line-solid {
+.silver-line-solid {
   height: 1px;
-  background-color: rgba(184, 154, 94, 0.35);
+  background-color: rgba(192, 192, 192, 0.3);
 }
 
 /* Physical Card & Invitation Utilities */
 .luxury-invitation-card {
-  background: #FAF9F6;
-  border: 1px solid #E5DAC6;
-  box-shadow: 0 20px 40px -15px rgba(30, 30, 30, 0.05), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+  background: var(--color-maroon);
+  border: 1px solid rgba(192, 192, 192, 0.25);
+  box-shadow: 0 20px 40px -15px var(--dark-shadow), 0 0 0 1px rgba(192, 192, 192, 0.1) inset;
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .luxury-invitation-card:hover {
-  border-color: #B89A5E;
-  box-shadow: 0 30px 60px -20px rgba(184, 154, 94, 0.15), 0 0 0 1px rgba(184, 154, 94, 0.2) inset;
+  border-color: var(--color-silver);
+  box-shadow: 0 30px 60px -20px rgba(192, 192, 192, 0.2), 0 0 0 1px rgba(192, 192, 192, 0.2) inset;
 }
 
 .luxury-black-card {
-  background: #181818;
-  border: 1px solid #333333;
-  box-shadow: 0 25px 50px -15px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(184, 154, 94, 0.2) inset;
+  background: var(--color-dark);
+  border: 1px solid rgba(192, 192, 192, 0.2);
+  box-shadow: 0 25px 50px -15px rgba(45, 7, 13, 0.7), 0 0 0 1px rgba(192, 192, 192, 0.15) inset;
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .luxury-black-card:hover {
-  border-color: #B89A5E;
-  box-shadow: 0 35px 70px -20px rgba(184, 154, 94, 0.3), 0 0 0 1px rgba(184, 154, 94, 0.4) inset;
+  border-color: var(--color-silver);
+  box-shadow: 0 35px 70px -20px rgba(192, 192, 192, 0.25), 0 0 0 1px rgba(192, 192, 192, 0.3) inset;
 }
 
 /* Ticket Perforation effect */
@@ -153,7 +121,7 @@ body {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background-color: #F5F1E8;
+  background-color: var(--color-primary);
 }
 
 .ticket-perforation-right {
@@ -168,34 +136,34 @@ body {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background-color: #F5F1E8;
+  background-color: var(--color-primary);
 }
 
 /* Minimal Underline Input */
 .luxury-input {
-  background: transparent;
+  background: var(--color-dark);
   border: none;
-  border-bottom: 1px solid #E5DAC6;
+  border-bottom: 1px solid rgba(192, 192, 192, 0.3);
   border-radius: 0;
   padding: 0.75rem 0;
-  color: #1E1E1E;
+  color: var(--color-cream);
   font-size: 1rem;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
   outline: none;
 }
 
 .luxury-input:focus {
-  border-bottom-color: #B89A5E;
-  box-shadow: 0 1px 0 0 #B89A5E;
+  border-bottom-color: var(--color-silver);
+  box-shadow: 0 1px 0 0 var(--color-silver);
 }
 
 .luxury-input::placeholder {
-  color: #969085;
+  color: rgba(242, 232, 216, 0.45);
 }
 
 /* Subtle Film Grain */
 .luxury-grain {
-  background-image: radial-gradient(rgba(30, 30, 30, 0.04) 1px, transparent 0);
+  background-image: radial-gradient(rgba(192, 192, 192, 0.04) 1px, transparent 0);
   background-size: 24px 24px;
 }
 
@@ -206,14 +174,14 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #F5F1E8;
+  background: var(--color-dark);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #DED3BD;
+  background: rgba(192, 192, 192, 0.35);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #B89A5E;
+  background: var(--color-silver);
 }

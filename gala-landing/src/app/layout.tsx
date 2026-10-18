@@ -50,7 +50,7 @@ export default function RootLayout({
         <link rel="icon" href="/GALA.png" />
       </head>
       <body
-        className={`min-h-full flex flex-col bg-[#F5F1E8] text-[#1E1E1E] antialiased selection:bg-[#ECE5F8] selection:text-[#6E4FA0] font-sans`}
+        className={`min-h-full flex flex-col bg-[var(--color-primary)] text-[var(--color-cream)] antialiased selection:bg-[var(--color-silver)] selection:text-[var(--color-dark)] font-sans`}
       >
         <LanguageProvider>{children}</LanguageProvider>
       </body>

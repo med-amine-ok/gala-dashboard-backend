@@ -10,7 +10,6 @@
       { "label": "Les Archives", "id": "historique", "subtitle": "Des chapitres d'excellence" },
       { "label": "Cette Année · 2026", "id": "cetteannee", "subtitle": "La prochaine édition" },
       { "label": "Billet Officiel", "id": "tarification", "subtitle": "Pass d'admission (1 000 DA)" },
-      { "label": "L'Application", "id": "app", "subtitle": "Tout dans votre poche" },
       { "label": "Notre Histoire", "id": "apropos", "subtitle": "Héritage et vision" }
     ]
   },

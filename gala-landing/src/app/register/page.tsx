@@ -252,40 +252,40 @@ function RegistrationContent() {
   // Success Celebration View
   if (done) {
     return (
-      <main className="min-h-screen bg-[#F5F1E8] flex items-center justify-center py-20 px-6 text-[#1E1E1E] font-sans relative overflow-hidden">
-        <div className="max-w-2xl w-full p-8 sm:p-14 rounded-3xl bg-[#FAF9F6] border border-[#E5DAC6] shadow-[0_30px_60px_-15px_rgba(30,30,30,0.08)] text-center relative z-10">
-          <div className="w-16 h-16 mx-auto rounded-full bg-[#ECE5F8] border border-[#DDD0F3] flex items-center justify-center mb-6 text-[#6E4FA0]">
+      <main className="min-h-screen bg-[var(--color-primary)] flex items-center justify-center py-20 px-6 text-[var(--color-cream)] font-sans relative overflow-hidden">
+        <div className="max-w-2xl w-full p-8 sm:p-14 rounded-3xl bg-[var(--color-dark)] border border-[var(--color-silver)]/30 shadow-[0_30px_60px_-15px_rgba(45,7,13,0.7)] text-center relative z-10">
+          <div className="w-16 h-16 mx-auto rounded-full bg-[var(--color-maroon)] border border-[var(--color-silver)]/40 flex items-center justify-center mb-6 text-[var(--color-silver)]">
             <CheckCircle2 className="w-8 h-8" />
           </div>
 
-          <span className="text-[11px] uppercase tracking-[0.25em] text-[#B89A5E] font-semibold block mb-2">
+          <span className="text-[11px] uppercase tracking-[0.25em] text-[var(--color-silver)] font-semibold block mb-2">
             REGISTRATION TRANSMITTED
           </span>
 
-          <h1 className="font-cinzel text-3xl sm:text-4xl font-bold text-[#1E1E1E] mb-4">
+          <h1 className="font-cinzel text-3xl sm:text-4xl font-bold text-[var(--color-cream)] mb-4">
             {texts.register?.success?.title || "Your request has been received."}
           </h1>
 
-          <p className="text-sm sm:text-base text-[#6B665E] font-light leading-relaxed max-w-md mx-auto mb-10">
+          <p className="text-sm sm:text-base text-[var(--color-cream)]/80 font-light leading-relaxed max-w-md mx-auto mb-10">
             {texts.register?.success?.message ||
               "Our admissions committee will carefully review your credentials. You will receive an official invitation update via email."}
           </p>
 
           {/* Luxury Journey Milestone Progress */}
-          <div className="py-6 border-y border-[#E5DAC6] mb-8">
-            <p className="text-[10px] uppercase tracking-[0.22em] text-[#969085] font-semibold mb-4">
+          <div className="py-6 border-y border-[var(--color-silver)]/20 mb-8">
+            <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-silver)] font-semibold mb-4">
               ADMISSION JOURNEY
             </p>
             <div className="grid grid-cols-4 gap-2 text-center text-[10px] font-mono">
-              <div className="text-[#B89A5E] font-bold">1. REQUESTED</div>
-              <div className="text-[#969085]">2. REVIEW</div>
-              <div className="text-[#969085]">3. APPROVAL</div>
-              <div className="text-[#969085]">4. INVITATION</div>
+              <div className="text-[var(--color-silver)] font-bold">1. REQUESTED</div>
+              <div className="text-[var(--color-cream)]/60">2. REVIEW</div>
+              <div className="text-[var(--color-cream)]/60">3. APPROVAL</div>
+              <div className="text-[var(--color-cream)]/60">4. INVITATION</div>
             </div>
           </div>
 
           <Link href="/">
-            <button className="px-8 py-3.5 rounded-full bg-[#1E1E1E] text-[#FAF9F6] hover:bg-[#B89A5E] hover:text-[#1E1E1E] text-xs font-semibold uppercase tracking-[0.2em] transition-all cursor-pointer border border-[#1E1E1E]">
+            <button className="px-8 py-3.5 rounded-full bg-[var(--color-maroon)] text-[var(--color-cream)] hover:bg-[var(--color-primary)] hover:text-[var(--color-silver)] text-xs font-semibold uppercase tracking-[0.2em] transition-all cursor-pointer border border-[var(--color-silver)]">
               RETURN TO GALA →
             </button>
           </Link>
@@ -304,21 +304,21 @@ function RegistrationContent() {
   return (
     <FormProvider {...methods}>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <main className="min-h-screen bg-[#F5F1E8] flex flex-col justify-center py-20 px-6 sm:px-12 text-[#1E1E1E] font-sans relative overflow-hidden">
+        <main className="min-h-screen bg-[var(--color-primary)] flex flex-col justify-center py-20 px-6 sm:px-12 text-[var(--color-cream)] font-sans relative overflow-hidden">
           <div className="max-w-4xl w-full mx-auto my-auto z-10">
             {/* Header */}
-            <div className="mb-10 text-center sm:text-left flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#E5DAC6] pb-6">
+            <div className="mb-10 text-center sm:text-left flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[var(--color-silver)]/20 pb-6">
               <div>
-                <Link href="/" className="inline-block font-cinzel text-xl font-bold tracking-[0.2em] text-[#1E1E1E] hover:text-[#B89A5E] mb-2 transition-colors">
+                <Link href="/" className="inline-block font-cinzel text-xl font-bold tracking-[0.2em] text-[var(--color-cream)] hover:text-[var(--color-silver)] mb-2 transition-colors">
                   GALA · ALGIERS 2026
                 </Link>
-                <h1 className="font-cinzel text-3xl sm:text-4xl font-light text-[#1E1E1E]">
+                <h1 className="font-cinzel text-3xl sm:text-4xl font-light text-[var(--color-cream)]">
                   {texts.register?.headline || "Your evening\nbegins here."}
                 </h1>
               </div>
 
               {/* Admission Pass Pill */}
-              <div className="text-xs uppercase tracking-widest text-[#B89A5E] px-4 py-2 rounded-full bg-[#FAF9F6] border border-[#E5DAC6] self-start sm:self-auto font-mono font-bold">
+              <div className="text-xs uppercase tracking-widest text-[var(--color-silver)] px-4 py-2 rounded-full bg-[var(--color-dark)] border border-[var(--color-silver)]/40 self-start sm:self-auto font-mono font-bold">
                 ADMISSION PASS · 1,000 DA
               </div>
             </div>
@@ -335,19 +335,19 @@ function RegistrationContent() {
                     <div
                       className={`h-[2px] transition-all duration-500 ${
                         isCurrent
-                          ? "bg-[#B89A5E]"
+                          ? "bg-[var(--color-silver)]"
                           : isPassed
-                          ? "bg-[#1E1E1E]"
-                          : "bg-[#E5DAC6]"
+                          ? "bg-[var(--color-cream)]"
+                          : "bg-[var(--color-silver)]/20"
                       }`}
                     />
                     <p
                       className={`text-[10px] uppercase tracking-widest font-mono ${
                         isCurrent
-                          ? "text-[#B89A5E] font-bold"
+                          ? "text-[var(--color-silver)] font-bold"
                           : isPassed
-                          ? "text-[#1E1E1E]"
-                          : "text-[#969085]"
+                          ? "text-[var(--color-cream)]"
+                          : "text-[var(--color-silver)]/50"
                       }`}
                     >
                       {s.num} {s.title}
@@ -358,7 +358,7 @@ function RegistrationContent() {
             </div>
 
             {/* Form Card */}
-            <div className="p-8 sm:p-12 rounded-3xl bg-[#FAF9F6] border border-[#E5DAC6] shadow-[0_25px_50px_-15px_rgba(30,30,30,0.06)]">
+            <div className="p-8 sm:p-12 rounded-3xl bg-[var(--color-dark)] border border-[var(--color-silver)]/30 shadow-[0_25px_50px_-15px_rgba(45,7,13,0.7)]">
               <AnimatePresence mode="wait">
                 {step === 1 && <Step1 texts={texts} />}
                 {step === 2 && <Step2 texts={texts} />}
@@ -367,19 +367,19 @@ function RegistrationContent() {
               </AnimatePresence>
 
               {submitError && (
-                <div className="mt-6 p-4 rounded-xl bg-[#F9ECEF] border border-[#F2C2CB] text-[#8B2635] text-xs font-semibold text-center">
+                <div className="mt-6 p-4 rounded-xl bg-[var(--color-maroon)] border border-[var(--color-primary)] text-[var(--color-cream)] text-xs font-semibold text-center">
                   {submitError}
                 </div>
               )}
 
               {/* Step Navigation Controls */}
-              <div className="mt-12 pt-6 border-t border-[#E5DAC6] flex items-center justify-between">
+              <div className="mt-12 pt-6 border-t border-[var(--color-silver)]/20 flex items-center justify-between">
                 {step > 1 ? (
                   <button
                     type="button"
                     onClick={prevStep}
                     disabled={loading}
-                    className="flex items-center gap-2 px-6 py-3 rounded-full border border-[#E5DAC6] text-[#6B665E] hover:text-[#1E1E1E] hover:bg-[#F5F1E8] text-xs font-semibold uppercase tracking-[0.18em] transition-all cursor-pointer"
+                    className="flex items-center gap-2 px-6 py-3 rounded-full border border-[var(--color-silver)]/30 text-[var(--color-cream)]/80 hover:text-[var(--color-cream)] hover:bg-[var(--color-maroon)] text-xs font-semibold uppercase tracking-[0.18em] transition-all cursor-pointer"
                   >
                     <ArrowLeft className="w-3.5 h-3.5" />
                     <span>{texts.register?.buttons?.previous || "PREVIOUS"}</span>
@@ -388,7 +388,7 @@ function RegistrationContent() {
                   <Link href="/">
                     <button
                       type="button"
-                      className="px-6 py-3 rounded-full border border-transparent text-[#969085] hover:text-[#1E1E1E] text-xs font-semibold uppercase tracking-[0.18em] transition-all cursor-pointer"
+                      className="px-6 py-3 rounded-full border border-transparent text-[var(--color-silver)]/70 hover:text-[var(--color-silver)] text-xs font-semibold uppercase tracking-[0.18em] transition-all cursor-pointer"
                     >
                       CANCEL
                     </button>
@@ -399,7 +399,7 @@ function RegistrationContent() {
                   <button
                     type="button"
                     onClick={nextStep}
-                    className="flex items-center gap-2 px-8 py-3.5 rounded-full bg-[#1E1E1E] text-[#FAF9F6] hover:bg-[#B89A5E] hover:text-[#1E1E1E] text-xs font-semibold uppercase tracking-[0.2em] transition-all cursor-pointer border border-[#1E1E1E] hover:border-[#B89A5E]"
+                    className="flex items-center gap-2 px-8 py-3.5 rounded-full bg-[var(--color-maroon)] text-[var(--color-cream)] hover:bg-[var(--color-primary)] hover:text-[var(--color-silver)] text-xs font-semibold uppercase tracking-[0.2em] transition-all cursor-pointer border border-[var(--color-silver)] hover:border-[var(--color-silver-light)]"
                   >
                     <span>{texts.register?.buttons?.next || "CONTINUE"}</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -414,7 +414,7 @@ function RegistrationContent() {
                       }
                     }}
                     disabled={loading}
-                    className="flex items-center gap-2 px-10 py-3.5 rounded-full bg-[#1E1E1E] text-[#FAF9F6] hover:bg-[#B89A5E] hover:text-[#1E1E1E] text-xs font-semibold uppercase tracking-[0.2em] transition-all cursor-pointer border border-[#1E1E1E] hover:border-[#B89A5E] disabled:opacity-50"
+                    className="flex items-center gap-2 px-10 py-3.5 rounded-full bg-[var(--color-maroon)] text-[var(--color-cream)] hover:bg-[var(--color-primary)] hover:text-[var(--color-silver)] text-xs font-semibold uppercase tracking-[0.2em] transition-all cursor-pointer border border-[var(--color-silver)] hover:border-[var(--color-silver-light)] disabled:opacity-50"
                   >
                     {loading ? (
                       <>
@@ -442,7 +442,7 @@ export default function RegistrationPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#F5F1E8] flex items-center justify-center font-cinzel text-xl text-[#B89A5E]">
+        <div className="min-h-screen bg-[var(--color-primary)] flex items-center justify-center font-cinzel text-xl text-[var(--color-silver)]">
           LOADING GALA INVITATION...
         </div>
       }
@@ -472,73 +472,73 @@ function Step1({ texts }: { texts: any }) {
       className="space-y-6"
     >
       <div>
-        <h3 className="font-cinzel text-xl sm:text-2xl font-medium text-[#1E1E1E] mb-1">
+        <h3 className="font-cinzel text-xl sm:text-2xl font-medium text-[var(--color-cream)] mb-1">
           {texts.register?.steps?.step1?.subtitle || "Identity & Credentials"}
         </h3>
-        <p className="text-xs text-[#969085]">Please provide your official information.</p>
+        <p className="text-xs text-[var(--color-cream)]/70">Please provide your official information.</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <div>
-          <label className="block text-[11px] uppercase tracking-[0.2em] text-[#969085] font-semibold mb-1">
+          <label className="block text-[11px] uppercase tracking-[0.2em] text-[var(--color-silver)] font-semibold mb-1">
             {texts.register?.fields?.firstName || "First Name *"}
           </label>
           <input
             {...register("first_name")}
-            className="w-full bg-transparent border-b border-[#E5DAC6] focus:border-[#B89A5E] focus:outline-none py-2.5 text-base text-[#1E1E1E]"
+            className="w-full bg-transparent border-b border-[var(--color-silver)]/30 focus:border-[var(--color-silver)] focus:outline-none py-2.5 text-base text-[var(--color-cream)]"
           />
           {errors.first_name && (
-            <p className="text-xs text-red-600 mt-1">{errors.first_name.message}</p>
+            <p className="text-xs text-red-400 mt-1">{errors.first_name.message}</p>
           )}
         </div>
 
         <div>
-          <label className="block text-[11px] uppercase tracking-[0.2em] text-[#969085] font-semibold mb-1">
+          <label className="block text-[11px] uppercase tracking-[0.2em] text-[var(--color-silver)] font-semibold mb-1">
             {texts.register?.fields?.lastName || "Last Name *"}
           </label>
           <input
             {...register("last_name")}
-            className="w-full bg-transparent border-b border-[#E5DAC6] focus:border-[#B89A5E] focus:outline-none py-2.5 text-base text-[#1E1E1E]"
+            className="w-full bg-transparent border-b border-[var(--color-silver)]/30 focus:border-[var(--color-silver)] focus:outline-none py-2.5 text-base text-[var(--color-cream)]"
           />
           {errors.last_name && (
-            <p className="text-xs text-red-600 mt-1">{errors.last_name.message}</p>
+            <p className="text-xs text-red-400 mt-1">{errors.last_name.message}</p>
           )}
         </div>
 
         <div>
-          <label className="block text-[11px] uppercase tracking-[0.2em] text-[#969085] font-semibold mb-1">
+          <label className="block text-[11px] uppercase tracking-[0.2em] text-[var(--color-silver)] font-semibold mb-1">
             {texts.register?.fields?.email || "Email Address *"}
           </label>
           <input
             type="email"
             {...register("email")}
-            className="w-full bg-transparent border-b border-[#E5DAC6] focus:border-[#B89A5E] focus:outline-none py-2.5 text-base text-[#1E1E1E]"
+            className="w-full bg-transparent border-b border-[var(--color-silver)]/30 focus:border-[var(--color-silver)] focus:outline-none py-2.5 text-base text-[var(--color-cream)]"
           />
           {errors.email && (
-            <p className="text-xs text-red-600 mt-1">{errors.email.message}</p>
+            <p className="text-xs text-red-400 mt-1">{errors.email.message}</p>
           )}
         </div>
 
         <div>
-          <label className="block text-[11px] uppercase tracking-[0.2em] text-[#969085] font-semibold mb-1">
+          <label className="block text-[11px] uppercase tracking-[0.2em] text-[var(--color-silver)] font-semibold mb-1">
             {texts.register?.fields?.phone || "Phone Number *"}
           </label>
           <input
             {...register("phone")}
-            className="w-full bg-transparent border-b border-[#E5DAC6] focus:border-[#B89A5E] focus:outline-none py-2.5 text-base text-[#1E1E1E]"
+            className="w-full bg-transparent border-b border-[var(--color-silver)]/30 focus:border-[var(--color-silver)] focus:outline-none py-2.5 text-base text-[var(--color-cream)]"
           />
           {errors.phone && (
-            <p className="text-xs text-red-600 mt-1">{errors.phone.message}</p>
+            <p className="text-xs text-red-400 mt-1">{errors.phone.message}</p>
           )}
         </div>
 
         <div>
-          <label className="block text-[11px] uppercase tracking-[0.2em] text-[#969085] font-semibold mb-1">
+          <label className="block text-[11px] uppercase tracking-[0.2em] text-[var(--color-silver)] font-semibold mb-1">
             {texts.register?.fields?.university || "University / Grande École *"}
           </label>
           <select
             {...register("university")}
-            className="w-full bg-transparent border-b border-[#E5DAC6] focus:border-[#B89A5E] focus:outline-none py-2.5 text-base text-[#1E1E1E] cursor-pointer"
+            className="w-full bg-transparent border-b border-[var(--color-silver)]/30 focus:border-[var(--color-silver)] focus:outline-none py-2.5 text-base text-[var(--color-cream)] cursor-pointer [&>option]:bg-[var(--color-dark)] [&>option]:text-[var(--color-cream)]"
           >
             <option value="ENP">École Nationale Polytechnique (ENP)</option>
             <option value="ENSTA">ENSTA</option>
@@ -550,12 +550,12 @@ function Step1({ texts }: { texts: any }) {
         </div>
 
         <div>
-          <label className="block text-[11px] uppercase tracking-[0.2em] text-[#969085] font-semibold mb-1">
+          <label className="block text-[11px] uppercase tracking-[0.2em] text-[var(--color-silver)] font-semibold mb-1">
             {texts.register?.fields?.fieldOfStudy || "Engineering Specialization *"}
           </label>
           <select
             {...register("field_of_study")}
-            className="w-full bg-transparent border-b border-[#E5DAC6] focus:border-[#B89A5E] focus:outline-none py-2.5 text-base text-[#1E1E1E] cursor-pointer"
+            className="w-full bg-transparent border-b border-[var(--color-silver)]/30 focus:border-[var(--color-silver)] focus:outline-none py-2.5 text-base text-[var(--color-cream)] cursor-pointer [&>option]:bg-[var(--color-dark)] [&>option]:text-[var(--color-cream)]"
           >
             {fieldOfStudyOptions.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -585,37 +585,37 @@ function Step2({ texts }: { texts: any }) {
       className="space-y-6"
     >
       <div>
-        <h3 className="font-cinzel text-xl sm:text-2xl font-medium text-[#1E1E1E] mb-1">
+        <h3 className="font-cinzel text-xl sm:text-2xl font-medium text-[var(--color-cream)] mb-1">
           {texts.register?.steps?.step2?.subtitle || "Ambitions & Trajectory"}
         </h3>
-        <p className="text-xs text-[#969085]">Share your goals for the upcoming year.</p>
+        <p className="text-xs text-[var(--color-cream)]/70">Share your goals for the upcoming year.</p>
       </div>
 
       <div className="space-y-6">
         <div>
-          <label className="block text-[11px] uppercase tracking-[0.2em] text-[#969085] font-semibold mb-1">
+          <label className="block text-[11px] uppercase tracking-[0.2em] text-[var(--color-silver)] font-semibold mb-1">
             {texts.register?.fields?.plansNextYear || "What are your primary ambitions for the coming year? *"}
           </label>
           <textarea
             rows={3}
             {...register("plans_next_year")}
             placeholder="e.g. Seeking graduate engineering roles in energy transition or AI systems..."
-            className="w-full bg-transparent border-b border-[#E5DAC6] focus:border-[#B89A5E] focus:outline-none py-2.5 text-base text-[#1E1E1E] resize-none"
+            className="w-full bg-transparent border-b border-[var(--color-silver)]/30 focus:border-[var(--color-silver)] focus:outline-none py-2.5 text-base text-[var(--color-cream)] placeholder-[var(--color-cream)]/40 resize-none"
           />
           {errors.plans_next_year && (
-            <p className="text-xs text-red-600 mt-1">{errors.plans_next_year.message}</p>
+            <p className="text-xs text-red-400 mt-1">{errors.plans_next_year.message}</p>
           )}
         </div>
 
         <div>
-          <label className="block text-[11px] uppercase tracking-[0.2em] text-[#969085] font-semibold mb-1">
+          <label className="block text-[11px] uppercase tracking-[0.2em] text-[var(--color-silver)] font-semibold mb-1">
             {texts.register?.fields?.personalDescription || "Short personal statement or executive summary"}
           </label>
           <textarea
             rows={3}
             {...register("personal_description")}
             placeholder="Key achievements, technical passions, or project leadership..."
-            className="w-full bg-transparent border-b border-[#E5DAC6] focus:border-[#B89A5E] focus:outline-none py-2.5 text-base text-[#1E1E1E] resize-none"
+            className="w-full bg-transparent border-b border-[var(--color-silver)]/30 focus:border-[var(--color-silver)] focus:outline-none py-2.5 text-base text-[var(--color-cream)] placeholder-[var(--color-cream)]/40 resize-none"
           />
         </div>
       </div>
@@ -641,44 +641,44 @@ function Step3({ texts }: { texts: any }) {
       className="space-y-6"
     >
       <div>
-        <h3 className="font-cinzel text-xl sm:text-2xl font-medium text-[#1E1E1E] mb-1">
+        <h3 className="font-cinzel text-xl sm:text-2xl font-medium text-[var(--color-cream)] mb-1">
           {texts.register?.steps?.step3?.subtitle || "GALA Perspective & Synergy"}
         </h3>
-        <p className="text-xs text-[#969085]">How your presence elevates the collective experience.</p>
+        <p className="text-xs text-[var(--color-cream)]/70">How your presence elevates the collective experience.</p>
       </div>
 
       <div className="space-y-6">
         <div>
-          <label className="block text-[11px] uppercase tracking-[0.2em] text-[#969085] font-semibold mb-1">
+          <label className="block text-[11px] uppercase tracking-[0.2em] text-[var(--color-silver)] font-semibold mb-1">
             {texts.register?.fields?.perspectiveGala || "What is your vision of the GALA experience? *"}
           </label>
           <textarea
             rows={3}
             {...register("perspective_gala")}
-            className="w-full bg-transparent border-b border-[#E5DAC6] focus:border-[#B89A5E] focus:outline-none py-2.5 text-base text-[#1E1E1E] resize-none"
+            className="w-full bg-transparent border-b border-[var(--color-silver)]/30 focus:border-[var(--color-silver)] focus:outline-none py-2.5 text-base text-[var(--color-cream)] resize-none"
           />
           {errors.perspective_gala && (
-            <p className="text-xs text-red-600 mt-1">{errors.perspective_gala.message}</p>
+            <p className="text-xs text-red-400 mt-1">{errors.perspective_gala.message}</p>
           )}
         </div>
 
         <div>
-          <label className="block text-[11px] uppercase tracking-[0.2em] text-[#969085] font-semibold mb-1">
+          <label className="block text-[11px] uppercase tracking-[0.2em] text-[var(--color-silver)] font-semibold mb-1">
             {texts.register?.fields?.benefitFromEvent || "How will participating in GALA accelerate your career? *"}
           </label>
           <textarea
             rows={3}
             {...register("benefit_from_event")}
-            className="w-full bg-transparent border-b border-[#E5DAC6] focus:border-[#B89A5E] focus:outline-none py-2.5 text-base text-[#1E1E1E] resize-none"
+            className="w-full bg-transparent border-b border-[var(--color-silver)]/30 focus:border-[var(--color-silver)] focus:outline-none py-2.5 text-base text-[var(--color-cream)] resize-none"
           />
           {errors.benefit_from_event && (
-            <p className="text-xs text-red-600 mt-1">{errors.benefit_from_event.message}</p>
+            <p className="text-xs text-red-400 mt-1">{errors.benefit_from_event.message}</p>
           )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
           <div>
-            <label className="block text-[11px] uppercase tracking-[0.2em] text-[#969085] font-semibold mb-2">
+            <label className="block text-[11px] uppercase tracking-[0.2em] text-[var(--color-silver)] font-semibold mb-2">
               {texts.register?.fields?.attendedBefore || "Attended Previous Edition?"}
             </label>
             <div className="flex gap-6 text-sm">
@@ -688,7 +688,7 @@ function Step3({ texts }: { texts: any }) {
                   value="true"
                   checked={watch("attended_before") === true}
                   onChange={() => setValue("attended_before", true)}
-                  className="accent-[#B89A5E]"
+                  className="accent-[var(--color-silver)]"
                 />
                 <span>{texts.register?.options?.yes || "Yes"}</span>
               </label>
@@ -698,7 +698,7 @@ function Step3({ texts }: { texts: any }) {
                   value="false"
                   checked={watch("attended_before") === false}
                   onChange={() => setValue("attended_before", false)}
-                  className="accent-[#B89A5E]"
+                  className="accent-[var(--color-silver)]"
                 />
                 <span>{texts.register?.options?.no || "No"}</span>
               </label>
@@ -706,12 +706,12 @@ function Step3({ texts }: { texts: any }) {
           </div>
 
           <div>
-            <label className="block text-[11px] uppercase tracking-[0.2em] text-[#969085] font-semibold mb-1">
+            <label className="block text-[11px] uppercase tracking-[0.2em] text-[var(--color-silver)] font-semibold mb-1">
               {texts.register?.fields?.heardAbout || "Discovery Channel"}
             </label>
             <select
               {...register("heard_about")}
-              className="w-full bg-transparent border-b border-[#E5DAC6] focus:border-[#B89A5E] focus:outline-none py-2.5 text-base text-[#1E1E1E] cursor-pointer"
+              className="w-full bg-transparent border-b border-[var(--color-silver)]/30 focus:border-[var(--color-silver)] focus:outline-none py-2.5 text-base text-[var(--color-cream)] cursor-pointer [&>option]:bg-[var(--color-dark)] [&>option]:text-[var(--color-cream)]"
             >
               <option value="LinkedIn">LinkedIn</option>
               <option value="Facebook">Facebook</option>
@@ -745,41 +745,41 @@ function Step4({
       className="space-y-6"
     >
       <div>
-        <h3 className="font-cinzel text-xl sm:text-2xl font-medium text-[#1E1E1E] mb-1">
+        <h3 className="font-cinzel text-xl sm:text-2xl font-medium text-[var(--color-cream)] mb-1">
           {texts.register?.steps?.step4?.subtitle || "Review & Confirmation"}
         </h3>
-        <p className="text-xs text-[#969085]">Please verify your dossier before final transmission.</p>
+        <p className="text-xs text-[var(--color-cream)]/70">Please verify your dossier before final transmission.</p>
       </div>
 
-      <div className="space-y-4 text-sm text-[#1E1E1E]">
-        <div className="p-4 rounded-2xl bg-[#F5F1E8] border border-[#E5DAC6] flex justify-between items-center">
+      <div className="space-y-4 text-sm text-[var(--color-cream)]">
+        <div className="p-4 rounded-2xl bg-[var(--color-maroon)] border border-[var(--color-silver)]/30 flex justify-between items-center">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.2em] text-[#969085]">ADMISSION PASS</p>
-            <p className="font-cinzel text-base font-bold text-[#1E1E1E]">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--color-silver)]">ADMISSION PASS</p>
+            <p className="font-cinzel text-base font-bold text-[var(--color-cream)]">
               OFFICIAL ADMISSION TICKET · 1,000 DA
             </p>
           </div>
-          <span className="text-xs font-mono font-semibold text-[#B89A5E]">
+          <span className="text-xs font-mono font-semibold text-[var(--color-silver)]">
             ALGIERS · 08 NOV 2026
           </span>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 p-4 rounded-2xl bg-[#F5F1E8] border border-[#E5DAC6]">
+        <div className="grid grid-cols-2 gap-4 p-4 rounded-2xl bg-[var(--color-maroon)] border border-[var(--color-silver)]/30">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.2em] text-[#969085]">CANDIDATE</p>
-            <p className="font-semibold">{data.first_name} {data.last_name}</p>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--color-silver)]">CANDIDATE</p>
+            <p className="font-semibold text-[var(--color-cream)]">{data.first_name} {data.last_name}</p>
           </div>
           <div>
-            <p className="text-[10px] uppercase tracking-[0.2em] text-[#969085]">EMAIL</p>
-            <p className="font-semibold">{data.email}</p>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--color-silver)]">EMAIL</p>
+            <p className="font-semibold text-[var(--color-cream)]">{data.email}</p>
           </div>
           <div>
-            <p className="text-[10px] uppercase tracking-[0.2em] text-[#969085]">INSTITUTION</p>
-            <p className="font-semibold">{data.university}</p>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--color-silver)]">INSTITUTION</p>
+            <p className="font-semibold text-[var(--color-cream)]">{data.university}</p>
           </div>
           <div>
-            <p className="text-[10px] uppercase tracking-[0.2em] text-[#969085]">SPECIALTY</p>
-            <p className="font-semibold">{data.field_of_study}</p>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--color-silver)]">SPECIALTY</p>
+            <p className="font-semibold text-[var(--color-cream)]">{data.field_of_study}</p>
           </div>
         </div>
       </div>

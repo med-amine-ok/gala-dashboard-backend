@@ -10,7 +10,6 @@
       { "label": "The Archives", "id": "historique", "subtitle": "Chapters of excellence" },
       { "label": "This Year · 2026", "id": "cetteannee", "subtitle": "The upcoming edition" },
       { "label": "Official Ticket Pass", "id": "tarification", "subtitle": "Admission & access (1,000 DA)" },
-      { "label": "The Companion App", "id": "app", "subtitle": "Everything in your pocket" },
       { "label": "The Story", "id": "apropos", "subtitle": "Our heritage and vision" }
     ]
   },

@@ -9,10 +9,11 @@ export default function ManifestoSection() {
   return (
     <section
       id="manifesto"
-      className="relative min-h-[85vh] w-full bg-[#F5F1E8] text-[#1E1E1E] flex flex-col justify-center py-24 sm:py-36 px-6 sm:px-12 overflow-hidden border-t border-[#E5DAC6]/60"
+      className="relative min-h-[85vh] w-full bg-[var(--color-maroon)] text-[var(--color-cream)] flex flex-col justify-center py-24 sm:py-36 px-6 sm:px-12 overflow-hidden border-t border-[var(--color-silver)]/20"
     >
       {/* Refined Ambient Glows */}
-      <div className="absolute top-[20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-[radial-gradient(circle,#ECE5F8_0%,transparent_70%)] opacity-30 blur-3xl pointer-events-none" />
+      <div className="absolute top-[20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-[radial-gradient(circle,rgba(139,30,45,0.45)_0%,transparent_70%)] opacity-35 blur-3xl pointer-events-none" />
+      <div className="absolute bottom-[10%] right-[-10%] w-[450px] h-[450px] rounded-full bg-[radial-gradient(circle,rgba(192,192,192,0.12)_0%,transparent_70%)] opacity-30 blur-3xl pointer-events-none" />
 
       <div className="max-w-6xl w-full mx-auto">
         {/* Category Label */}
@@ -23,7 +24,7 @@ export default function ManifestoSection() {
           transition={{ duration: 0.8 }}
           className="mb-8"
         >
-          <span className="text-xs font-semibold uppercase tracking-[0.28em] text-[#B89A5E]">
+          <span className="text-xs font-semibold uppercase tracking-[0.28em] text-[var(--color-silver)]">
             {texts.manifesto?.label || "THE GALA EXPERIENCE"}
           </span>
         </motion.div>
@@ -34,18 +35,18 @@ export default function ManifestoSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ delay: 0.15, duration: 1, ease: [0.16, 1, 0.3, 1] }}
-          className="font-cinzel text-4xl sm:text-6xl lg:text-7xl font-light text-[#1E1E1E] leading-[1.12] mb-12 whitespace-pre-line"
+          className="font-cinzel text-4xl sm:text-6xl lg:text-7xl font-light text-[var(--color-cream)] leading-[1.12] mb-12 whitespace-pre-line"
         >
           {texts.manifesto?.headline || "One night.\nThe right people.\nEndless possibilities."}
         </motion.h2>
 
-        {/* Expanding Champagne Gold Line */}
+        {/* Expanding Silver Line */}
         <motion.div
           initial={{ scaleX: 0 }}
           whileInView={{ scaleX: 1 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ delay: 0.3, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-          className="origin-left w-full h-[1px] bg-gradient-to-r from-[#B89A5E] via-[#DED3BD] to-transparent mb-12"
+          className="origin-left w-full h-[1px] bg-gradient-to-r from-[var(--color-silver)] via-[var(--color-silver-light)] to-transparent mb-12"
         />
 
         {/* Editorial Narrative Grid */}
@@ -55,7 +56,7 @@ export default function ManifestoSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ delay: 0.4, duration: 0.8 }}
-            className="md:col-span-7 space-y-6 text-base sm:text-lg text-[#6B665E] font-light leading-relaxed"
+            className="md:col-span-7 space-y-6 text-base sm:text-lg text-[var(--color-cream)]/85 font-light leading-relaxed"
           >
             <p>
               {texts.manifesto?.paragraph1 ||
@@ -72,24 +73,24 @@ export default function ManifestoSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ delay: 0.55, duration: 0.8 }}
-            className="md:col-span-5 p-8 rounded-2xl bg-[#FAF9F6] border border-[#E5DAC6] shadow-[0_10px_30px_-15px_rgba(30,30,30,0.03)]"
+            className="md:col-span-5 p-8 rounded-2xl bg-[var(--color-dark)] border border-[var(--color-silver)]/30 shadow-[0_15px_35px_-15px_rgba(45,7,13,0.7)]"
           >
-            <p className="font-cinzel text-xl sm:text-2xl text-[#1E1E1E] font-medium leading-snug mb-6">
+            <p className="font-cinzel text-xl sm:text-2xl text-[var(--color-cream)] font-medium leading-snug mb-6">
               {texts.manifesto?.quote ||
                 "“Connections that matter. Conversations that create opportunity.”"}
             </p>
 
-            <div className="grid grid-cols-3 gap-4 pt-4 border-t border-[#E5DAC6]">
+            <div className="grid grid-cols-3 gap-4 pt-4 border-t border-[var(--color-silver)]/20">
               {(texts.manifesto?.stats || [
                 { value: "100%", label: "Curated Attendance" },
                 { value: "1:1", label: "Executive Access" },
                 { value: "5-Star", label: "Refined Hospitality" },
               ]).map((st: any, idx: number) => (
                 <div key={idx} className="text-left">
-                  <span className="font-cinzel text-xl font-bold text-[#B89A5E]">
+                  <span className="font-cinzel text-xl font-bold text-[var(--color-silver)]">
                     {st.value}
                   </span>
-                  <p className="text-[10px] uppercase tracking-wider text-[#969085] mt-1 font-medium">
+                  <p className="text-[10px] uppercase tracking-wider text-[var(--color-cream)]/70 mt-1 font-medium">
                     {st.label}
                   </p>
                 </div>

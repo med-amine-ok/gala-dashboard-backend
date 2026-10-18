@@ -6,7 +6,6 @@ import Manifesto from "./manifesto/page";
 import Historique from "./historique/page";
 import CetteAnnee from "./annee/page";
 import Pricing from "./ticket/page";
-import App from "./app/page";
 import Apropos from "./apropos/page";
 import Footer from "./footer/page";
 import mixpanel from "mixpanel-browser";
@@ -22,7 +21,7 @@ if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_MIXPANEL_TOKEN) {
 
 export default function Home() {
   return (
-    <div className="w-full min-h-screen bg-[#F5F1E8] text-[#1E1E1E]">
+    <div className="w-full min-h-screen bg-[var(--color-primary)] text-[var(--color-cream)]">
       <NavBar />
 
       <main className="w-full overflow-x-hidden">
@@ -51,17 +50,12 @@ export default function Home() {
           <Pricing />
         </section>
 
-        {/* 06 — THE GALA COMPANION APP */}
-        <section id="app">
-          <App />
-        </section>
-
-        {/* 07 — THE STORY (HERITAGE & VIC) */}
+        {/* 06 — THE STORY (HERITAGE & VIC) */}
         <section id="apropos">
           <Apropos />
         </section>
 
-        {/* 08 — FOOTER */}
+        {/* 07 — FOOTER */}
         <section id="footer">
           <Footer />
         </section>

@@ -87,29 +87,29 @@ export default function ThisYearSection() {
       id="cetteannee"
       ref={containerRef}
       onMouseMove={handleMouseMove}
-      className="relative min-h-screen w-full bg-[#F5F1E8] text-[#1E1E1E] flex flex-col justify-center py-24 sm:py-36 px-6 sm:px-12 overflow-hidden border-t border-[#E5DAC6]/60"
+      className="relative min-h-screen w-full bg-[var(--color-maroon)] text-[var(--color-cream)] flex flex-col justify-center py-24 sm:py-36 px-6 sm:px-12 overflow-hidden border-t border-[var(--color-silver)]/20"
     >
-      {/* Ambient Lavender & Gold Glows */}
-      <div className="absolute top-[10%] right-[-10%] w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle,#DED3BD_0%,transparent_70%)] opacity-30 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-[10%] left-[-10%] w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle,#ECE5F8_0%,transparent_70%)] opacity-40 blur-3xl pointer-events-none" />
+      {/* Ambient Maroon & Silver Glows */}
+      <div className="absolute top-[10%] right-[-10%] w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle,rgba(139,30,45,0.45)_0%,transparent_70%)] opacity-35 blur-3xl pointer-events-none" />
+      <div className="absolute bottom-[10%] left-[-10%] w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle,rgba(192,192,192,0.12)_0%,transparent_70%)] opacity-30 blur-3xl pointer-events-none" />
 
       <div className="max-w-7xl w-full mx-auto">
         {/* Section Header */}
         <div className="max-w-3xl mb-16">
-          <span className="text-xs font-semibold uppercase tracking-[0.28em] text-[#B89A5E] block mb-4">
+          <span className="text-xs font-semibold uppercase tracking-[0.28em] text-[var(--color-silver)] block mb-4">
             {texts.thisYear?.label || "THIS YEAR"}
           </span>
-          <h2 className="font-cinzel text-4xl sm:text-6xl font-light text-[#1E1E1E] leading-tight mb-6 whitespace-pre-line">
+          <h2 className="font-cinzel text-4xl sm:text-6xl font-light text-[var(--color-cream)] leading-tight mb-6 whitespace-pre-line">
             {texts.thisYear?.headline || "This is\nGALA 2026."}
           </h2>
-          <p className="text-base sm:text-lg text-[#6B665E] font-light leading-relaxed">
+          <p className="text-base sm:text-lg text-[var(--color-cream)]/85 font-light leading-relaxed">
             {texts.thisYear?.intro ||
               "A transcendent evening built around four core pillars of luxury, leadership, and opportunity."}
           </p>
         </div>
 
         {/* 4 Interactive Chapters Tabs */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-12 border-b border-[#E5DAC6] pb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-12 border-b border-[var(--color-silver)]/20 pb-8">
           {chapters.map((ch: any, idx: number) => {
             const isActive = activeChapter === idx;
             return (
@@ -118,58 +118,58 @@ export default function ThisYearSection() {
                 onClick={() => setActiveChapter(idx)}
                 className={`group text-left p-4 sm:p-6 rounded-2xl transition-all duration-300 cursor-pointer bg-transparent border ${
                   isActive
-                    ? "bg-[#FAF9F6] border-[#B89A5E] shadow-[0_10px_25px_-10px_rgba(184,154,94,0.15)]"
-                    : "border-transparent hover:border-[#E5DAC6] hover:bg-[#FAF9F6]/50"
+                    ? "bg-[var(--color-dark)] border-[var(--color-silver)] shadow-[0_10px_25px_-10px_rgba(192,192,192,0.15)]"
+                    : "border-transparent hover:border-[var(--color-silver)]/20 hover:bg-[var(--color-dark)]/40"
                 }`}
               >
                 <div className="flex items-center justify-between mb-3">
                   <span
                     className={`font-mono text-xs font-semibold ${
-                      isActive ? "text-[#B89A5E]" : "text-[#969085]"
+                      isActive ? "text-[var(--color-silver)]" : "text-[var(--color-cream)]/50"
                     }`}
                   >
                     {ch.number || `0${idx + 1}`}
                   </span>
                   <span
                     className={`w-2 h-2 rounded-full transition-colors ${
-                      isActive ? "bg-[#B89A5E]" : "bg-transparent"
+                      isActive ? "bg-[var(--color-silver)]" : "bg-transparent"
                     }`}
                   />
                 </div>
-                <p className="font-cinzel text-lg sm:text-xl font-medium text-[#1E1E1E] mb-1">
+                <p className="font-cinzel text-lg sm:text-xl font-medium text-[var(--color-cream)] mb-1">
                   {ch.title}
                 </p>
-                <p className="text-xs text-[#969085] tracking-wide">{ch.subtitle}</p>
+                <p className="text-xs text-[var(--color-silver)]/80 tracking-wide">{ch.subtitle}</p>
               </button>
             );
           })}
         </div>
 
         {/* Active Chapter Presentation */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center mb-24">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center mb-12">
           {/* Chapter Description */}
           <div className="lg:col-span-6 space-y-6">
-            <span className="text-xs uppercase tracking-[0.25em] text-[#B89A5E] font-semibold">
+            <span className="text-xs uppercase tracking-[0.25em] text-[var(--color-silver)] font-semibold">
               PILLAR {chapters[activeChapter].number}
             </span>
-            <h3 className="font-cinzel text-3xl sm:text-4xl text-[#1E1E1E] font-medium leading-snug">
+            <h3 className="font-cinzel text-3xl sm:text-4xl text-[var(--color-cream)] font-medium leading-snug">
               {chapters[activeChapter].title}
             </h3>
-            <p className="text-base sm:text-lg text-[#6B665E] font-light leading-relaxed">
+            <p className="text-base sm:text-lg text-[var(--color-cream)]/85 font-light leading-relaxed">
               {chapters[activeChapter].description}
             </p>
 
             {/* Special Highlight for Chapter 2 (Companies) */}
             {activeChapter === 1 && (
               <div className="pt-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-[#969085] font-medium mb-3">
+                <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-silver)] font-medium mb-3">
                   PARTICIPATING INDUSTRY LEADERS
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {featuredCompanies.map((c, i) => (
                     <span
                       key={i}
-                      className="text-xs px-3.5 py-1.5 rounded-full bg-[#FAF9F6] border border-[#E5DAC6] text-[#1E1E1E] font-medium"
+                      className="text-xs px-3.5 py-1.5 rounded-full bg-[var(--color-dark)] border border-[var(--color-silver)]/30 text-[var(--color-cream)] font-medium"
                     >
                       {c.name}
                     </span>
@@ -183,10 +183,10 @@ export default function ThisYearSection() {
           <div className="lg:col-span-6 relative [perspective:1000px]">
             <motion.div
               style={{ x: parallaxX, y: parallaxY }}
-              className="relative h-[320px] sm:h-[420px] rounded-2xl bg-[#FAF9F6] border border-[#E5DAC6] p-6 shadow-[0_25px_50px_-15px_rgba(30,30,30,0.06)] overflow-hidden flex items-center justify-center"
+              className="relative h-[320px] sm:h-[420px] rounded-2xl bg-[var(--color-dark)] border border-[var(--color-silver)]/30 p-6 shadow-[0_25px_50px_-15px_rgba(45,7,13,0.7)] overflow-hidden flex items-center justify-center"
             >
-              {/* Inner Decorative Champagne Gold Frame */}
-              <div className="absolute inset-4 border border-[#B89A5E]/20 rounded-xl pointer-events-none" />
+              {/* Inner Decorative Silver Frame */}
+              <div className="absolute inset-4 border border-[var(--color-silver)]/25 rounded-xl pointer-events-none" />
 
               <div className="relative w-full h-full p-4 flex items-center justify-center">
                 <Image
@@ -200,8 +200,6 @@ export default function ThisYearSection() {
             </motion.div>
           </div>
         </div>
-
-        
       </div>
     </section>
   );

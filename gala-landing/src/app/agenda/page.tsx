@@ -28,15 +28,15 @@ export default function Agenda() {
   });
 
   return (
-    <main className="relative min-h-screen py-16 px-4 bg-[#F7F4EE] font-sans">
+    <main className="relative min-h-screen py-16 px-4 bg-[var(--color-primary)] text-[var(--color-cream)] font-sans overflow-hidden">
       {/* Décor SVG */}
-      <div className="absolute top-80 right-0 w-32 h-32 opacity-20">
+      <div className="absolute top-80 right-0 w-32 h-32 opacity-10 filter invert">
         <Image src="/images/Agenda.svg" alt="decor" width={128} height={128} />
       </div>
-      <div className="absolute top-220 left-0 w-40 h-40 opacity-20">
+      <div className="absolute top-220 left-0 w-40 h-40 opacity-10 filter invert">
         <Image src="/images/Agenda.svg" alt="decor" width={128} height={128} />
       </div>
-      <div className="absolute top-450 right-0 w-40 h-40 opacity-20">
+      <div className="absolute top-450 right-0 w-40 h-40 opacity-10 filter invert">
         <Image src="/images/Agenda.svg" alt="decor" width={128} height={128} />
       </div>
 
@@ -49,11 +49,11 @@ export default function Agenda() {
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
         >
-          <span className="bg-gradient-to-r from-[#C5A880] via-[#DFC598] to-[#8C6F45] bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-[var(--color-silver-light)] via-[var(--color-silver)] to-[var(--color-silver-dark)] bg-clip-text text-transparent">
             {texts.agenda?.title?.part1 || "Agenda officielle"}
           </span>
           <br />
-          <span className="text-[#1A1A1A] font-serif">
+          <span className="text-[var(--color-cream)] font-serif">
             {texts.agenda?.title?.highlighted || "Engineers' GALA"}
           </span>
         </motion.div>
@@ -84,14 +84,14 @@ export default function Agenda() {
                     whileHover={{ scale: 1.02 }}
                     className="transition-all duration-300 w-full md:max-w-3xl"
                   >
-                    <div className="bg-gradient-to-r from-[#DFC598] via-[#C5A880] to-[#DFC598] p-0.5 rounded-full shadow-lg shadow-[#1A1A1A]/5 w-full">
+                    <div className="bg-gradient-to-r from-[var(--color-silver)] via-[var(--color-silver-light)] to-[var(--color-silver)] p-0.5 rounded-full shadow-lg shadow-[var(--color-dark)]/50 w-full">
                       <div
-                        className={`bg-white rounded-full p-6 flex flex-row items-center justify-center gap-4 md:gap-6 text-center w-full border border-[#EAE3D5] ${
+                        className={`bg-[var(--color-dark)] rounded-full p-6 flex flex-row items-center justify-center gap-4 md:gap-6 text-center w-full border border-[var(--color-silver)]/20 ${
                           index % 2 === 0 ? "md:flex-row-reverse" : "md:flex-row"
                         }`}
                       >
                         {/* Numéro */}
-                        <span className="bg-gradient-to-r from-[#C5A880] via-[#DFC598] to-[#8C6F45] bg-clip-text text-transparent text-5xl md:text-7xl font-serif font-bold mb-0">
+                        <span className="bg-gradient-to-r from-[var(--color-silver-light)] via-[var(--color-silver)] to-[var(--color-silver-dark)] bg-clip-text text-transparent text-5xl md:text-7xl font-serif font-bold mb-0">
                           {item.id.toString().padStart(2, "0")}
                         </span>
 
@@ -103,10 +103,10 @@ export default function Agenda() {
                               : "md:items-start text-right"
                           }`}
                         >
-                          <span className="text-xl md:text-3xl font-serif text-[#1A1A1A] font-bold">
+                          <span className="text-xl md:text-3xl font-serif text-[var(--color-cream)] font-bold">
                             {item.time}
                           </span>
-                          <h3 className="text-base md:text-xl text-[#6B6862] mt-1 font-medium">
+                          <h3 className="text-base md:text-xl text-[var(--color-cream)]/80 mt-1 font-medium">
                             {item.title}
                           </h3>
                         </div>

@@ -50,9 +50,9 @@ export default function HeroSection() {
   return (
     <section
       id="home"
-      className="relative min-h-screen w-full bg-[#F5F1E8] text-[#1E1E1E] flex flex-col justify-between pt-32 sm:pt-25 pb-12 px-6 sm:px-12 overflow-hidden font-sans"
+      className="relative min-h-screen w-full bg-[var(--color-primary)] text-[var(--color-cream)] flex flex-col justify-between pt-32 sm:pt-25 pb-12 px-6 sm:px-12 overflow-hidden font-sans"
     >
-      {/* BACKGROUND PHOTOGRAPHY (DSCF7403.jpg) */}
+      {/* BACKGROUND PHOTOGRAPHY (AIMG_7652.jpg) */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         <Image
           src="/AIMG_7652.jpg"
@@ -60,21 +60,19 @@ export default function HeroSection() {
           fill
           priority
           sizes="100vw"
-          className="object-cover object-center scale-105 filter brightness-[0.92] contrast-[1.04]"
+          className="object-cover object-center scale-105 filter brightness-[0.7] contrast-[1.1] saturate-[0.8]"
         />
-        {/* Luxury Warm Ivory & Vignette Overlay */}
-        {/* <div className="absolute inset-0 bg-[#F5F1E8]/80 backdrop-blur-[2px]" /> */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#F5F1E8]/85 via-[#F5F1E8]/70 to-[#F5F1E8]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(18, 18, 17, 0.85)_80%)]" />
-      
+        {/* Luxury Burgundy & Maroon Vignette Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-primary)]/85 via-[var(--color-primary)]/75 to-[var(--color-primary)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(45,7,13,0.85)_80%)]" />
       </div>
 
       {/* Refined Ambient Luxury Glows */}
-      <div className="absolute top-[-10%] right-[-5%] w-[650px] h-[650px] rounded-full bg-[radial-gradient(circle,#DED3BD_0%,transparent_70%)] opacity-35 blur-3xl pointer-events-none z-1" />
-      <div className="absolute bottom-[-10%] left-[-5%] w-[550px] h-[550px] rounded-full bg-[radial-gradient(circle,#ECE5F8_0%,transparent_70%)] opacity-45 blur-3xl pointer-events-none z-1" />
+      <div className="absolute top-[-10%] right-[-5%] w-[650px] h-[650px] rounded-full bg-[radial-gradient(circle,rgba(91,15,26,0.5)_0%,transparent_70%)] opacity-40 blur-3xl pointer-events-none z-1" />
+      <div className="absolute bottom-[-10%] left-[-5%] w-[550px] h-[550px] rounded-full bg-[radial-gradient(circle,rgba(192,192,192,0.15)_0%,transparent_70%)] opacity-35 blur-3xl pointer-events-none z-1" />
 
-      {/* Subtle Luxury Paper Texture / Grid */}
-      <div className="absolute inset-0 bg-[radial-gradient(#B89A5E_0.8px,transparent_0.8px)] [background-size:32px_32px] opacity-15 pointer-events-none z-1" />
+      {/* Subtle Luxury Grid */}
+      <div className="absolute inset-0 bg-[radial-gradient(var(--color-silver)_0.8px,transparent_0.8px)] [background-size:32px_32px] opacity-15 pointer-events-none z-1" />
 
       {/* MAIN CENTERED HERO CONTENT */}
       <div className="max-w-4xl w-full mx-auto text-center z-10 my-auto flex flex-col items-center">
@@ -85,11 +83,11 @@ export default function HeroSection() {
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8"
         >
-          <span className="text-xs font-semibold uppercase tracking-[0.28em] text-[#B89A5E]">
+          <span className="text-xs font-semibold uppercase tracking-[0.28em] text-[var(--color-silver)]">
             {texts.hero?.edition || "ALGIERS · 2026"}
           </span>
-          <span className="w-8 sm:w-12 h-[1px] bg-[#B89A5E]/40" />
-          <span className="text-xs uppercase tracking-[0.22em] text-[#969085]">
+          <span className="w-8 sm:w-12 h-[1px] bg-[var(--color-silver)]/40" />
+          <span className="text-xs uppercase tracking-[0.22em] text-[var(--color-cream)]/75">
             {texts.hero?.venue || "HOTEL MERCURE"}
           </span>
         </motion.div>
@@ -107,7 +105,7 @@ export default function HeroSection() {
             width={580}
             height={190}
             priority
-            className="w-[280px] sm:w-[420px] md:w-[520px] lg:w-[580px] h-auto object-contain select-none drop-shadow-sm"
+            className="w-[280px] sm:w-[420px] md:w-[520px] lg:w-[580px] h-auto object-contain select-none drop-shadow-md brightness-110"
           />
         </motion.div>
 
@@ -116,7 +114,7 @@ export default function HeroSection() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 1, ease: [0.16, 1, 0.3, 1] }}
-          className="font-cinzel text-3xl sm:text-5xl xl:text-6xl font-light text-[#1E1E1E] leading-[1.15] mb-6 max-w-3xl whitespace-pre-line"
+          className="font-cinzel text-3xl sm:text-5xl xl:text-6xl font-light text-[var(--color-cream)] leading-[1.15] mb-6 max-w-3xl whitespace-pre-line"
         >
           {texts.hero?.headline || "Where ambition\nmeets opportunity."}
         </motion.h2>
@@ -126,7 +124,7 @@ export default function HeroSection() {
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.45, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="text-base sm:text-lg text-[#6B665E] max-w-2xl font-light leading-relaxed mb-10 sm:mb-12"
+          className="text-base sm:text-lg text-[var(--color-cream)]/85 max-w-2xl font-light leading-relaxed mb-10 sm:mb-12"
         >
           {texts.hero?.subheadline ||
             "An exclusive evening uniting elite engineers, pioneering organizations, and visionary leaders in a five-star luxury setting."}
@@ -140,7 +138,7 @@ export default function HeroSection() {
           className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 w-full sm:w-auto"
         >
           <Link href="/register">
-            <button className="group flex items-center justify-center gap-3 px-8 sm:px-10 py-4 rounded-full bg-[#1E1E1E] text-[#FAF9F6] hover:bg-[#B89A5E] hover:text-[#1E1E1E] text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 shadow-md cursor-pointer border border-[#1E1E1E] hover:border-[#B89A5E]">
+            <button className="group flex items-center justify-center gap-3 px-8 sm:px-10 py-4 rounded-full bg-[var(--color-maroon)] text-[var(--color-cream)] hover:bg-[var(--color-dark)] hover:text-[var(--color-silver)] text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 shadow-md cursor-pointer border border-[var(--color-silver)] hover:border-[var(--color-silver-light)]">
               <span>{texts.hero?.requestCTA || "REQUEST INVITATION"}</span>
               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </button>
@@ -148,7 +146,7 @@ export default function HeroSection() {
 
           <button
             onClick={scrollToManifesto}
-            className="group flex items-center justify-center gap-2 px-6 sm:px-8 py-4 rounded-full bg-transparent hover:bg-[#ECE5F8] text-xs font-medium uppercase tracking-[0.2em] text-[#6B665E] hover:text-[#6E4FA0] transition-colors cursor-pointer border border-[#E5DAC6]/80 hover:border-[#DDD0F3]"
+            className="group flex items-center justify-center gap-2 px-6 sm:px-8 py-4 rounded-full bg-transparent hover:bg-[var(--color-maroon)] text-xs font-medium uppercase tracking-[0.2em] text-[var(--color-cream)]/85 hover:text-[var(--color-cream)] transition-colors cursor-pointer border border-[var(--color-silver)]/40 hover:border-[var(--color-silver)]"
           >
             <span>{texts.hero?.discoverCTA || "DISCOVER GALA"}</span>
             <ArrowDown className="w-3.5 h-3.5 transition-transform group-hover:translate-y-0.5" />
@@ -161,9 +159,9 @@ export default function HeroSection() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.8, duration: 1 }}
-        className="max-w-7xl w-full mx-auto pt-8 border-t border-[#E5DAC6]/70 flex flex-col sm:flex-row items-center justify-between gap-4 z-10"
+        className="max-w-7xl w-full mx-auto pt-8 border-t border-[var(--color-silver)]/20 flex flex-col sm:flex-row items-center justify-between gap-4 z-10"
       >
-        <p className="text-[11px] uppercase tracking-[0.22em] text-[#969085] font-medium">
+        <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-silver)] font-medium">
           {texts.hero?.countdownLabel || "INVITATION WINDOW CLOSES IN"}
         </p>
 
@@ -184,10 +182,10 @@ export default function HeroSection() {
             },
           ].map((item, idx) => (
             <div key={idx} className="flex items-baseline gap-1.5">
-              <span className="font-cinzel text-xl sm:text-2xl font-bold text-[#1E1E1E]">
+              <span className="font-cinzel text-xl sm:text-2xl font-bold text-[var(--color-cream)]">
                 {item.val}
               </span>
-              <span className="text-[9px] uppercase tracking-wider text-[#B89A5E] font-medium">
+              <span className="text-[9px] uppercase tracking-wider text-[var(--color-silver)] font-medium">
                 {item.label}
               </span>
             </div>
