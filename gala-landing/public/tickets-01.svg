@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1200 420">
   <defs>
     <style>
@@ -23,75 +23,82 @@
       }
 
       .cls-7 {
-        fill: #67766e;
+        fill: #430A13;
       }
 
       .cls-8, .cls-9, .cls-10 {
-        fill: #00080f;
+        fill: #2D070D;
+      }
+      .cls-card-bg {
+        fill: #2D070D;
       }
 
       .cls-11 {
-        fill: #7c8883;
+        fill: #5B0F1A;
       }
 
       .cls-12 {
-        fill: #929d99;
+        fill: #7E1B29;
       }
 
       .cls-13 {
-        fill: #9ea8a5;
+        fill: #8B1E2D;
       }
 
       .cls-14 {
-        fill: #b7bfbf;
+        fill: #B8B8C0;
       }
 
       .cls-15 {
-        fill: #aab3b2;
+        fill: #A0A0A8;
       }
 
       .cls-16 {
-        fill: #c4cccd;
+        fill: #D0D0D5;
       }
 
-      .cls-17, .cls-18 {
-        fill: #dcd4c2;
+      .cls-17 {
+        fill: #F2E8D8;
+      }
+      .cls-18 {
+        fill: #2D070D;
+        font-weight: bold;
       }
 
       .cls-19 {
-        fill: #d4dcde;
+        fill: #E5E5E5;
       }
 
       .cls-20 {
-        fill: #42564c;
+        fill: #6E1624;
       }
 
       .cls-21 {
-        fill: #717f78;
+        fill: #4E0C16;
       }
 
       .cls-22 {
-        fill: #54655c;
+        fill: #2D070D;
       }
 
       .cls-23 {
-        fill: #87928e;
+        fill: #6E1624;
       }
 
       .cls-24 {
-        fill: #3a4f45;
+        fill: #8B1E2D;
       }
 
       .cls-25 {
-        fill: #4b5d54;
+        fill: #5B0F1A;
       }
 
       .cls-26 {
-        fill: #5e6d65;
+        fill: #38080F;
       }
 
       .cls-27 {
-        fill: #4e6258;
+        fill: #5B0F1A;
       }
 
       .cls-28 {
@@ -451,6 +458,7 @@
 
       .cls-111 {
         fill-rule: evenodd;
+        fill: #2D070D;
       }
 
       .cls-112 {
@@ -489,12 +497,12 @@
       <rect class="cls-1" width="1200" height="420"/>
     </clipPath>
     <linearGradient id="White_Gold" data-name="White Gold" x1="100.74" y1="12.82" x2="1426.96" y2="12.82" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#d4dcde"/>
-      <stop offset=".25" stop-color="#fcfbe1"/>
-      <stop offset=".38" stop-color="#ede9d4"/>
-      <stop offset=".6" stop-color="#ccc3b8"/>
-      <stop offset=".79" stop-color="#e7e7e7"/>
-      <stop offset="1" stop-color="#d0ceb4"/>
+      <stop offset="0" stop-color="#C0C0C0"/>
+      <stop offset=".25" stop-color="#FFFFFF"/>
+      <stop offset=".38" stop-color="#F2E8D8"/>
+      <stop offset=".6" stop-color="#D8D8D8"/>
+      <stop offset=".79" stop-color="#E5E5E5"/>
+      <stop offset="1" stop-color="#A8A8A8"/>
     </linearGradient>
     <linearGradient id="linear-gradient" x1="89.02" y1="21.66" x2="1417.99" y2="21.66" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#c6ced0"/>
@@ -595,13 +603,13 @@
       <stop offset="1" stop-color="#56685d"/>
     </linearGradient>
     <linearGradient id="Dégradé_sans_nom_2" data-name="Dégradé sans nom 2" x1="249.24" y1="199" x2="668.43" y2="199" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#9f603a"/>
-      <stop offset=".22" stop-color="#97692f"/>
-      <stop offset=".47" stop-color="#f2ae54"/>
-      <stop offset=".53" stop-color="#e5a44f"/>
-      <stop offset=".63" stop-color="#c58c42"/>
-      <stop offset=".75" stop-color="#97692f"/>
-      <stop offset="1" stop-color="#784d3e"/>
+      <stop offset="0" stop-color="#96969C"/>
+      <stop offset=".22" stop-color="#B8B8BE"/>
+      <stop offset=".47" stop-color="#FFFFFF"/>
+      <stop offset=".53" stop-color="#ECECEF"/>
+      <stop offset=".63" stop-color="#C2C2C8"/>
+      <stop offset=".75" stop-color="#9C9CA2"/>
+      <stop offset="1" stop-color="#76767C"/>
     </linearGradient>
     <linearGradient id="Dégradé_sans_nom_2-2" data-name="Dégradé sans nom 2" x1="539.14" y1="159.65" x2="590.25" y2="159.65" xlink:href="#Dégradé_sans_nom_2"/>
     <clipPath id="clippath-1">
@@ -651,9 +659,9 @@
     <linearGradient id="Dégradé_sans_nom_2-5" data-name="Dégradé sans nom 2" x1="808.84" y1="95.25" x2="825.77" y2="95.25" xlink:href="#Dégradé_sans_nom_2"/>
     <linearGradient id="Dégradé_sans_nom_2-6" data-name="Dégradé sans nom 2" x1="821.26" y1="87.75" x2="830.35" y2="87.75" xlink:href="#Dégradé_sans_nom_2"/>
     <linearGradient id="linear-gradient-14" x1="440.51" y1="349.38" x2="440.51" y2="338.05" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#00080f"/>
-      <stop offset=".4" stop-color="#00191a"/>
-      <stop offset=".92" stop-color="#002c26"/>
+      <stop offset="0" stop-color="#2D070D"/>
+      <stop offset=".4" stop-color="#5B0F1A"/>
+      <stop offset=".92" stop-color="#3A0910"/>
     </linearGradient>
     <linearGradient id="linear-gradient-15" x1="463.67" y1="349.14" x2="463.67" y2="338.26" xlink:href="#linear-gradient-14"/>
     <linearGradient id="linear-gradient-16" x1="454.13" y1="349.37" x2="454.13" y2="338.06" xlink:href="#linear-gradient-14"/>
@@ -715,7 +723,7 @@
     <linearGradient id="Dégradé_sans_nom_2-21" data-name="Dégradé sans nom 2" x1="363.53" y1="298.02" x2="553.43" y2="298.02" xlink:href="#Dégradé_sans_nom_2"/>
   </defs>
   <g>
-    <rect class="cls-8" width="1200" height="420"/>
+    <rect class="cls-card-bg" width="1200" height="420"/>
     <g class="cls-50">
       <g class="cls-4">
         <g class="cls-50">

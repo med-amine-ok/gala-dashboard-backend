@@ -85,7 +85,7 @@ export default function TicketPricing() {
                 backfaceVisibility: "hidden",
                 transform: "rotateY(0deg)",
               }}
-              className="absolute inset-0 w-full h-full rounded-xl sm:rounded-2xl overflow-hidden shadow-[0_20px_50px_-15px_rgba(45,7,13,0.7)] border border-[var(--color-silver)]/60 bg-[var(--color-cream)]"
+              className="absolute inset-0 w-full h-full rounded-xl sm:rounded-2xl overflow-hidden shadow-[0_20px_50px_-15px_rgba(45,7,13,0.7)] border border-[var(--color-silver)]/60 bg-[var(--color-dark)]"
             >
               <Image
                 src="/tickets-01.svg"

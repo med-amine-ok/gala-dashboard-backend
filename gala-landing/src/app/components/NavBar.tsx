@@ -54,9 +54,9 @@ export default function NavBar() {
   return (
     <>
       <header
-        className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 font-sans ${
+        className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 font-sans ${
           scrolled
-            ? "py-3.5 bg-[var(--color-primary)]/92 backdrop-blur-md border-b border-[var(--color-silver)]/20 shadow-[0_4px_25px_-10px_rgba(45,7,13,0.5)]"
+            ? "py-3.5 sm:py-4 bg-transparent backdrop-blur-sm border-b border-[var(--color-silver)]/10"
             : "py-6 sm:py-8 bg-transparent"
         }`}
       >
@@ -68,7 +68,7 @@ export default function NavBar() {
             aria-label="GALA Home"
           >
             <Image
-              src="/GALA.png"
+              src="/GALA-silver.png"
               alt="GALA Logo"
               width={140}
               height={46}
@@ -156,7 +156,7 @@ export default function NavBar() {
                 className="bg-transparent border-none cursor-pointer p-0"
               >
                 <Image
-                  src="/GALA.png"
+                  src="/GALA-silver.png"
                   alt="GALA Logo"
                   width={140}
                   height={46}

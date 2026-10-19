@@ -100,7 +100,7 @@ export default function HeroSection() {
           className="flex justify-center mb-6 sm:mb-8"
         >
           <Image
-            src="/GALA.png"
+            src="/GALA-silver.png"
             alt="GALA"
             width={580}
             height={190}

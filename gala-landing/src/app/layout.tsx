@@ -31,8 +31,8 @@ export const metadata = {
   title: "GALA — Where Ambition Meets Opportunity",
   description: "A prestigious, invitation-only corporate, networking, and engineering experience. Algiers 2026.",
   icons: {
-    icon: "/GALA.png",
-    apple: "/GALA.png",
+    icon: "/GALA-silver.png",
+    apple: "/GALA-silver.png",
   },
 };
 
@@ -47,7 +47,7 @@ export default function RootLayout({
       className={`${cinzel.variable} ${plusJakarta.variable} ${cormorant.variable}`}
     >
       <head>
-        <link rel="icon" href="/GALA.png" />
+        <link rel="icon" href="/GALA-silver.png" />
       </head>
       <body
         className={`min-h-full flex flex-col bg-[var(--color-primary)] text-[var(--color-cream)] antialiased selection:bg-[var(--color-silver)] selection:text-[var(--color-dark)] font-sans`}

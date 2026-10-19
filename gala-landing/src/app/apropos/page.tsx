@@ -34,7 +34,7 @@ export default function AboutUsSection() {
           <img
             src="/vic.png"
             alt="Vision & Innovation Club"
-            className="w-[120px] h-[50px] lg:w-[220px] lg:h-[90px] object-contain select-none brightness-110 drop-shadow-sm"
+            className="w-[120px] h-[50px] lg:w-[220px] lg:h-[90px] object-contain select-none brightness-110 drop-shadow-sm filter brightness-[0] invert-[1]"
           />
 
           {/* Silver Divider Line */}
