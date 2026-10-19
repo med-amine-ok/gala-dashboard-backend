@@ -124,7 +124,7 @@ export default function TicketPricing() {
         </div>
 
         {/* Action Button */}
-        {/* <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link href="/register">
             <button className="flex items-center justify-center gap-3 px-8 sm:px-10 py-4 rounded-full bg-[var(--color-maroon)] text-[var(--color-cream)] hover:bg-[var(--color-dark)] hover:text-[var(--color-silver)] text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 shadow-md cursor-pointer border border-[var(--color-silver)] hover:border-[var(--color-silver-light)]">
               <span>
@@ -134,7 +134,7 @@ export default function TicketPricing() {
               <ArrowRight className="w-4 h-4" />
             </button>
           </Link>
-        </div> */}
+        </div>
       </div>
     </section>
   );
