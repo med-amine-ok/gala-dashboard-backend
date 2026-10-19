@@ -84,12 +84,8 @@ export default function HeroSection() {
           className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8"
         >
           <span className="text-xs font-semibold uppercase tracking-[0.28em] text-[var(--color-silver)]">
-            {texts.hero?.edition || "ALGIERS · 2026"}
-          </span>
-          <span className="w-8 sm:w-12 h-[1px] bg-[var(--color-silver)]/40" />
-          <span className="text-xs uppercase tracking-[0.22em] text-[var(--color-cream)]/75">
-            {texts.hero?.venue || "HOTEL MERCURE"}
-          </span>
+            ALGIERS · 2026 · ENP
+          </span> 
         </motion.div>
 
         {/* Monumental Brand Logo */}
@@ -131,7 +127,7 @@ export default function HeroSection() {
         </motion.p>
 
         {/* Call to Actions */}
-        <motion.div
+        {/* <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
@@ -151,7 +147,7 @@ export default function HeroSection() {
             <span>{texts.hero?.discoverCTA || "DISCOVER GALA"}</span>
             <ArrowDown className="w-3.5 h-3.5 transition-transform group-hover:translate-y-0.5" />
           </button>
-        </motion.div>
+        </motion.div> */}
       </div>
 
       {/* FOOTER COUNTDOWN BAR */}

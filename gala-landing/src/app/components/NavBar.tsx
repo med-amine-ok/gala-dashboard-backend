@@ -43,11 +43,31 @@ export default function NavBar() {
   };
 
   const navMenuItems = texts.nav?.menuItems || [
-    { label: "The Experience", id: "home", subtitle: "Where ambition meets opportunity" },
-    { label: "The Manifesto", id: "manifesto", subtitle: "One night. The right people." },
-    { label: "The Archives", id: "historique", subtitle: "Chapters of excellence" },
-    { label: "This Year · 2026", id: "cetteannee", subtitle: "The upcoming edition" },
-    { label: "Official Ticket Pass", id: "tarification", subtitle: "Admission & access (1,000 DA)" },
+    {
+      label: "The Experience",
+      id: "home",
+      subtitle: "Where ambition meets opportunity",
+    },
+    {
+      label: "The Manifesto",
+      id: "manifesto",
+      subtitle: "One night. The right people.",
+    },
+    {
+      label: "The Archives",
+      id: "historique",
+      subtitle: "Chapters of excellence",
+    },
+    {
+      label: "This Year · 2026",
+      id: "cetteannee",
+      subtitle: "The upcoming edition",
+    },
+    {
+      label: "Official Ticket Pass",
+      id: "tarification",
+      subtitle: "Admission & access (1,000 DA)",
+    },
     { label: "The Story", id: "apropos", subtitle: "Our heritage and vision" },
   ];
 
@@ -94,7 +114,9 @@ export default function NavBar() {
               >
                 FR
               </span>
-              <span className="mx-1.5 text-[var(--color-silver)]/40 font-light">/</span>
+              <span className="mx-1.5 text-[var(--color-silver)]/40 font-light">
+                /
+              </span>
               <span
                 className={
                   lang === "en"
@@ -127,7 +149,9 @@ export default function NavBar() {
             {/* Bespoke Luxury CTA Button */}
             <Link href="/register" className="hidden sm:block">
               <button className="group inline-flex items-center gap-2.5 px-6 py-2.5 rounded-full bg-[var(--color-maroon)] text-[var(--color-cream)] hover:bg-[var(--color-dark)] hover:text-[var(--color-silver)] text-[10.5px] font-semibold uppercase tracking-[0.24em] transition-all duration-300 cursor-pointer shadow-xs border border-[var(--color-silver)]/60 hover:border-[var(--color-silver)]">
-                <span>{texts.nav?.requestInvitation || "REQUEST INVITATION"}</span>
+                <span>
+                  {texts.nav?.requestInvitation || "REQUEST INVITATION"}
+                </span>
                 <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" />
               </button>
             </Link>
@@ -249,10 +273,14 @@ export default function NavBar() {
 
             {/* Bottom Bar of Overlay */}
             <div className="border-t border-[var(--color-silver)]/20 pt-6 max-w-7xl w-full mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[var(--color-cream)]/60 relative z-10">
-              <p className="tracking-wider uppercase text-[11px]">ALGIERS · HOTEL MERCURE · NOVEMBER 08, 2026</p>
+              <p className="tracking-wider uppercase text-[11px]">
+                ALGIERS · HOTEL MERCURE · NOVEMBER 08, 2026
+              </p>
               <Link href="/register" onClick={() => setMenuOpen(false)}>
                 <span className="text-xs uppercase tracking-[0.24em] font-semibold text-[var(--color-silver)] hover:text-[var(--color-cream)] transition-colors cursor-pointer inline-flex items-center gap-2">
-                  <span>{texts.nav?.requestInvitation || "REQUEST INVITATION"}</span>
+                  <span>
+                    {texts.nav?.requestInvitation || "REQUEST INVITATION"}
+                  </span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </span>
               </Link>

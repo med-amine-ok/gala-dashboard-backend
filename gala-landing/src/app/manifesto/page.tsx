@@ -37,7 +37,7 @@ export default function ManifestoSection() {
           transition={{ delay: 0.15, duration: 1, ease: [0.16, 1, 0.3, 1] }}
           className="font-cinzel text-4xl sm:text-6xl lg:text-7xl font-light text-[var(--color-cream)] leading-[1.12] mb-12 whitespace-pre-line"
         >
-          {texts.manifesto?.headline || "One night.\nThe right people.\nEndless possibilities."}
+          {texts.manifesto?.headline || "One day.\nThe right people.\nEndless possibilities."}
         </motion.h2>
 
         {/* Expanding Silver Line */}

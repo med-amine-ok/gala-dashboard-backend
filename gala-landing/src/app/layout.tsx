@@ -28,7 +28,7 @@ const cormorant = Cormorant_Garamond({
 });
 
 export const metadata = {
-  title: "GALA — Where Ambition Meets Opportunity",
+  title: "GALA | Where Ambition Meets Opportunity",
   description: "A prestigious, invitation-only corporate, networking, and engineering experience. Algiers 2026.",
   icons: {
     icon: "/GALA-silver.png",

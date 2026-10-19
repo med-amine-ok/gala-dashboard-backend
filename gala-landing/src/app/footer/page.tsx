@@ -17,10 +17,12 @@ export default function Footer() {
       <div className="absolute bottom-[-10%] right-[-5%] w-[450px] h-[450px] rounded-full bg-[radial-gradient(circle,rgba(139,30,45,0.45)_0%,transparent_70%)] opacity-35 blur-3xl pointer-events-none" />
 
       <div className="max-w-7xl mx-auto flex flex-col justify-between">
-    
-
         <div className="pt-2 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-[var(--color-cream)]/60">
-          <p>© {new Date().getFullYear()} {texts.footer?.copyright || "GALA. All rights reserved. Vision & Innovation Club."}</p>
+          <p>
+            © {new Date().getFullYear()}{" "}
+            {texts.footer?.copyright ||
+              "GALA. All rights reserved. Vision & Innovation Club."}
+          </p>
 
           <a
             href="https://medamine-portfolio-v3.vercel.app"
@@ -44,8 +46,12 @@ export default function Footer() {
           </a>
 
           <div className="flex gap-4">
-            <span className="hover:text-[var(--color-silver)] cursor-pointer transition-colors">Privilege & Privacy</span>
-            <span className="hover:text-[var(--color-silver)] cursor-pointer transition-colors">Terms of Invitation</span>
+            <span className="hover:text-[var(--color-silver)] cursor-pointer transition-colors">
+              Privilege & Privacy
+            </span>
+            <span className="hover:text-[var(--color-silver)] cursor-pointer transition-colors">
+              Terms of Invitation
+            </span>
           </div>
         </div>
       </div>

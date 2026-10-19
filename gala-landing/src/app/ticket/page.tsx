@@ -17,8 +17,14 @@ export default function TicketPricing() {
   const mouseY = useMotionValue(0);
 
   const springConfig = { damping: 25, stiffness: 120 };
-  const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [6, -6]), springConfig);
-  const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-8, 8]), springConfig);
+  const rotateX = useSpring(
+    useTransform(mouseY, [-0.5, 0.5], [6, -6]),
+    springConfig,
+  );
+  const rotateY = useSpring(
+    useTransform(mouseX, [-0.5, 0.5], [-8, 8]),
+    springConfig,
+  );
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!cardRef.current) return;
@@ -117,22 +123,18 @@ export default function TicketPricing() {
           </motion.div>
         </div>
 
-        {/* Subtle Flip Hint */}
-        <div className="text-center mb-10">
-          <p className="text-[10px] sm:text-xs uppercase tracking-[0.22em] font-mono text-[var(--color-silver)]">
-            ✦ CLICK THE TICKET TO FLIP ✦
-          </p>
-        </div>
-
         {/* Action Button */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+        {/* <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link href="/register">
             <button className="flex items-center justify-center gap-3 px-8 sm:px-10 py-4 rounded-full bg-[var(--color-maroon)] text-[var(--color-cream)] hover:bg-[var(--color-dark)] hover:text-[var(--color-silver)] text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 shadow-md cursor-pointer border border-[var(--color-silver)] hover:border-[var(--color-silver-light)]">
-              <span>{texts.invitations?.selectCTA || "REQUEST YOUR ADMISSION PASS (1,000 DA)"}</span>
+              <span>
+                {texts.invitations?.selectCTA ||
+                  "REQUEST YOUR ADMISSION PASS (1,000 DA)"}
+              </span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </Link>
-        </div>
+        </div> */}
       </div>
     </section>
   );

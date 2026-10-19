@@ -87,7 +87,9 @@ export default function Agenda() {
                     <div className="bg-gradient-to-r from-[var(--color-silver)] via-[var(--color-silver-light)] to-[var(--color-silver)] p-0.5 rounded-full shadow-lg shadow-[var(--color-dark)]/50 w-full">
                       <div
                         className={`bg-[var(--color-dark)] rounded-full p-6 flex flex-row items-center justify-center gap-4 md:gap-6 text-center w-full border border-[var(--color-silver)]/20 ${
-                          index % 2 === 0 ? "md:flex-row-reverse" : "md:flex-row"
+                          index % 2 === 0
+                            ? "md:flex-row-reverse"
+                            : "md:flex-row"
                         }`}
                       >
                         {/* Numéro */}

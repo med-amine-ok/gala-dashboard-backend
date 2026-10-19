@@ -16,8 +16,14 @@ export default function ThisYearSection() {
   const mouseY = useMotionValue(0);
 
   const springConfig = { damping: 30, stiffness: 100 };
-  const parallaxX = useSpring(useTransform(mouseX, [-0.5, 0.5], [-20, 20]), springConfig);
-  const parallaxY = useSpring(useTransform(mouseY, [-0.5, 0.5], [-15, 15]), springConfig);
+  const parallaxX = useSpring(
+    useTransform(mouseX, [-0.5, 0.5], [-20, 20]),
+    springConfig,
+  );
+  const parallaxY = useSpring(
+    useTransform(mouseY, [-0.5, 0.5], [-15, 15]),
+    springConfig,
+  );
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!containerRef.current) return;
@@ -125,7 +131,9 @@ export default function ThisYearSection() {
                 <div className="flex items-center justify-between mb-3">
                   <span
                     className={`font-mono text-xs font-semibold ${
-                      isActive ? "text-[var(--color-silver)]" : "text-[var(--color-cream)]/50"
+                      isActive
+                        ? "text-[var(--color-silver)]"
+                        : "text-[var(--color-cream)]/50"
                     }`}
                   >
                     {ch.number || `0${idx + 1}`}
@@ -139,7 +147,9 @@ export default function ThisYearSection() {
                 <p className="font-cinzel text-lg sm:text-xl font-medium text-[var(--color-cream)] mb-1">
                   {ch.title}
                 </p>
-                <p className="text-xs text-[var(--color-silver)]/80 tracking-wide">{ch.subtitle}</p>
+                <p className="text-xs text-[var(--color-silver)]/80 tracking-wide">
+                  {ch.subtitle}
+                </p>
               </button>
             );
           })}
