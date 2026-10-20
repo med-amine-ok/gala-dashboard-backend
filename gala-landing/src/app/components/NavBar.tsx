@@ -59,11 +59,6 @@ export default function NavBar() {
       subtitle: "Chapters of excellence",
     },
     {
-      label: "This Year · 2026",
-      id: "cetteannee",
-      subtitle: "The upcoming edition",
-    },
-    {
       label: "Official Ticket Pass",
       id: "tarification",
       subtitle: "Admission & access (1,000 DA)",

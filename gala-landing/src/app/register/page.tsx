@@ -252,8 +252,12 @@ function RegistrationContent() {
   // Success Celebration View
   if (done) {
     return (
-      <main className="min-h-screen bg-[var(--color-primary)] flex items-center justify-center py-20 px-6 text-[var(--color-cream)] font-sans relative overflow-hidden">
-        <div className="max-w-2xl w-full p-8 sm:p-14 rounded-3xl bg-[var(--color-dark)] border border-[var(--color-silver)]/30 shadow-[0_30px_60px_-15px_rgba(45,7,13,0.7)] text-center relative z-10">
+      <main className="min-h-screen bg-[var(--color-cream)] flex items-center justify-center py-20 px-6 text-[var(--color-dark)] font-sans relative overflow-hidden">
+        {/* Ambient Subtle Warm Glows */}
+        <div className="absolute top-[-10%] right-[-10%] w-[550px] h-[550px] rounded-full bg-[radial-gradient(circle,rgba(139,30,45,0.08)_0%,transparent_70%)] pointer-events-none" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[550px] h-[550px] rounded-full bg-[radial-gradient(circle,rgba(45,7,13,0.06)_0%,transparent_70%)] pointer-events-none" />
+
+        <div className="max-w-2xl w-full p-8 sm:p-14 rounded-3xl bg-[var(--color-dark)] text-[var(--color-cream)] border border-[var(--color-silver)]/30 shadow-[0_30px_60px_-15px_rgba(45,7,13,0.45)] text-center relative z-10">
           <div className="w-16 h-16 mx-auto rounded-full bg-[var(--color-maroon)] border border-[var(--color-silver)]/40 flex items-center justify-center mb-6 text-[var(--color-silver)]">
             <CheckCircle2 className="w-8 h-8" />
           </div>
@@ -304,21 +308,25 @@ function RegistrationContent() {
   return (
     <FormProvider {...methods}>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <main className="min-h-screen bg-[var(--color-primary)] flex flex-col justify-center py-20 px-6 sm:px-12 text-[var(--color-cream)] font-sans relative overflow-hidden">
+        <main className="min-h-screen bg-[var(--color-cream)] flex flex-col justify-center py-20 px-6 sm:px-12 text-[var(--color-dark)] font-sans relative overflow-hidden">
+          {/* Subtle Ambient Warm Glows on Cream */}
+          <div className="absolute top-[-10%] right-[-10%] w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle,rgba(139,30,45,0.08)_0%,transparent_70%)] pointer-events-none" />
+          <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle,rgba(45,7,13,0.06)_0%,transparent_70%)] pointer-events-none" />
+
           <div className="max-w-4xl w-full mx-auto my-auto z-10">
             {/* Header */}
-            <div className="mb-10 text-center sm:text-left flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[var(--color-silver)]/20 pb-6">
+            <div className="mb-10 text-center sm:text-left flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[var(--color-dark)]/15 pb-6">
               <div>
-                <Link href="/" className="inline-block font-cinzel text-xl font-bold tracking-[0.2em] text-[var(--color-cream)] hover:text-[var(--color-silver)] mb-2 transition-colors">
+                <Link href="/" className="inline-block font-cinzel text-xl font-bold tracking-[0.2em] text-[var(--color-primary)] hover:text-[var(--color-dark)] mb-2 transition-colors">
                   GALA · ALGIERS 2026
                 </Link>
-                <h1 className="font-cinzel text-3xl sm:text-4xl font-light text-[var(--color-cream)]">
+                <h1 className="font-cinzel text-3xl sm:text-4xl font-light text-[var(--color-dark)]">
                   {texts.register?.headline || "Your evening\nbegins here."}
                 </h1>
               </div>
 
               {/* Admission Pass Pill */}
-              <div className="text-xs uppercase tracking-widest text-[var(--color-silver)] px-4 py-2 rounded-full bg-[var(--color-dark)] border border-[var(--color-silver)]/40 self-start sm:self-auto font-mono font-bold">
+              <div className="text-xs uppercase tracking-widest text-[var(--color-cream)] px-4 py-2 rounded-full bg-[var(--color-dark)] border border-[var(--color-primary)]/40 self-start sm:self-auto font-mono font-bold shadow-sm">
                 ADMISSION PASS · 1,000 DA
               </div>
             </div>
@@ -333,21 +341,21 @@ function RegistrationContent() {
                 return (
                   <div key={idx} className="space-y-2">
                     <div
-                      className={`h-[2px] transition-all duration-500 ${
+                      className={`h-[2.5px] rounded-full transition-all duration-500 ${
                         isCurrent
-                          ? "bg-[var(--color-silver)]"
+                          ? "bg-[var(--color-primary)]"
                           : isPassed
-                          ? "bg-[var(--color-cream)]"
-                          : "bg-[var(--color-silver)]/20"
+                          ? "bg-[var(--color-maroon)]"
+                          : "bg-[var(--color-dark)]/15"
                       }`}
                     />
                     <p
                       className={`text-[10px] uppercase tracking-widest font-mono ${
                         isCurrent
-                          ? "text-[var(--color-silver)] font-bold"
+                          ? "text-[var(--color-primary)] font-bold"
                           : isPassed
-                          ? "text-[var(--color-cream)]"
-                          : "text-[var(--color-silver)]/50"
+                          ? "text-[var(--color-dark)]/80 font-medium"
+                          : "text-[var(--color-dark)]/40"
                       }`}
                     >
                       {s.num} {s.title}
@@ -358,7 +366,7 @@ function RegistrationContent() {
             </div>
 
             {/* Form Card */}
-            <div className="p-8 sm:p-12 rounded-3xl bg-[var(--color-dark)] border border-[var(--color-silver)]/30 shadow-[0_25px_50px_-15px_rgba(45,7,13,0.7)]">
+            <div className="p-8 sm:p-12 rounded-3xl bg-[var(--color-dark)] text-[var(--color-cream)] border border-[var(--color-silver)]/30 shadow-[0_30px_70px_-20px_rgba(45,7,13,0.45)]">
               <AnimatePresence mode="wait">
                 {step === 1 && <Step1 texts={texts} />}
                 {step === 2 && <Step2 texts={texts} />}
@@ -442,7 +450,7 @@ export default function RegistrationPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[var(--color-primary)] flex items-center justify-center font-cinzel text-xl text-[var(--color-silver)]">
+        <div className="min-h-screen bg-[var(--color-cream)] flex items-center justify-center font-cinzel text-xl text-[var(--color-primary)]">
           LOADING GALA INVITATION...
         </div>
       }

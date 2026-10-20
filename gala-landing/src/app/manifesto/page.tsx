@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { useLanguage } from "../../context/LanguageContext";
 
@@ -9,13 +10,28 @@ export default function ManifestoSection() {
   return (
     <section
       id="manifesto"
-      className="relative min-h-[85vh] w-full bg-[var(--color-maroon)] text-[var(--color-cream)] flex flex-col justify-center py-24 sm:py-36 px-6 sm:px-12 overflow-hidden border-t border-[var(--color-silver)]/20"
+      className="relative min-h-[85vh] w-full bg-[var(--color-dark)] text-[var(--color-cream)] flex flex-col justify-center py-24 sm:py-36 px-6 sm:px-12 overflow-hidden border-t border-[var(--color-silver)]/20"
     >
-      {/* Refined Ambient Glows */}
-      <div className="absolute top-[20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-[radial-gradient(circle,rgba(139,30,45,0.45)_0%,transparent_70%)] opacity-35 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-[10%] right-[-10%] w-[450px] h-[450px] rounded-full bg-[radial-gradient(circle,rgba(192,192,192,0.12)_0%,transparent_70%)] opacity-30 blur-3xl pointer-events-none" />
+      {/* Background Photography with Cinematic Dark Filter */}
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+        <Image
+          src="/AIMG_7652.jpg"
+          alt="GALA Manifesto Ambience"
+          fill
+          priority={false}
+          sizes="100vw"
+          className="object-cover object-center scale-105 filter brightness-[0.25] contrast-[1.15] saturate-[0.7]"
+        />
+        {/* Luxury Deep Dark Noir & Wine Gradient & Vignette Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-dark)]/90 via-[var(--color-dark)]/75 to-[var(--color-dark)]/95" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(20,3,6,0.85)_80%)]" />
+      </div>
 
-      <div className="max-w-6xl w-full mx-auto">
+      {/* Refined Ambient Animated Glows */}
+      <div className="absolute top-[20%] left-[-10%] w-[550px] h-[550px] rounded-full bg-[radial-gradient(circle,rgba(139,30,45,0.45)_0%,transparent_70%)] opacity-35 blur-3xl pointer-events-none z-1 animate-glow-slow" />
+      <div className="absolute bottom-[10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-[radial-gradient(circle,rgba(192,192,192,0.12)_0%,transparent_70%)] opacity-30 blur-3xl pointer-events-none z-1 animate-glow-reverse" />
+
+      <div className="max-w-6xl w-full mx-auto relative z-10">
         {/* Category Label */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -37,7 +53,8 @@ export default function ManifestoSection() {
           transition={{ delay: 0.15, duration: 1, ease: [0.16, 1, 0.3, 1] }}
           className="font-cinzel text-4xl sm:text-6xl lg:text-7xl font-light text-[var(--color-cream)] leading-[1.12] mb-12 whitespace-pre-line"
         >
-          {texts.manifesto?.headline || "One day.\nThe right people.\nEndless possibilities."}
+          {texts.manifesto?.headline ||
+            "One day.\nThe right people.\nEndless possibilities."}
         </motion.h2>
 
         {/* Expanding Silver Line */}
@@ -81,11 +98,13 @@ export default function ManifestoSection() {
             </p>
 
             <div className="grid grid-cols-3 gap-4 pt-4 border-t border-[var(--color-silver)]/20">
-              {(texts.manifesto?.stats || [
-                { value: "100%", label: "Curated Attendance" },
-                { value: "1:1", label: "Executive Access" },
-                { value: "5-Star", label: "Refined Hospitality" },
-              ]).map((st: any, idx: number) => (
+              {(
+                texts.manifesto?.stats || [
+                  { value: "100%", label: "Curated Attendance" },
+                  { value: "1:1", label: "Executive Access" },
+                  { value: "5-Star", label: "Refined Hospitality" },
+                ]
+              ).map((st: any, idx: number) => (
                 <div key={idx} className="text-left">
                   <span className="font-cinzel text-xl font-bold text-[var(--color-silver)]">
                     {st.value}

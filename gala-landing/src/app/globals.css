@@ -3,13 +3,20 @@
 
 :root {
   /* Brand Luxury Palette Tokens */
-  --color-primary: #8B1E2D;        /* Burgundy / Wine Red (Primary) */
-  --color-maroon: #5B0F1A;         /* Deep Maroon (Alternating Sections & Hover) */
-  --color-dark: #2D070D;           /* Near-Black Maroon (Darkest Base, Shadows & Overlays) */
-  --color-silver: #C0C0C0;         /* Silver (Metallic Accent & Highlights) */
-  --color-silver-light: #E5E5E5;   /* Metallic Silver highlight */
-  --color-silver-dark: #A8A8A8;    /* Metallic Silver shadow */
-  --color-cream: #F2E8D8;          /* Cream / Off-white (Text & Light surfaces) */
+  --color-primary: #8B1E2D;
+  /* Burgundy / Wine Red (Primary) */
+  --color-maroon: #5B0F1A;
+  /* Deep Maroon (Alternating Sections & Hover) */
+  --color-dark: #2D070D;
+  /* Near-Black Maroon (Darkest Base, Shadows & Overlays) */
+  --color-silver: #C0C0C0;
+  /* Silver (Metallic Accent & Highlights) */
+  --color-silver-light: #E5E5E5;
+  /* Metallic Silver highlight */
+  --color-silver-dark: #A8A8A8;
+  /* Metallic Silver shadow */
+  --color-cream: #F2E8D8;
+  /* Cream / Off-white (Text & Light surfaces) */
 
   /* Metallic Accents & Lines */
   --silver-gradient: linear-gradient(135deg, #C0C0C0 0%, #E5E5E5 50%, #A8A8A8 100%);
@@ -35,7 +42,7 @@
 
 html {
   scroll-behavior: smooth;
-  background-color: var(--color-primary);
+  background-color: var(--color-dark);
   color: var(--color-cream);
   font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -43,7 +50,7 @@ html {
 }
 
 body {
-  background-color: var(--color-primary);
+  background-color: var(--color-dark);
   color: var(--color-cream);
   margin: 0;
   overflow-x: hidden;
@@ -112,6 +119,7 @@ body {
 .ticket-perforation-left {
   position: relative;
 }
+
 .ticket-perforation-left::before {
   content: '';
   position: absolute;
@@ -127,6 +135,7 @@ body {
 .ticket-perforation-right {
   position: relative;
 }
+
 .ticket-perforation-right::after {
   content: '';
   position: absolute;
@@ -184,4 +193,44 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-silver);
+}
+
+/* Luxury Animated Atmospheric Gradient System */
+@keyframes ambient-glow-slow {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.35;
+  }
+  50% {
+    transform: translate3d(20px, -25px, 0) scale(1.12);
+    opacity: 0.55;
+  }
+}
+
+@keyframes ambient-glow-reverse {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translate3d(-25px, 20px, 0) scale(1.15);
+    opacity: 0.48;
+  }
+}
+
+.animate-glow-slow {
+  animation: ambient-glow-slow 14s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.animate-glow-reverse {
+  animation: ambient-glow-reverse 18s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-glow-slow,
+  .animate-glow-reverse {
+    animation: none !important;
+  }
 }

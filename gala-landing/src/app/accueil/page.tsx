@@ -50,26 +50,16 @@ export default function HeroSection() {
   return (
     <section
       id="home"
-      className="relative min-h-screen w-full bg-[var(--color-primary)] text-[var(--color-cream)] flex flex-col justify-between pt-32 sm:pt-25 pb-12 px-6 sm:px-12 overflow-hidden font-sans"
+      className="relative min-h-screen w-full bg-[var(--color-dark)] text-[var(--color-cream)] flex flex-col justify-between pt-32 sm:pt-25 pb-12 px-6 sm:px-12 overflow-hidden font-sans"
     >
-      {/* BACKGROUND PHOTOGRAPHY (AIMG_7652.jpg) */}
-      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <Image
-          src="/AIMG_7652.jpg"
-          alt="GALA Ambience"
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover object-center scale-105 filter brightness-[0.7] contrast-[1.1] saturate-[0.8]"
-        />
-        {/* Luxury Burgundy & Maroon Vignette Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-primary)]/85 via-[var(--color-primary)]/75 to-[var(--color-primary)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(45,7,13,0.85)_80%)]" />
-      </div>
+      {/* Rich Dark Maroon & Burgundy Animated Gradient Atmosphere */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-dark)] via-[#380810]/40 to-[var(--color-dark)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_35%,rgba(139,30,45,0.25)_0%,transparent_70%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,rgba(20,3,6,0.65)_85%)] pointer-events-none" />
 
-      {/* Refined Ambient Luxury Glows */}
-      <div className="absolute top-[-10%] right-[-5%] w-[650px] h-[650px] rounded-full bg-[radial-gradient(circle,rgba(91,15,26,0.5)_0%,transparent_70%)] opacity-40 blur-3xl pointer-events-none z-1" />
-      <div className="absolute bottom-[-10%] left-[-5%] w-[550px] h-[550px] rounded-full bg-[radial-gradient(circle,rgba(192,192,192,0.15)_0%,transparent_70%)] opacity-35 blur-3xl pointer-events-none z-1" />
+      {/* Floating Animated Luxury Glows */}
+      <div className="absolute top-[-10%] right-[-5%] w-[650px] h-[650px] rounded-full bg-[radial-gradient(circle,rgba(139,30,45,0.5)_0%,transparent_70%)] opacity-45 blur-3xl pointer-events-none z-1 animate-glow-slow" />
+      <div className="absolute bottom-[-10%] left-[-5%] w-[550px] h-[550px] rounded-full bg-[radial-gradient(circle,rgba(192,192,192,0.14)_0%,transparent_70%)] opacity-35 blur-3xl pointer-events-none z-1 animate-glow-reverse" />
 
       {/* Subtle Luxury Grid */}
       <div className="absolute inset-0 bg-[radial-gradient(var(--color-silver)_0.8px,transparent_0.8px)] [background-size:32px_32px] opacity-15 pointer-events-none z-1" />

@@ -6,11 +6,15 @@ export default function AboutUsSection() {
   return (
     <section
       id="apropos"
-      className="relative w-full min-h-[85vh] px-8 py-16 lg:px-20 lg:py-24 flex flex-col justify-between bg-[var(--color-maroon)] text-[var(--color-cream)] border-t border-[var(--color-silver)]/20 font-sans overflow-hidden"
+      className="relative w-full min-h-[85vh] px-8 py-16 lg:px-20 lg:py-24 flex flex-col justify-between bg-[var(--color-dark)] text-[var(--color-cream)] border-t border-[var(--color-silver)]/20 font-sans overflow-hidden"
     >
-      {/* Ambient Luxury Glows */}
-      <div className="absolute top-[10%] right-[-10%] w-[550px] h-[550px] rounded-full bg-[radial-gradient(circle,rgba(139,30,45,0.45)_0%,transparent_70%)] opacity-35 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-[10%] left-[-10%] w-[550px] h-[550px] rounded-full bg-[radial-gradient(circle,rgba(192,192,192,0.12)_0%,transparent_70%)] opacity-30 blur-3xl pointer-events-none" />
+      {/* Subtle Animated Dark Gradient Atmosphere */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-dark)] via-[#35070e]/30 to-[var(--color-dark)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_50%,rgba(139,30,45,0.22)_0%,transparent_70%)] pointer-events-none" />
+
+      {/* Floating Animated Luxury Glows */}
+      <div className="absolute top-[10%] right-[-10%] w-[550px] h-[550px] rounded-full bg-[radial-gradient(circle,rgba(139,30,45,0.45)_0%,transparent_70%)] opacity-35 blur-3xl pointer-events-none animate-glow-slow" />
+      <div className="absolute bottom-[10%] left-[-10%] w-[550px] h-[550px] rounded-full bg-[radial-gradient(circle,rgba(192,192,192,0.12)_0%,transparent_70%)] opacity-30 blur-3xl pointer-events-none animate-glow-reverse" />
 
       {/* Top Content: Title + Horizontal Layout */}
       <motion.div

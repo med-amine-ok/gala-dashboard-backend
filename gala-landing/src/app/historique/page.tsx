@@ -30,10 +30,15 @@ export default function ArchivesSection() {
   return (
     <section
       id="historique"
-      className="relative min-h-screen w-full bg-[var(--color-primary)] text-[var(--color-cream)] flex flex-col justify-center py-24 sm:py-36 px-6 sm:px-12 overflow-hidden border-t border-[var(--color-silver)]/20"
+      className="relative min-h-screen w-full bg-[var(--color-dark)] text-[var(--color-cream)] flex flex-col justify-center py-24 sm:py-36 px-6 sm:px-12 overflow-hidden border-t border-[var(--color-silver)]/20"
     >
-      {/* Ambient subtle glow */}
-      <div className="absolute top-[10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-[radial-gradient(circle,rgba(91,15,26,0.4)_0%,transparent_70%)] opacity-35 blur-3xl pointer-events-none" />
+      {/* Subtle Animated Dark Gradient Atmosphere */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-dark)] via-[#35070e]/30 to-[var(--color-dark)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_60%_30%,rgba(139,30,45,0.2)_0%,transparent_70%)] pointer-events-none" />
+
+      {/* Floating Animated Ambient Glows */}
+      <div className="absolute top-[10%] right-[-10%] w-[550px] h-[550px] rounded-full bg-[radial-gradient(circle,rgba(139,30,45,0.45)_0%,transparent_70%)] opacity-35 blur-3xl pointer-events-none animate-glow-slow" />
+      <div className="absolute bottom-[5%] left-[-5%] w-[450px] h-[450px] rounded-full bg-[radial-gradient(circle,rgba(192,192,192,0.12)_0%,transparent_70%)] opacity-25 blur-3xl pointer-events-none animate-glow-reverse" />
 
       <div className="max-w-7xl w-full mx-auto">
         {/* Section Header */}
@@ -138,8 +143,8 @@ export default function ArchivesSection() {
               <div className="pt-2">
                 <button
                   onClick={() => {
-                    const yearEl = document.getElementById("cetteannee");
-                    if (yearEl) yearEl.scrollIntoView({ behavior: "smooth" });
+                    const ticketEl = document.getElementById("tarification");
+                    if (ticketEl) ticketEl.scrollIntoView({ behavior: "smooth" });
                   }}
                   className="group inline-flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-cream)] hover:text-[var(--color-silver)] transition-colors cursor-pointer bg-transparent border-none p-0"
                 >

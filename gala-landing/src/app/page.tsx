@@ -4,7 +4,6 @@ import NavBar from "./components/NavBar";
 import Accueil from "./accueil/page";
 import Manifesto from "./manifesto/page";
 import Historique from "./historique/page";
-import CetteAnnee from "./annee/page";
 import Pricing from "./ticket/page";
 import Apropos from "./apropos/page";
 import Footer from "./footer/page";
@@ -21,7 +20,7 @@ if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_MIXPANEL_TOKEN) {
 
 export default function Home() {
   return (
-    <div className="w-full min-h-screen bg-[var(--color-primary)] text-[var(--color-cream)]">
+    <div className="w-full min-h-screen bg-[var(--color-dark)] text-[var(--color-cream)]">
       <NavBar />
 
       <main className="w-full overflow-x-hidden">
@@ -40,22 +39,17 @@ export default function Home() {
           <Historique />
         </section>
 
-        {/* 04 — THIS YEAR (GALA 2026) */}
-        <section id="cetteannee">
-          <CetteAnnee />
-        </section>
-
-        {/* 05 — INVITATION / TICKET */}
+        {/* 04 — INVITATION / TICKET PASS */}
         <section id="tarification">
           <Pricing />
         </section>
 
-        {/* 06 — THE STORY (HERITAGE & VIC) */}
+        {/* 05 — THE STORY (HERITAGE & VIC) */}
         <section id="apropos">
           <Apropos />
         </section>
 
-        {/* 07 — FOOTER */}
+        {/* 06 — FOOTER */}
         <section id="footer">
           <Footer />
         </section>

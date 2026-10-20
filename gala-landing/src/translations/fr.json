@@ -8,7 +8,6 @@
       { "label": "L'Expérience", "id": "home", "subtitle": "Là où l'ambition rencontre l'opportunité" },
       { "label": "Le Manifeste", "id": "manifesto", "subtitle": "Une soirée. Les bonnes personnes." },
       { "label": "Les Archives", "id": "historique", "subtitle": "Des chapitres d'excellence" },
-      { "label": "Cette Année · 2026", "id": "cetteannee", "subtitle": "La prochaine édition" },
       { "label": "Billet Officiel", "id": "tarification", "subtitle": "Pass d'admission (1 000 DA)" },
       { "label": "Notre Histoire", "id": "apropos", "subtitle": "Héritage et vision" }
     ]
@@ -25,7 +24,8 @@
     "countdown": ["JOURS", "HEURES", "MINUTES", "SECONDES"]
   },
   "manifesto": {
-    "label": "L'EXPÉRIENCE GALA",
+    "label": "LE MANIFESTE GALA",
+    "eyebrow": "UN SANCTUAIRE POUR L'AMBITION",
     "headline": "Un jour.\nLes bonnes personnes.\nDes opportunités infinies.",
     "paragraph1": "GALA n'est pas un simple événement annuel. C'est un sanctuaire conçu avec intention pour faire converger les esprits d'ingénierie les plus brillants et les décideurs d'entreprises avant-gardistes.",
     "paragraph2": "Nous orchestrons un environnement où le dialogue authentique remplace les discours convenus, et où un échange unique peut transformer une carrière ou façonner l'avenir d'une organisation.",
@@ -33,7 +33,58 @@
     "stats": [
       { "value": "100%", "label": "Sélection Rigoureuse" },
       { "value": "1:1", "label": "Accès Dirigeants" },
-      { "value": "5 Étoiles", "label": "Hospitalité d'Exception" }
+      { "value": "5 Étoiles", "label": "Hospitalité d'Exception" },
+      { "value": "500+", "label": "Futurs Leaders" }
+    ],
+    "moments": [
+      {
+        "id": "people",
+        "tag": "AMBITION & FIERTÉ",
+        "number": "01",
+        "title": "Les Esprits d'Élite",
+        "subtitle": "Là où les plus grands talents d'Algérie s'unissent",
+        "description": "Tout accomplissement commence par une conviction profonde. Le GALA rassemble les diplômés les plus brillants, chercheurs et futurs leaders issus des plus prestigieuses écoles d'ingénieurs d'Algérie — prouvant que l'excellence est notre norme partagée.",
+        "quote": "« Être au milieu de centaines de passionnés partageant la même détermination m'a fait réaliser une chose : l'avenir n'est pas lointain. Il commence ce soir. »",
+        "quoteAuthor": "Diplômé Délégué · Promotion 2025",
+        "highlight": "500+ Ingénieurs Sélectionnés · 100% sur Mérite",
+        "image": "/images/sora jama3ia 1.svg"
+      },
+      {
+        "id": "connection",
+        "tag": "DES DIALOGUES DÉCISIFS",
+        "number": "02",
+        "title": "L'Alchimie des Synergies",
+        "subtitle": "Une seule poignée de main peut transformer une destinée",
+        "description": "Nous faisons disparaître les barrières traditionnelles entre les jeunes talents et les états-majors des entreprises. Ici, dirigeants de multinationales, pionniers de l'énergie et innovators tech dialoguent d'égal à égal. Une conversation authentique surpasse mille CV sans réponse.",
+        "quote": "« Je n'ai pas distribué de CV. J'ai partagé une vision d'ingénieur autour d'un café, et dès minuit, la trajectoire de ma carrière a basculé pour toujours. »",
+        "quoteAuthor": "Ingénieur en Transition Énergétique & Recruté GALA",
+        "highlight": "Accès Direct 1:1 aux Décideurs · Leaders Industriels",
+        "image": "/images/lema.svg"
+      },
+      {
+        "id": "discourse",
+        "tag": "DES IDÉES QUI BÂTISSENT",
+        "number": "03",
+        "title": "La Tribune des Convictions",
+        "subtitle": "Vision d'avant-garde et salons de haut niveau",
+        "description": "Des keynotes inspirantes aux salons stratégiques sur l'intelligence artificielle, l'hydrogène vert et la souveraineté industrielle. Nous ne débattons pas d'un avenir abstrait — nous concevons les projets concrets qui bâtiront l'Algérie de demain.",
+        "quote": "« Quand un haut dirigeant de l'industrie vous regarde dans les yeux et bouscule vos certitudes, vous ne faites pas qu'apprendre — vous gagnez dix ans d'expérience en une soirée. »",
+        "quoteAuthor": "Intervenant Clé & Chercheur en Chef",
+        "highlight": "Keynotes Exclusives · Salons Technologies de Demain",
+        "image": "/images/host.svg"
+      },
+      {
+        "id": "elegance",
+        "tag": "CÉLÉBRATION 5 ÉTOILES",
+        "number": "04",
+        "title": "Le Sanctuaire de Dignité",
+        "subtitle": "Un écrin à la hauteur de vos années d'efforts",
+        "description": "Des années de travail acharné, de nuits blanches en laboratoire et d'exigence intellectuelle méritent un cadre de très haute distinction. Sous les lustres ambrés de la Grande Salle de Bal de l'Hôtel Mercure, nous célébrons bien plus qu'un diplôme : l'entrée dans une confrérie d'excellence.",
+        "quote": "« Vous arrivez comme un étudiant habité d'espoirs. Vous repartez comme un ingénieur porteur d'un héritage. »",
+        "quoteAuthor": "Major de Promotion · ENP Alger",
+        "highlight": "Hôtel Mercure Grande Salle · Hospitalité Raffinée",
+        "image": "/images/gpt.svg"
+      }
     ]
   },
   "archives": {

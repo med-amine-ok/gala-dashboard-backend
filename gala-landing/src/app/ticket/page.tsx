@@ -43,11 +43,15 @@ export default function TicketPricing() {
   return (
     <section
       id="tarification"
-      className="relative min-h-screen w-full bg-[var(--color-primary)] text-[var(--color-cream)] flex flex-col justify-center py-20 sm:py-32 px-4 sm:px-12 overflow-hidden border-t border-[var(--color-silver)]/20 font-sans"
+      className="relative min-h-screen w-full bg-[var(--color-dark)] text-[var(--color-cream)] flex flex-col justify-center py-20 sm:py-32 px-4 sm:px-12 overflow-hidden border-t border-[var(--color-silver)]/20 font-sans"
     >
-      {/* Ambient Luxury Glows */}
-      <div className="absolute top-[10%] left-[-10%] w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle,rgba(91,15,26,0.45)_0%,transparent_70%)] opacity-35 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-[10%] right-[-10%] w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle,rgba(192,192,192,0.12)_0%,transparent_70%)] opacity-30 blur-3xl pointer-events-none" />
+      {/* Subtle Animated Dark Gradient Atmosphere */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-dark)] via-[#360810]/30 to-[var(--color-dark)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(139,30,45,0.22)_0%,transparent_75%)] pointer-events-none" />
+
+      {/* Floating Animated Luxury Glows */}
+      <div className="absolute top-[10%] left-[-10%] w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle,rgba(139,30,45,0.45)_0%,transparent_70%)] opacity-35 blur-3xl pointer-events-none animate-glow-slow" />
+      <div className="absolute bottom-[10%] right-[-10%] w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle,rgba(192,192,192,0.12)_0%,transparent_70%)] opacity-30 blur-3xl pointer-events-none animate-glow-reverse" />
 
       <div className="max-w-5xl w-full mx-auto">
         {/* Section Header */}

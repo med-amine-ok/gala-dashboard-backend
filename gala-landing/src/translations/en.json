@@ -8,7 +8,6 @@
       { "label": "The Experience", "id": "home", "subtitle": "Where ambition meets opportunity" },
       { "label": "The Manifesto", "id": "manifesto", "subtitle": "One night. The right people." },
       { "label": "The Archives", "id": "historique", "subtitle": "Chapters of excellence" },
-      { "label": "This Year · 2026", "id": "cetteannee", "subtitle": "The upcoming edition" },
       { "label": "Official Ticket Pass", "id": "tarification", "subtitle": "Admission & access (1,000 DA)" },
       { "label": "The Story", "id": "apropos", "subtitle": "Our heritage and vision" }
     ]
@@ -25,7 +24,8 @@
     "countdown": ["DAYS", "HOURS", "MINUTES", "SECONDS"]
   },
   "manifesto": {
-    "label": "THE GALA EXPERIENCE",
+    "label": "THE GALA MANIFESTO",
+    "eyebrow": "A SANCTUARY FOR AMBITION",
     "headline": "One day.\nThe right people.\nEndless possibilities.",
     "paragraph1": "GALA is not merely an annual gathering. It is an intentional sanctuary designed for high-calibre engineering minds and forward-thinking corporate titans to cross paths.",
     "paragraph2": "We curate an environment where meaningful dialogue replaces elevator pitches, and where a single conversation can redefine an engineer's career or illuminate an enterprise's future.",
@@ -33,7 +33,58 @@
     "stats": [
       { "value": "100%", "label": "Curated Attendance" },
       { "value": "1:1", "label": "Executive Access" },
-      { "value": "5-Star", "label": "Refined Hospitality" }
+      { "value": "5-Star", "label": "Refined Hospitality" },
+      { "value": "500+", "label": "Future Leaders" }
+    ],
+    "moments": [
+      {
+        "id": "people",
+        "tag": "AMBITION & PRIDE",
+        "number": "01",
+        "title": "The Curated Minds",
+        "subtitle": "Where Algeria's brightest stand together",
+        "description": "Every great leap begins with belief. GALA convenes handpicked graduates, researchers, and rising engineering leaders representing Algeria's foremost institutions — proving that excellence is not an exception, but our shared standard.",
+        "quote": "“Standing among hundreds who share the same fire made me realize: the future isn't distant. It begins right here.”",
+        "quoteAuthor": "Alumni Delegate · Class of 2025",
+        "highlight": "500+ Curated Engineers · 100% Merit-Selected",
+        "image": "/images/sora jama3ia 1.svg"
+      },
+      {
+        "id": "connection",
+        "tag": "CONVERSATIONS THAT COUNT",
+        "number": "02",
+        "title": "The Alchemy of Synergy",
+        "subtitle": "A single handshake can redefine a destiny",
+        "description": "We dissolve the conventional distance between talent and enterprise leadership. Here, multinational directors, energy pioneers, and tech executives engage as mentors and peers. One authentic exchange accomplishes what a thousand unread resumes never could.",
+        "quote": "“I didn't hand out a resume. I shared an engineering vision over warm coffee, and by midnight, my career trajectory shifted forever.”",
+        "quoteAuthor": "Energy Transition Scholar & Recruited Engineer",
+        "highlight": "Direct 1:1 Executive Access · Industry Pioneers",
+        "image": "/images/lema.svg"
+      },
+      {
+        "id": "discourse",
+        "tag": "IDEAS THAT TRANSCEND",
+        "number": "03",
+        "title": "Voices of Conviction",
+        "subtitle": "Frontline vision and transformative salons",
+        "description": "From intimate TED-style keynotes to high-stakes dialogues on AI, renewables, and national industrial sovereignity. We move beyond rhetoric to confront the real engineering challenges that will define Algeria's tomorrow.",
+        "quote": "“When an industry titan looks you in the eye and challenges your calculations, you don't just learn — you grow ten years in one evening.”",
+        "quoteAuthor": "Keynote Speaker & Lead Researcher",
+        "highlight": "High-Impact Keynotes · Future Technology Salons",
+        "image": "/images/host.svg"
+      },
+      {
+        "id": "elegance",
+        "tag": "FIVE-STAR CELEBRATION",
+        "number": "04",
+        "title": "The Sanctuary of Dignity",
+        "subtitle": "An atmosphere worthy of your relentless effort",
+        "description": "Years of rigorous study, late nights in laboratories, and uncompromising dedication deserve a setting of true distinction. Under the amber chandeliers of the Grand Ballroom, we honor not only what you have achieved, but who you are becoming.",
+        "quote": "“You arrive as a student carrying hopes. You depart as an engineer carrying a legacy.”",
+        "quoteAuthor": "Honor Graduate · ENP Algiers",
+        "highlight": "Hotel Mercure Grand Ballroom · Unforgettable Hospitality",
+        "image": "/images/gpt.svg"
+      }
     ]
   },
   "archives": {

@@ -9,10 +9,10 @@ export default function RegistrationClosedPage() {
   const { texts } = language;
 
   return (
-    <main className="min-h-screen bg-[var(--color-primary)] flex items-center justify-center py-16 px-4 text-[var(--color-cream)] font-sans relative overflow-hidden">
-      {/* Decorative Ambient Glows */}
-      <div className="absolute top-[-20%] left-[-10%] w-[550px] h-[550px] rounded-full bg-radial from-[var(--color-maroon)]/50 via-[var(--color-dark)]/30 to-transparent blur-3xl pointer-events-none" />
-      <div className="absolute bottom-[-15%] right-[-10%] w-[500px] h-[500px] rounded-full bg-radial from-[var(--color-maroon)]/40 via-[var(--color-dark)]/30 to-transparent blur-3xl pointer-events-none" />
+    <main className="min-h-screen bg-[var(--color-cream)] flex items-center justify-center py-16 px-4 text-[var(--color-dark)] font-sans relative overflow-hidden">
+      {/* Decorative Ambient Subtle Glows */}
+      <div className="absolute top-[-20%] left-[-10%] w-[550px] h-[550px] rounded-full bg-[radial-gradient(circle,rgba(139,30,45,0.08)_0%,transparent_70%)] pointer-events-none" />
+      <div className="absolute bottom-[-15%] right-[-10%] w-[500px] h-[500px] rounded-full bg-[radial-gradient(circle,rgba(45,7,13,0.06)_0%,transparent_70%)] pointer-events-none" />
 
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
