@@ -17,6 +17,18 @@
   /* Metallic Silver shadow */
   --color-cream: #F2E8D8;
   /* Cream / Off-white (Text & Light surfaces) */
+  --color-cream-soft: #FAF7F2;
+  /* Soft Calm Warm Ivory */
+  --color-cream-card: #FFFFFF;
+  /* Crisp Card Surface */
+  --color-cream-muted: #EADDC8;
+  /* Warm Sand Neutral */
+  --color-text-dark: #2D070D;
+  /* Deep Burgundy Text Anchor */
+  --color-text-body: #4A1B22;
+  /* Comfortable Reading Text */
+  --color-text-muted: #73343C;
+  /* Subdued Editorial Text */
 
   /* Metallic Accents & Lines */
   --silver-gradient: linear-gradient(135deg, #C0C0C0 0%, #E5E5E5 50%, #A8A8A8 100%);
@@ -34,6 +46,12 @@
   --color-silver-light: #E5E5E5;
   --color-silver-dark: #A8A8A8;
   --color-cream: #F2E8D8;
+  --color-cream-soft: #FAF7F2;
+  --color-cream-card: #FFFFFF;
+  --color-cream-muted: #EADDC8;
+  --color-text-dark: #2D070D;
+  --color-text-body: #4A1B22;
+  --color-text-muted: #73343C;
 
   --font-cinzel: 'Cinzel', serif;
   --font-serif: 'Cinzel', 'Cormorant Garamond', Georgia, serif;
@@ -197,10 +215,13 @@ body {
 
 /* Luxury Animated Atmospheric Gradient System */
 @keyframes ambient-glow-slow {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translate3d(0, 0, 0) scale(1);
     opacity: 0.35;
   }
+
   50% {
     transform: translate3d(20px, -25px, 0) scale(1.12);
     opacity: 0.55;
@@ -208,10 +229,13 @@ body {
 }
 
 @keyframes ambient-glow-reverse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translate3d(0, 0, 0) scale(1);
     opacity: 0.3;
   }
+
   50% {
     transform: translate3d(-25px, 20px, 0) scale(1.15);
     opacity: 0.48;
@@ -228,9 +252,40 @@ body {
   will-change: transform, opacity;
 }
 
+/* Cinematic Horizontal Ribbon Loop (Seamless 35-50s) */
+@keyframes cinematic-ribbon-loop {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-ribbon-loop {
+  display: flex;
+  width: max-content;
+  animation: cinematic-ribbon-loop 42s linear infinite;
+  will-change: transform;
+}
+
+.animate-ribbon-loop:hover,
+.animate-ribbon-loop:focus-within {
+  animation-play-state: paused;
+}
+
+/* Accessible focus ring for interactive elements */
+.luxury-focus-ring:focus-visible {
+  outline: 2px solid var(--color-silver);
+  outline-offset: 3px;
+}
+
 @media (prefers-reduced-motion: reduce) {
+
   .animate-glow-slow,
-  .animate-glow-reverse {
+  .animate-glow-reverse,
+  .animate-ribbon-loop {
     animation: none !important;
   }
 }

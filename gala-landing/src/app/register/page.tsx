@@ -159,7 +159,9 @@ function RegistrationContent() {
       academic_level_other:
         data.academic_level === "OTHER" ? data.academic_level_other || "" : "",
       graduation_year_other:
-        data.graduation_year === "OTHER" ? data.graduation_year_other || "" : "",
+        data.graduation_year === "OTHER"
+          ? data.graduation_year_other || ""
+          : "",
       heard_about_other:
         data.heard_about === "OTHER" ? data.heard_about_other || "" : "",
     };
@@ -206,7 +208,7 @@ function RegistrationContent() {
         }
         setSubmitError(
           texts.register?.errors?.submit ||
-            "Failed to submit request. Please verify your details."
+            "Failed to submit request. Please verify your details.",
         );
         return;
       }
@@ -216,7 +218,7 @@ function RegistrationContent() {
       console.error("Submission error:", err);
       setSubmitError(
         texts.register?.errors?.network ||
-          "Unable to connect to the secure server. Please try again."
+          "Unable to connect to the secure server. Please try again.",
       );
     } finally {
       setLoading(false);
@@ -240,7 +242,11 @@ function RegistrationContent() {
     } else if (step === 2) {
       fieldsToValidate = ["plans_next_year"];
     } else if (step === 3) {
-      fieldsToValidate = ["perspective_gala", "benefit_from_event", "heard_about"];
+      fieldsToValidate = [
+        "perspective_gala",
+        "benefit_from_event",
+        "heard_about",
+      ];
     }
 
     const valid = await trigger(fieldsToValidate);
@@ -267,7 +273,8 @@ function RegistrationContent() {
           </span>
 
           <h1 className="font-cinzel text-3xl sm:text-4xl font-bold text-[var(--color-cream)] mb-4">
-            {texts.register?.success?.title || "Your request has been received."}
+            {texts.register?.success?.title ||
+              "Your request has been received."}
           </h1>
 
           <p className="text-sm sm:text-base text-[var(--color-cream)]/80 font-light leading-relaxed max-w-md mx-auto mb-10">
@@ -281,7 +288,9 @@ function RegistrationContent() {
               ADMISSION JOURNEY
             </p>
             <div className="grid grid-cols-4 gap-2 text-center text-[10px] font-mono">
-              <div className="text-[var(--color-silver)] font-bold">1. REQUESTED</div>
+              <div className="text-[var(--color-silver)] font-bold">
+                1. REQUESTED
+              </div>
               <div className="text-[var(--color-cream)]/60">2. REVIEW</div>
               <div className="text-[var(--color-cream)]/60">3. APPROVAL</div>
               <div className="text-[var(--color-cream)]/60">4. INVITATION</div>
@@ -317,7 +326,10 @@ function RegistrationContent() {
             {/* Header */}
             <div className="mb-10 text-center sm:text-left flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[var(--color-dark)]/15 pb-6">
               <div>
-                <Link href="/" className="inline-block font-cinzel text-xl font-bold tracking-[0.2em] text-[var(--color-primary)] hover:text-[var(--color-dark)] mb-2 transition-colors">
+                <Link
+                  href="/"
+                  className="inline-block font-cinzel text-xl font-bold tracking-[0.2em] text-[var(--color-primary)] hover:text-[var(--color-dark)] mb-2 transition-colors"
+                >
                   GALA · ALGIERS 2026
                 </Link>
                 <h1 className="font-cinzel text-3xl sm:text-4xl font-light text-[var(--color-dark)]">
@@ -345,8 +357,8 @@ function RegistrationContent() {
                         isCurrent
                           ? "bg-[var(--color-primary)]"
                           : isPassed
-                          ? "bg-[var(--color-maroon)]"
-                          : "bg-[var(--color-dark)]/15"
+                            ? "bg-[var(--color-maroon)]"
+                            : "bg-[var(--color-dark)]/15"
                       }`}
                     />
                     <p
@@ -354,8 +366,8 @@ function RegistrationContent() {
                         isCurrent
                           ? "text-[var(--color-primary)] font-bold"
                           : isPassed
-                          ? "text-[var(--color-dark)]/80 font-medium"
-                          : "text-[var(--color-dark)]/40"
+                            ? "text-[var(--color-dark)]/80 font-medium"
+                            : "text-[var(--color-dark)]/40"
                       }`}
                     >
                       {s.num} {s.title}
@@ -371,7 +383,13 @@ function RegistrationContent() {
                 {step === 1 && <Step1 texts={texts} />}
                 {step === 2 && <Step2 texts={texts} />}
                 {step === 3 && <Step3 texts={texts} />}
-                {step === 4 && <Step4 data={watch()} requestedTier={requestedTier} texts={texts} />}
+                {step === 4 && (
+                  <Step4
+                    data={watch()}
+                    requestedTier={requestedTier}
+                    texts={texts}
+                  />
+                )}
               </AnimatePresence>
 
               {submitError && (
@@ -390,7 +408,9 @@ function RegistrationContent() {
                     className="flex items-center gap-2 px-6 py-3 rounded-full border border-[var(--color-silver)]/30 text-[var(--color-cream)]/80 hover:text-[var(--color-cream)] hover:bg-[var(--color-maroon)] text-xs font-semibold uppercase tracking-[0.18em] transition-all cursor-pointer"
                   >
                     <ArrowLeft className="w-3.5 h-3.5" />
-                    <span>{texts.register?.buttons?.previous || "PREVIOUS"}</span>
+                    <span>
+                      {texts.register?.buttons?.previous || "PREVIOUS"}
+                    </span>
                   </button>
                 ) : (
                   <Link href="/">
@@ -427,11 +447,17 @@ function RegistrationContent() {
                     {loading ? (
                       <>
                         <Loader2 className="animate-spin h-4 w-4" />
-                        <span>{texts.register?.buttons?.submitting || "SUBMITTING REQUEST..."}</span>
+                        <span>
+                          {texts.register?.buttons?.submitting ||
+                            "SUBMITTING REQUEST..."}
+                        </span>
                       </>
                     ) : (
                       <>
-                        <span>{texts.register?.buttons?.submit || "SUBMIT INVITATION REQUEST"}</span>
+                        <span>
+                          {texts.register?.buttons?.submit ||
+                            "SUBMIT INVITATION REQUEST"}
+                        </span>
                         <ArrowRight className="w-3.5 h-3.5" />
                       </>
                     )}
@@ -483,7 +509,9 @@ function Step1({ texts }: { texts: any }) {
         <h3 className="font-cinzel text-xl sm:text-2xl font-medium text-[var(--color-cream)] mb-1">
           {texts.register?.steps?.step1?.subtitle || "Identity & Credentials"}
         </h3>
-        <p className="text-xs text-[var(--color-cream)]/70">Please provide your official information.</p>
+        <p className="text-xs text-[var(--color-cream)]/70">
+          Please provide your official information.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -496,7 +524,9 @@ function Step1({ texts }: { texts: any }) {
             className="w-full bg-transparent border-b border-[var(--color-silver)]/30 focus:border-[var(--color-silver)] focus:outline-none py-2.5 text-base text-[var(--color-cream)]"
           />
           {errors.first_name && (
-            <p className="text-xs text-red-400 mt-1">{errors.first_name.message}</p>
+            <p className="text-xs text-red-400 mt-1">
+              {errors.first_name.message}
+            </p>
           )}
         </div>
 
@@ -509,7 +539,9 @@ function Step1({ texts }: { texts: any }) {
             className="w-full bg-transparent border-b border-[var(--color-silver)]/30 focus:border-[var(--color-silver)] focus:outline-none py-2.5 text-base text-[var(--color-cream)]"
           />
           {errors.last_name && (
-            <p className="text-xs text-red-400 mt-1">{errors.last_name.message}</p>
+            <p className="text-xs text-red-400 mt-1">
+              {errors.last_name.message}
+            </p>
           )}
         </div>
 
@@ -542,7 +574,8 @@ function Step1({ texts }: { texts: any }) {
 
         <div>
           <label className="block text-[11px] uppercase tracking-[0.2em] text-[var(--color-silver)] font-semibold mb-1">
-            {texts.register?.fields?.university || "University / Grande École *"}
+            {texts.register?.fields?.university ||
+              "University / Grande École *"}
           </label>
           <select
             {...register("university")}
@@ -559,7 +592,8 @@ function Step1({ texts }: { texts: any }) {
 
         <div>
           <label className="block text-[11px] uppercase tracking-[0.2em] text-[var(--color-silver)] font-semibold mb-1">
-            {texts.register?.fields?.fieldOfStudy || "Engineering Specialization *"}
+            {texts.register?.fields?.fieldOfStudy ||
+              "Engineering Specialization *"}
           </label>
           <select
             {...register("field_of_study")}
@@ -567,7 +601,8 @@ function Step1({ texts }: { texts: any }) {
           >
             {fieldOfStudyOptions.map((opt) => (
               <option key={opt.value} value={opt.value}>
-                {texts.register?.fields?.fieldOfStudies?.[opt.value] || opt.label}
+                {texts.register?.fields?.fieldOfStudies?.[opt.value] ||
+                  opt.label}
               </option>
             ))}
           </select>
@@ -596,13 +631,16 @@ function Step2({ texts }: { texts: any }) {
         <h3 className="font-cinzel text-xl sm:text-2xl font-medium text-[var(--color-cream)] mb-1">
           {texts.register?.steps?.step2?.subtitle || "Ambitions & Trajectory"}
         </h3>
-        <p className="text-xs text-[var(--color-cream)]/70">Share your goals for the upcoming year.</p>
+        <p className="text-xs text-[var(--color-cream)]/70">
+          Share your goals for the upcoming year.
+        </p>
       </div>
 
       <div className="space-y-6">
         <div>
           <label className="block text-[11px] uppercase tracking-[0.2em] text-[var(--color-silver)] font-semibold mb-1">
-            {texts.register?.fields?.plansNextYear || "What are your primary ambitions for the coming year? *"}
+            {texts.register?.fields?.plansNextYear ||
+              "What are your primary ambitions for the coming year? *"}
           </label>
           <textarea
             rows={3}
@@ -611,13 +649,16 @@ function Step2({ texts }: { texts: any }) {
             className="w-full bg-transparent border-b border-[var(--color-silver)]/30 focus:border-[var(--color-silver)] focus:outline-none py-2.5 text-base text-[var(--color-cream)] placeholder-[var(--color-cream)]/40 resize-none"
           />
           {errors.plans_next_year && (
-            <p className="text-xs text-red-400 mt-1">{errors.plans_next_year.message}</p>
+            <p className="text-xs text-red-400 mt-1">
+              {errors.plans_next_year.message}
+            </p>
           )}
         </div>
 
         <div>
           <label className="block text-[11px] uppercase tracking-[0.2em] text-[var(--color-silver)] font-semibold mb-1">
-            {texts.register?.fields?.personalDescription || "Short personal statement or executive summary"}
+            {texts.register?.fields?.personalDescription ||
+              "Short personal statement or executive summary"}
           </label>
           <textarea
             rows={3}
@@ -650,15 +691,19 @@ function Step3({ texts }: { texts: any }) {
     >
       <div>
         <h3 className="font-cinzel text-xl sm:text-2xl font-medium text-[var(--color-cream)] mb-1">
-          {texts.register?.steps?.step3?.subtitle || "GALA Perspective & Synergy"}
+          {texts.register?.steps?.step3?.subtitle ||
+            "GALA Perspective & Synergy"}
         </h3>
-        <p className="text-xs text-[var(--color-cream)]/70">How your presence elevates the collective experience.</p>
+        <p className="text-xs text-[var(--color-cream)]/70">
+          How your presence elevates the collective experience.
+        </p>
       </div>
 
       <div className="space-y-6">
         <div>
           <label className="block text-[11px] uppercase tracking-[0.2em] text-[var(--color-silver)] font-semibold mb-1">
-            {texts.register?.fields?.perspectiveGala || "What is your vision of the GALA experience? *"}
+            {texts.register?.fields?.perspectiveGala ||
+              "What is your vision of the GALA experience? *"}
           </label>
           <textarea
             rows={3}
@@ -666,13 +711,16 @@ function Step3({ texts }: { texts: any }) {
             className="w-full bg-transparent border-b border-[var(--color-silver)]/30 focus:border-[var(--color-silver)] focus:outline-none py-2.5 text-base text-[var(--color-cream)] resize-none"
           />
           {errors.perspective_gala && (
-            <p className="text-xs text-red-400 mt-1">{errors.perspective_gala.message}</p>
+            <p className="text-xs text-red-400 mt-1">
+              {errors.perspective_gala.message}
+            </p>
           )}
         </div>
 
         <div>
           <label className="block text-[11px] uppercase tracking-[0.2em] text-[var(--color-silver)] font-semibold mb-1">
-            {texts.register?.fields?.benefitFromEvent || "How will participating in GALA accelerate your career? *"}
+            {texts.register?.fields?.benefitFromEvent ||
+              "How will participating in GALA accelerate your career? *"}
           </label>
           <textarea
             rows={3}
@@ -680,14 +728,17 @@ function Step3({ texts }: { texts: any }) {
             className="w-full bg-transparent border-b border-[var(--color-silver)]/30 focus:border-[var(--color-silver)] focus:outline-none py-2.5 text-base text-[var(--color-cream)] resize-none"
           />
           {errors.benefit_from_event && (
-            <p className="text-xs text-red-400 mt-1">{errors.benefit_from_event.message}</p>
+            <p className="text-xs text-red-400 mt-1">
+              {errors.benefit_from_event.message}
+            </p>
           )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
           <div>
             <label className="block text-[11px] uppercase tracking-[0.2em] text-[var(--color-silver)] font-semibold mb-2">
-              {texts.register?.fields?.attendedBefore || "Attended Previous Edition?"}
+              {texts.register?.fields?.attendedBefore ||
+                "Attended Previous Edition?"}
             </label>
             <div className="flex gap-6 text-sm">
               <label className="flex items-center gap-2 cursor-pointer">
@@ -756,13 +807,17 @@ function Step4({
         <h3 className="font-cinzel text-xl sm:text-2xl font-medium text-[var(--color-cream)] mb-1">
           {texts.register?.steps?.step4?.subtitle || "Review & Confirmation"}
         </h3>
-        <p className="text-xs text-[var(--color-cream)]/70">Please verify your dossier before final transmission.</p>
+        <p className="text-xs text-[var(--color-cream)]/70">
+          Please verify your dossier before final transmission.
+        </p>
       </div>
 
       <div className="space-y-4 text-sm text-[var(--color-cream)]">
         <div className="p-4 rounded-2xl bg-[var(--color-maroon)] border border-[var(--color-silver)]/30 flex justify-between items-center">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--color-silver)]">ADMISSION PASS</p>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--color-silver)]">
+              ADMISSION PASS
+            </p>
             <p className="font-cinzel text-base font-bold text-[var(--color-cream)]">
               OFFICIAL ADMISSION TICKET · 1,000 DA
             </p>
@@ -774,20 +829,36 @@ function Step4({
 
         <div className="grid grid-cols-2 gap-4 p-4 rounded-2xl bg-[var(--color-maroon)] border border-[var(--color-silver)]/30">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--color-silver)]">CANDIDATE</p>
-            <p className="font-semibold text-[var(--color-cream)]">{data.first_name} {data.last_name}</p>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--color-silver)]">
+              CANDIDATE
+            </p>
+            <p className="font-semibold text-[var(--color-cream)]">
+              {data.first_name} {data.last_name}
+            </p>
           </div>
           <div>
-            <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--color-silver)]">EMAIL</p>
-            <p className="font-semibold text-[var(--color-cream)]">{data.email}</p>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--color-silver)]">
+              EMAIL
+            </p>
+            <p className="font-semibold text-[var(--color-cream)]">
+              {data.email}
+            </p>
           </div>
           <div>
-            <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--color-silver)]">INSTITUTION</p>
-            <p className="font-semibold text-[var(--color-cream)]">{data.university}</p>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--color-silver)]">
+              INSTITUTION
+            </p>
+            <p className="font-semibold text-[var(--color-cream)]">
+              {data.university}
+            </p>
           </div>
           <div>
-            <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--color-silver)]">SPECIALTY</p>
-            <p className="font-semibold text-[var(--color-cream)]">{data.field_of_study}</p>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--color-silver)]">
+              SPECIALTY
+            </p>
+            <p className="font-semibold text-[var(--color-cream)]">
+              {data.field_of_study}
+            </p>
           </div>
         </div>
       </div>

@@ -19,7 +19,10 @@ export default function ArchivesSection() {
   };
 
   const years = ["2025", "2024", "2019", "2017"];
-  const editionTexts = texts.archives?.editions?.[selectedYear] || texts.archives?.editions?.["2025"] || {};
+  const editionTexts =
+    texts.archives?.editions?.[selectedYear] ||
+    texts.archives?.editions?.["2025"] ||
+    {};
   const currentEdition = {
     title: editionTexts?.title || `GALA ${selectedYear}`,
     story: editionTexts?.story || "",
@@ -32,15 +35,15 @@ export default function ArchivesSection() {
       id="historique"
       className="relative min-h-screen w-full bg-[var(--color-dark)] text-[var(--color-cream)] flex flex-col justify-center py-24 sm:py-36 px-6 sm:px-12 overflow-hidden border-t border-[var(--color-silver)]/20"
     >
-      {/* Subtle Animated Dark Gradient Atmosphere */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-dark)] via-[#35070e]/30 to-[var(--color-dark)] pointer-events-none" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_60%_30%,rgba(139,30,45,0.2)_0%,transparent_70%)] pointer-events-none" />
+      {/* Subtle Animated Dark Gradient Atmosphere matching Ticket Section */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-dark)] via-[#360810]/30 to-[var(--color-dark)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(139,30,45,0.22)_0%,transparent_75%)] pointer-events-none" />
 
-      {/* Floating Animated Ambient Glows */}
-      <div className="absolute top-[10%] right-[-10%] w-[550px] h-[550px] rounded-full bg-[radial-gradient(circle,rgba(139,30,45,0.45)_0%,transparent_70%)] opacity-35 blur-3xl pointer-events-none animate-glow-slow" />
-      <div className="absolute bottom-[5%] left-[-5%] w-[450px] h-[450px] rounded-full bg-[radial-gradient(circle,rgba(192,192,192,0.12)_0%,transparent_70%)] opacity-25 blur-3xl pointer-events-none animate-glow-reverse" />
+      {/* Floating Animated Luxury Glows */}
+      <div className="absolute top-[10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-[radial-gradient(circle,rgba(139,30,45,0.45)_0%,transparent_70%)] opacity-35 blur-3xl pointer-events-none animate-glow-slow" />
+      <div className="absolute bottom-[5%] left-[-5%] w-[450px] h-[450px] rounded-full bg-[radial-gradient(circle,rgba(192,192,192,0.12)_0%,transparent_70%)] opacity-30 blur-3xl pointer-events-none animate-glow-reverse" />
 
-      <div className="max-w-7xl w-full mx-auto">
+      <div className="max-w-7xl w-full mx-auto relative z-10">
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8">
           <div>
@@ -62,16 +65,20 @@ export default function ArchivesSection() {
                   onClick={() => setSelectedYear(year)}
                   className={`group relative bg-transparent border-none cursor-pointer p-0 font-cinzel text-lg sm:text-xl transition-all duration-300 ${
                     isActive
-                      ? "text-[var(--color-silver)] font-bold scale-105"
-                      : "text-[var(--color-cream)]/50 hover:text-[var(--color-cream)]"
+                      ? "text-[var(--color-cream)] font-bold scale-105"
+                      : "text-[var(--color-silver)]/60 hover:text-[var(--color-cream)]"
                   }`}
                 >
                   <span>{year}</span>
                   {isActive && (
                     <motion.div
                       layoutId="activeYearUnderline"
-                      className="absolute -bottom-3 left-0 right-0 h-[2px] bg-[var(--color-silver)]"
-                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      className="absolute -bottom-3 left-0 right-0 h-[2px] bg-[var(--color-silver)] shadow-[0_0_10px_rgba(192,192,192,0.6)]"
+                      transition={{
+                        type: "spring",
+                        stiffness: 300,
+                        damping: 30,
+                      }}
                     />
                   )}
                 </button>
@@ -91,20 +98,20 @@ export default function ArchivesSection() {
             className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center"
           >
             {/* Left: Cinematic Editorial Image */}
-            <div className="lg:col-span-7 relative group overflow-hidden rounded-2xl border border-[var(--color-silver)]/30 shadow-[0_20px_40px_-15px_rgba(45,7,13,0.7)] bg-[var(--color-dark)]">
+            <div className="lg:col-span-7 relative group overflow-hidden rounded-2xl border border-[var(--color-silver)]/30 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.8)] bg-[var(--color-dark)]">
               <div className="relative h-[340px] sm:h-[460px] w-full overflow-hidden">
                 <Image
                   src={currentEdition.image}
                   alt={currentEdition.title}
                   fill
-                  className="object-cover transition-transform duration-700 group-hover:scale-105 filter brightness-[0.85] contrast-[1.05]"
+                  className="object-cover transition-transform duration-700 group-hover:scale-105 filter brightness-[0.94] contrast-[1.08]"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-dark)]/90 via-[var(--color-dark)]/25 to-transparent" />
-                <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between text-[var(--color-cream)]">
-                  <span className="font-cinzel text-lg sm:text-xl tracking-wider font-medium">
+                <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-dark)]/90 via-transparent to-transparent" />
+                <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between text-white">
+                  <span className="font-cinzel text-lg sm:text-xl tracking-wider font-medium text-[var(--color-cream)]">
                     {currentEdition.title}
                   </span>
-                  <span className="text-[11px] uppercase tracking-[0.2em] font-mono px-3 py-1 rounded bg-[var(--color-dark)]/80 backdrop-blur-xs border border-[var(--color-silver)]/40 text-[var(--color-silver)]">
+                  <span className="text-[11px] uppercase tracking-[0.2em] font-mono px-3 py-1 rounded bg-[var(--color-dark)]/90 backdrop-blur-xs border border-[var(--color-silver)]/40 text-[var(--color-silver)]">
                     EDITION {selectedYear}
                   </span>
                 </div>
@@ -129,7 +136,7 @@ export default function ArchivesSection() {
               <div className="grid grid-cols-3 gap-4 pt-6 border-t border-[var(--color-silver)]/20">
                 {currentEdition.stats.map((st: any, idx: number) => (
                   <div key={idx} className="text-left">
-                    <span className="font-cinzel text-2xl sm:text-3xl font-bold text-[var(--color-silver)] block">
+                    <span className="font-cinzel text-2xl sm:text-3xl font-bold text-[var(--color-silver-light)] block">
                       {st.value}
                     </span>
                     <span className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-cream)]/70 font-medium mt-1 block">
@@ -144,11 +151,14 @@ export default function ArchivesSection() {
                 <button
                   onClick={() => {
                     const ticketEl = document.getElementById("tarification");
-                    if (ticketEl) ticketEl.scrollIntoView({ behavior: "smooth" });
+                    if (ticketEl)
+                      ticketEl.scrollIntoView({ behavior: "smooth" });
                   }}
-                  className="group inline-flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-cream)] hover:text-[var(--color-silver)] transition-colors cursor-pointer bg-transparent border-none p-0"
+                  className="group inline-flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-silver)] hover:text-[var(--color-cream)] transition-colors cursor-pointer bg-transparent border-none p-0"
                 >
-                  <span>{texts.archives?.exploreCTA || "EXPLORE THE GALA UNIVERSE"}</span>
+                  <span>
+                    {texts.archives?.exploreCTA || "EXPLORE THE GALA UNIVERSE"}
+                  </span>
                   <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                 </button>
               </div>

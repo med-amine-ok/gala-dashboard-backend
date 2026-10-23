@@ -22,15 +22,22 @@ export default function NavBar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Lock body scroll when menu overlay is open
+  // Lock body scroll when menu overlay is open & handle Escape key
   useEffect(() => {
     if (menuOpen) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "unset";
     }
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && menuOpen) {
+        setMenuOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
     return () => {
       document.body.style.overflow = "unset";
+      window.removeEventListener("keydown", handleKeyDown);
     };
   }, [menuOpen]);
 
@@ -53,6 +60,11 @@ export default function NavBar() {
       id: "manifesto",
       subtitle: "One night. The right people.",
     },
+    // {
+    //   label: "The Four Pillars",
+    //   id: "piliers",
+    //   subtitle: "Talents, enterprises & salons",
+    // },
     {
       label: "The Archives",
       id: "historique",
@@ -61,7 +73,7 @@ export default function NavBar() {
     {
       label: "Official Ticket Pass",
       id: "tarification",
-      subtitle: "Admission & access (1,000 DA)",
+      subtitle: "Admission & privileges (1,000 DA)",
     },
     { label: "The Story", id: "apropos", subtitle: "Our heritage and vision" },
   ];
@@ -71,7 +83,7 @@ export default function NavBar() {
       <header
         className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 font-sans ${
           scrolled
-            ? "py-3.5 sm:py-4 bg-transparent backdrop-blur-sm border-b border-[var(--color-silver)]/10"
+            ? "py-3.5 sm:py-4 bg-[var(--color-dark)]/85 backdrop-blur-md border-b border-[var(--color-silver)]/15 shadow-[0_10px_30px_rgba(0,0,0,0.6)]"
             : "py-6 sm:py-8 bg-transparent"
         }`}
       >
@@ -129,8 +141,10 @@ export default function NavBar() {
             {/* Architectural Menu Trigger */}
             <button
               onClick={() => setMenuOpen(true)}
-              className="group flex items-center gap-2.5 py-1 bg-transparent border-none cursor-pointer text-[var(--color-cream)] hover:text-[var(--color-silver)] transition-colors p-0"
+              className="group flex items-center gap-2.5 py-1 bg-transparent border-none cursor-pointer text-[var(--color-cream)] hover:text-[var(--color-silver)] transition-colors p-0 luxury-focus-ring"
               aria-label="Open menu"
+              aria-expanded={menuOpen}
+              aria-controls="fullscreen-navigation-menu"
             >
               <span className="text-[11px] font-medium uppercase tracking-[0.24em]">
                 {texts.nav?.menuLabel || "MENU"}
@@ -141,13 +155,25 @@ export default function NavBar() {
               </div>
             </button>
 
-            {/* Bespoke Luxury CTA Button */}
-            <Link href="/register" className="hidden sm:block">
-              <button className="group inline-flex items-center gap-2.5 px-6 py-2.5 rounded-full bg-[var(--color-maroon)] text-[var(--color-cream)] hover:bg-[var(--color-dark)] hover:text-[var(--color-silver)] text-[10.5px] font-semibold uppercase tracking-[0.24em] transition-all duration-300 cursor-pointer shadow-xs border border-[var(--color-silver)]/60 hover:border-[var(--color-silver)]">
-                <span>
+            {/* Bespoke Luxury CTA Button with Radiant Aura */}
+            <Link href="/register" className="hidden sm:block group relative">
+              {/* Luminous Luxury Wine & Silver Aura Halo */}
+              <span
+                aria-hidden="true"
+                className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-[var(--color-primary)] via-[#B52B3E] to-[var(--color-silver)] opacity-45 blur-sm group-hover:opacity-90 group-hover:blur-md transition-all duration-500 animate-pulse pointer-events-none"
+              />
+              <button className="relative inline-flex items-center gap-2.5 px-6 py-2.5 rounded-full bg-gradient-to-r from-[#5B0F1A] via-[#7B1726] to-[#450912] text-[var(--color-cream)] group-hover:text-white text-[10.5px] font-semibold uppercase tracking-[0.24em] transition-all duration-300 cursor-pointer overflow-hidden border border-[var(--color-silver)]/80 group-hover:border-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.35),0_10px_25px_-5px_rgba(45,7,13,0.9)] group-hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.5),0_15px_30px_-5px_rgba(139,30,45,0.7)] luxury-focus-ring">
+                {/* Diagonal Light Shimmer Sweep */}
+                <span
+                  aria-hidden="true"
+                  className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out bg-gradient-to-r from-transparent via-white/25 to-transparent pointer-events-none"
+                />
+
+                <span className="relative z-10 font-sans">
                   {texts.nav?.requestInvitation || "REQUEST INVITATION"}
                 </span>
-                <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" />
+
+                <ArrowRight className="relative z-10 w-3.5 h-3.5 text-[var(--color-silver-light)] group-hover:text-white transition-all duration-300 group-hover:translate-x-1" />
               </button>
             </Link>
           </div>
@@ -158,6 +184,10 @@ export default function NavBar() {
       <AnimatePresence>
         {menuOpen && (
           <motion.div
+            id="fullscreen-navigation-menu"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Site Navigation Menu"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

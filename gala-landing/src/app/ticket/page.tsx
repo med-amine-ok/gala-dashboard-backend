@@ -56,27 +56,30 @@ export default function TicketPricing() {
       <div className="max-w-5xl w-full mx-auto">
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-8 sm:mb-12">
-          <span className="text-xs font-semibold uppercase tracking-[0.28em] text-[var(--color-silver)] block mb-3">
-            {texts.invitations?.label || "OFFICIAL ADMISSION PASS"}
-          </span>
+          
           <h2 className="font-cinzel text-3xl sm:text-5xl font-light text-[var(--color-cream)] leading-tight mb-3 whitespace-pre-line">
             {texts.invitations?.headline || "Your entrance\nto the evening."}
           </h2>
-          <p className="text-sm sm:text-base text-[var(--color-cream)]/85 font-light leading-relaxed">
-            {texts.invitations?.description ||
-              "A single symbolic pass granting full access to the complete GALA experience, conferences, corporate exhibition stands, CV review corner, and networking cocktail."}
-          </p>
+          
         </div>
+
+        
 
         {/* 3D DOUBLE-SIDED PHYSICAL TICKET PASS */}
         <div
           ref={cardRef}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
-          className="flex justify-center [perspective:1400px] mb-6 sm:mb-8 w-full"
+          className="flex justify-center [perspective:1400px] mb-8 sm:mb-10 w-full"
         >
           <motion.div
             onClick={() => setIsFlipped((prev) => !prev)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setIsFlipped((prev) => !prev);
+              }
+            }}
             style={{
               rotateX,
               rotateY,
@@ -84,10 +87,10 @@ export default function TicketPricing() {
             }}
             animate={{ rotateY: isFlipped ? 180 : 0 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="relative w-full max-w-4xl aspect-[1200/420] cursor-pointer select-none"
+            className="relative w-full max-w-4xl aspect-[1200/420] cursor-pointer select-none rounded-xl sm:rounded-2xl luxury-focus-ring"
             role="button"
             tabIndex={0}
-            aria-label="Click to flip ticket pass"
+            aria-label="Interactive double-sided GALA admission pass. Press enter or space to flip."
           >
             {/* ================= FRONT SIDE OF TICKET (tickets-01.svg) ================= */}
             <div
@@ -127,10 +130,12 @@ export default function TicketPricing() {
           </motion.div>
         </div>
 
+      
+
         {/* Action Button */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link href="/register">
-            <button className="flex items-center justify-center gap-3 px-8 sm:px-10 py-4 rounded-full bg-[var(--color-maroon)] text-[var(--color-cream)] hover:bg-[var(--color-dark)] hover:text-[var(--color-silver)] text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 shadow-md cursor-pointer border border-[var(--color-silver)] hover:border-[var(--color-silver-light)]">
+            <button className="flex items-center justify-center gap-3 px-8 sm:px-10 py-4  text-[var(--color-cream)] hover:bg-[var(--color-dark)] hover:text-[var(--color-silver)] text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 cursor-pointer  hover:border-[var(--color-silver-light)] luxury-focus-ring">
               <span>
                 {texts.invitations?.selectCTA ||
                   "REQUEST YOUR ADMISSION PASS (1,000 DA)"}

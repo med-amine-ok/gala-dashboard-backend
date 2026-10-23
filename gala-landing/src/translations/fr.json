@@ -7,6 +7,7 @@
     "menuItems": [
       { "label": "L'Expérience", "id": "home", "subtitle": "Là où l'ambition rencontre l'opportunité" },
       { "label": "Le Manifeste", "id": "manifesto", "subtitle": "Une soirée. Les bonnes personnes." },
+      { "label": "Les Quatre Piliers", "id": "piliers", "subtitle": "Talents, entreprises & salons" },
       { "label": "Les Archives", "id": "historique", "subtitle": "Des chapitres d'excellence" },
       { "label": "Billet Officiel", "id": "tarification", "subtitle": "Pass d'admission (1 000 DA)" },
       { "label": "Notre Histoire", "id": "apropos", "subtitle": "Héritage et vision" }

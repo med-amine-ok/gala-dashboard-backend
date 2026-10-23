@@ -45,12 +45,11 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${cinzel.variable} ${plusJakarta.variable} ${cormorant.variable}`}
+      suppressHydrationWarning
     >
-      <head>
-        <link rel="icon" href="/GALA-silver.png" />
-      </head>
       <body
         className={`min-h-full flex flex-col bg-[var(--color-dark)] text-[var(--color-cream)] antialiased selection:bg-[var(--color-silver)] selection:text-[var(--color-dark)] font-sans`}
+        suppressHydrationWarning
       >
         <LanguageProvider>{children}</LanguageProvider>
       </body>

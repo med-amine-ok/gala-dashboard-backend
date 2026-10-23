@@ -8,13 +8,13 @@ export default function AboutUsSection() {
       id="apropos"
       className="relative w-full min-h-[85vh] px-8 py-16 lg:px-20 lg:py-24 flex flex-col justify-between bg-[var(--color-dark)] text-[var(--color-cream)] border-t border-[var(--color-silver)]/20 font-sans overflow-hidden"
     >
-      {/* Subtle Animated Dark Gradient Atmosphere */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-dark)] via-[#35070e]/30 to-[var(--color-dark)] pointer-events-none" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_50%,rgba(139,30,45,0.22)_0%,transparent_70%)] pointer-events-none" />
+      {/* Subtle Animated Dark Gradient Atmosphere matching Ticket Section */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-dark)] via-[#360810]/30 to-[var(--color-dark)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(139,30,45,0.22)_0%,transparent_75%)] pointer-events-none" />
 
       {/* Floating Animated Luxury Glows */}
-      <div className="absolute top-[10%] right-[-10%] w-[550px] h-[550px] rounded-full bg-[radial-gradient(circle,rgba(139,30,45,0.45)_0%,transparent_70%)] opacity-35 blur-3xl pointer-events-none animate-glow-slow" />
-      <div className="absolute bottom-[10%] left-[-10%] w-[550px] h-[550px] rounded-full bg-[radial-gradient(circle,rgba(192,192,192,0.12)_0%,transparent_70%)] opacity-30 blur-3xl pointer-events-none animate-glow-reverse" />
+      <div className="absolute top-[10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-[radial-gradient(circle,rgba(139,30,45,0.45)_0%,transparent_70%)] opacity-35 blur-3xl pointer-events-none animate-glow-slow" />
+      <div className="absolute bottom-[10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-[radial-gradient(circle,rgba(192,192,192,0.12)_0%,transparent_70%)] opacity-30 blur-3xl pointer-events-none animate-glow-reverse" />
 
       {/* Top Content: Title + Horizontal Layout */}
       <motion.div
@@ -33,38 +33,40 @@ export default function AboutUsSection() {
           </h2>
         </div>
 
-        <div className="flex flex-col lg:flex-row items-start lg:items-center mt-8 lg:mt-12 gap-6 lg:gap-20">
-          {/* VIC Logo */}
-          <img
-            src="/vic.png"
-            alt="Vision & Innovation Club"
-            className="w-[120px] h-[50px] lg:w-[220px] lg:h-[90px] object-contain select-none brightness-110 drop-shadow-sm filter brightness-[0] invert-[1]"
-          />
+        <div className="flex flex-col lg:flex-row items-start lg:items-center mt-8 lg:mt-12 gap-6 lg:gap-16">
+          {/* VIC Logo Plaque */}
+          <div className="p-3.5 sm:p-5  shrink-0 flex items-center justify-center ">
+            <img
+              src="/vic.png"
+              alt="Vision & Innovation Club"
+              className="w-[120px] h-[120px] lg:w-[190px] lg:h-[190px] object-contain select-none   brightness-2 invert"
+            />
+          </div>
 
           {/* Silver Divider Line */}
-          <div className="h-[220px] w-[1.5px] bg-[var(--color-silver)]/40 hidden lg:inline" />
-          <div className="w-[200px] h-[1.5px] bg-[var(--color-silver)]/40 lg:hidden" />
+          <div className="h-[200px] w-[1px] bg-[var(--color-silver)]/20 hidden lg:inline" />
+          <div className="w-[160px] h-[1px] bg-[var(--color-silver)]/20 lg:hidden" />
 
           {/* Narrative & Stats */}
           <div className="flex flex-col gap-3 lg:gap-2">
-            <h3 className="text-[20px] lg:text-[36px] font-cinzel text-[var(--color-cream)] font-bold tracking-[0.08em]">
+            <h3 className="text-[20px] lg:text-[34px] font-cinzel text-[var(--color-cream)] font-bold tracking-[0.08em]">
               VISION & INNOVATION CLUB
             </h3>
-            <p className="text-[13px] sm:text-[15px] lg:text-[18px] text-[var(--color-cream)]/85 lg:max-w-[700px] font-light leading-relaxed">
+            <p className="text-[13px] sm:text-[15px] lg:text-[17px] text-[var(--color-cream)]/85 lg:max-w-[700px] font-light leading-relaxed">
               {`A scientific club founded in 2014 at the National Polytechnic School of Algiers under the supervision of the scientific and cultural association "EL–MAARIFA", which aims to foster creativity, communication, and innovation among students.`}
             </p>
 
             {/* Metric Counters */}
             <div className="flex flex-col lg:flex-row gap-4 lg:gap-12 mt-4 lg:mt-6">
-              <p className="uppercase text-[12px] lg:text-[18px] font-cinzel text-[var(--color-cream)] tracking-wider">
-                <span className="font-cinzel font-bold text-[24px] lg:text-[38px] mr-2 text-[var(--color-silver)]">
+              <p className="uppercase text-[12px] lg:text-[16px] font-cinzel text-[var(--color-cream)] tracking-wider">
+                <span className="font-cinzel font-bold text-[28px] lg:text-[38px] mr-2 text-[var(--color-silver-light)]">
                   10+
                 </span>{" "}
                 Major Events
               </p>
-              <div className="w-[80px] h-px bg-[var(--color-silver)]/40 lg:hidden" />
-              <p className="uppercase text-[12px] lg:text-[18px] font-cinzel text-[var(--color-cream)] tracking-wider">
-                <span className="font-cinzel font-bold text-[24px] lg:text-[38px] mr-2 text-[var(--color-silver)]">
+              <div className="w-[80px] h-px bg-[var(--color-silver)]/20 lg:hidden" />
+              <p className="uppercase text-[12px] lg:text-[16px] font-cinzel text-[var(--color-cream)] tracking-wider">
+                <span className="font-cinzel font-bold text-[28px] lg:text-[38px] mr-2 text-[var(--color-silver-light)]">
                   200+
                 </span>{" "}
                 Active Members
@@ -84,7 +86,7 @@ export default function AboutUsSection() {
       >
         <div className="h-[1px] w-full bg-[var(--color-silver)]/20 lg:mb-6" />
 
-        <div className="flex flex-wrap gap-8 sm:gap-12 lg:gap-24 mb-4 lg:mb-0 text-[10px] sm:text-[12px] uppercase font-mono tracking-widest text-[var(--color-cream)]/70">
+        <div className="flex flex-wrap gap-8 sm:gap-12 lg:gap-24 mb-4 lg:mb-0 text-[10px] sm:text-[12px] uppercase font-sans tracking-[0.2em] text-[var(--color-silver)]/75">
           <div className="flex flex-col gap-1.5 font-semibold text-[var(--color-cream)]">
             <a
               href="https://www.enp.edu.dz/en/"
@@ -96,17 +98,17 @@ export default function AboutUsSection() {
             </a>
             <a
               href="mailto:vic@g.enp.edu.dz"
-              className="cursor-pointer hover:text-[var(--color-silver)] transition-colors font-normal text-[var(--color-cream)]/80"
+              className="cursor-pointer hover:text-[var(--color-silver)] transition-colors font-normal text-[var(--color-cream)]/70"
             >
               vic@g.enp.edu.dz
             </a>
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <span className="cursor-pointer hover:text-[var(--color-silver)] transition-colors text-[var(--color-cream)]">
+            <span className="cursor-pointer hover:text-[var(--color-cream)] transition-colors text-[var(--color-silver)]">
               WHAT IS GALA®
             </span>
-            <span className="cursor-pointer hover:text-[var(--color-silver)] transition-colors">
+            <span className="cursor-pointer hover:text-[var(--color-cream)] transition-colors text-[var(--color-silver)]/70">
               ABOUT US
             </span>
           </div>
@@ -116,7 +118,7 @@ export default function AboutUsSection() {
               href="https://www.facebook.com/vic.enpa"
               target="_blank"
               rel="noopener noreferrer"
-              className="cursor-pointer hover:text-[var(--color-silver)] transition-colors"
+              className="cursor-pointer hover:text-[var(--color-cream)] transition-colors"
             >
               FACEBOOK
             </a>
@@ -124,7 +126,7 @@ export default function AboutUsSection() {
               href="https://www.instagram.com/vic.enp/"
               target="_blank"
               rel="noopener noreferrer"
-              className="cursor-pointer hover:text-[var(--color-silver)] transition-colors"
+              className="cursor-pointer hover:text-[var(--color-cream)] transition-colors"
             >
               INSTAGRAM
             </a>
@@ -132,7 +134,7 @@ export default function AboutUsSection() {
               href="https://www.linkedin.com/company/vicenp/"
               target="_blank"
               rel="noopener noreferrer"
-              className="cursor-pointer hover:text-[var(--color-silver)] transition-colors"
+              className="cursor-pointer hover:text-[var(--color-cream)] transition-colors"
             >
               LINKEDIN
             </a>
@@ -140,7 +142,7 @@ export default function AboutUsSection() {
               href="https://www.tiktok.com/@vic.enp"
               target="_blank"
               rel="noopener noreferrer"
-              className="cursor-pointer hover:text-[var(--color-silver)] transition-colors"
+              className="cursor-pointer hover:text-[var(--color-cream)] transition-colors"
             >
               TIKTOK
             </a>

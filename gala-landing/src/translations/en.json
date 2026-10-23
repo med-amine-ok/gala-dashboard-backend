@@ -8,7 +8,7 @@
       { "label": "The Experience", "id": "home", "subtitle": "Where ambition meets opportunity" },
       { "label": "The Manifesto", "id": "manifesto", "subtitle": "One night. The right people." },
       { "label": "The Archives", "id": "historique", "subtitle": "Chapters of excellence" },
-      { "label": "Official Ticket Pass", "id": "tarification", "subtitle": "Admission & access (1,000 DA)" },
+      { "label": "Official Ticket Pass", "id": "tarification", "subtitle": "Admission & privileges (1,000 DA)" },
       { "label": "The Story", "id": "apropos", "subtitle": "Our heritage and vision" }
     ]
   },
