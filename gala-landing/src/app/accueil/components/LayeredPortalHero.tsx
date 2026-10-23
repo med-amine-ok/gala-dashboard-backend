@@ -184,7 +184,7 @@ export default function LayeredPortalHero() {
       {/* Pinned Stage Element: EXACT website background token var(--color-dark) (#2D070D) */}
       <div
         ref={stageRef}
-        className="relative w-full h-[100svh] min-h-[100svh] overflow-hidden bg-[var(--color-dark)] text-[var(--color-cream)]"
+        className="relative w-full h-[100svh] min-h-[100svh] overflow-hidden text-[var(--color-cream)] bg-[#450A14] bg-[radial-gradient(ellipse_at_50%_40%,#5B101D_0%,#460C16_55%,#2D070D_100%)]"
       >
         {/* REAL 3D BURGUNDY & SILVER ENTRANCE MODEL (Live Three.js) */}
         <div className="absolute inset-0 w-full h-full z-[1] pointer-events-auto">

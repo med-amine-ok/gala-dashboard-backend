@@ -161,7 +161,7 @@ function getGalaDuskCubeMap(renderer: THREE.WebGLRenderer): THREE.WebGLCubeRende
   if (cachedCubeTarget) return cachedCubeTarget;
 
   const envScene = new THREE.Scene();
-  envScene.background = new THREE.Color(0x2D070D);
+  envScene.background = new THREE.Color(0x5E121E);
 
   const addPanel = (
     w: number, h: number,
@@ -181,10 +181,10 @@ function getGalaDuskCubeMap(renderer: THREE.WebGLRenderer): THREE.WebGLCubeRende
   };
 
   const panels = [
-    addPanel(20, 20, 0x4a0e18, [0, 20, 0], 0, Math.PI / 2),
-    addPanel(8, 24, 0xb0b8c4, [-18, 8, 0], Math.PI / 2),
-    addPanel(8, 24, 0xb0b8c4, [ 18, 8, 0], -Math.PI / 2),
-    addPanel(12, 10, 0x2D070D, [0, 4, -20]),
+    addPanel(24, 24, 0x8B1E2D, [0, 22, 0], 0, Math.PI / 2),
+    addPanel(10, 24, 0xd0d8e2, [-18, 8, 0], Math.PI / 2),
+    addPanel(10, 24, 0xd0d8e2, [ 18, 8, 0], -Math.PI / 2),
+    addPanel(16, 12, 0x661422, [0, 6, -20]),
   ];
 
   const target = new THREE.WebGLCubeRenderTarget(256, {
@@ -264,7 +264,7 @@ export default function Real3DEntranceCanvas({
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobile ? 1.2 : 1.6));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.10;
+    renderer.toneMappingExposure = 1.18;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.shadowMap.enabled = !isMobile;
     renderer.shadowMap.type = THREE.PCFShadowMap;
@@ -279,9 +279,9 @@ export default function Real3DEntranceCanvas({
 
     mount.appendChild(renderer.domElement);
 
-    // ── 2. SCENE & BRAND OXBLOOD FOG (#2D070D - Exact Website Background) ───
+    // ── 2. SCENE & WARM LUMINOUS BURGUNDY FOG (#4E0E1A) ──────────────────────
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x2D070D, 0.010);
+    scene.fog = new THREE.FogExp2(0x4E0E1A, 0.007);
 
     // ── 3. CAMERA SETUP & RESPONSIVE FRAMING ──────────────────────────────────
     const aspect = width / height;
@@ -311,28 +311,28 @@ export default function Real3DEntranceCanvas({
 
     // ── 5. MATERIALS SPECIFICATION (EXACT PALETTE: BURGUNDY, SILVER, IVORY) ───
 
-    // Part 1: Façade wall (Deep burgundy polished stone: #28070f)
+    // Part 1: Façade wall (Warm illuminated burgundy marble: #4D101C)
     const matFacadeWall = trackMat(
       new THREE.MeshPhysicalMaterial({
-        color: new THREE.Color("#28070f"),
-        roughness: 0.36,
+        color: new THREE.Color("#4D101C"),
+        roughness: 0.32,
         roughnessMap: stoneSlabTex,
         metalness: 0.04,
-        clearcoat: 0.40,
-        clearcoatRoughness: 0.25,
-        envMapIntensity: 0.50,
+        clearcoat: 0.45,
+        clearcoatRoughness: 0.22,
+        envMapIntensity: 0.75,
       })
     );
 
-    // Part 2: Grand portal surround & Steps (Deep wine: #420b18)
+    // Part 2: Grand portal surround & Steps (Rich wine: #5B1120)
     const matPortalStone = trackMat(
       new THREE.MeshPhysicalMaterial({
-        color: new THREE.Color("#420b18"),
-        roughness: 0.24,
+        color: new THREE.Color("#5B1120"),
+        roughness: 0.22,
         metalness: 0.05,
-        clearcoat: 0.65,
-        clearcoatRoughness: 0.18,
-        envMapIntensity: 0.90,
+        clearcoat: 0.70,
+        clearcoatRoughness: 0.16,
+        envMapIntensity: 1.10,
       })
     );
 
@@ -340,9 +340,9 @@ export default function Real3DEntranceCanvas({
     const matSilver = trackMat(
       new THREE.MeshStandardMaterial({
         color: new THREE.Color("#d6dadf"),
-        roughness: 0.24,
+        roughness: 0.22,
         metalness: 0.96,
-        envMapIntensity: 1.85,
+        envMapIntensity: 1.95,
       })
     );
 
@@ -352,83 +352,85 @@ export default function Real3DEntranceCanvas({
         color: new THREE.Color("#dbe5ee"),
         opacity: 0.35,
         transparent: true,
-        roughness: 0.06,
-        reflectivity: 0.9,
+        roughness: 0.05,
+        reflectivity: 0.92,
         clearcoat: 1.0,
-        clearcoatRoughness: 0.04,
-        envMapIntensity: 1.8,
+        clearcoatRoughness: 0.03,
+        envMapIntensity: 1.9,
       })
     );
 
-    // Part 6: Red carpet velvet (Deep crimson-burgundy: #5e0a1b with sheen)
+    // Part 6: Red carpet velvet (Deep royal crimson-burgundy: #6B0D20 with sheen)
     const matRedCarpet = trackMat(
       new THREE.MeshPhysicalMaterial({
-        color: new THREE.Color("#5e0a1b"),
+        color: new THREE.Color("#6B0D20"),
         map: carpetTex,
-        roughness: 0.88,
+        roughness: 0.86,
         metalness: 0.0,
         sheen: 1.0,
-        sheenColor: new THREE.Color("#901228"),
-        sheenRoughness: 0.45,
-        envMapIntensity: 0.20,
+        sheenColor: new THREE.Color("#AA1832"),
+        sheenRoughness: 0.40,
+        envMapIntensity: 0.25,
       })
     );
 
-    // Part 7: Plaza floor (Dark obsidian burgundy stone: #22050A, harmonizes with #2D070D)
+    // Part 7: Plaza floor (Warm polished burgundy stone: #3E0B16)
     const matPlazaFloor = trackMat(
       new THREE.MeshStandardMaterial({
-        color: new THREE.Color("#22050A"),
-        roughness: 0.42,
+        color: new THREE.Color("#3E0B16"),
+        roughness: 0.38,
         metalness: 0.05,
-        envMapIntensity: 0.20,
+        envMapIntensity: 0.45,
       })
     );
 
-    // Part 8: Background after the doors (MATCHES WEBSITE BACKGROUND COLOR: #2D070D)
-    // Seamlessly dissolves into the site background with zero contrast shock
+    // Part 8: Background after the doors (MATCHES LUMINOUS WINE TONE: #4A0C16)
     const matLobbyBg = trackMat(
       new THREE.MeshBasicMaterial({
-        color: new THREE.Color("#2D070D"),
+        color: new THREE.Color("#4A0C16"),
       })
     );
 
-    // Lobby interior walls & ceiling (Same deep oxblood background color: #2D070D)
+    // Lobby interior walls & ceiling (Warm wine: #4A0C16)
     const matLobbyWall = trackMat(
       new THREE.MeshStandardMaterial({
-        color: new THREE.Color("#2D070D"),
-        roughness: 0.65,
+        color: new THREE.Color("#4A0C16"),
+        roughness: 0.55,
         metalness: 0.02,
-        envMapIntensity: 0.12,
+        envMapIntensity: 0.25,
       })
     );
 
     // Subdued architectural silver/ivory guide lines in lobby
     const matLightStrip = trackMat(
       new THREE.MeshStandardMaterial({
-        color: new THREE.Color("#827870"),
-        roughness: 0.4,
-        metalness: 0.5,
+        color: new THREE.Color("#958B82"),
+        roughness: 0.35,
+        metalness: 0.6,
       })
     );
 
-    // Part 9: Velvet stanchion ropes (Deep burgundy: #520915 with sheen)
+    // Part 9: Velvet stanchion ropes (Royal burgundy: #620E1C with rich sheen)
     const matRope = trackMat(
       new THREE.MeshPhysicalMaterial({
-        color: new THREE.Color("#520915"),
-        roughness: 0.84,
+        color: new THREE.Color("#620E1C"),
+        roughness: 0.82,
         metalness: 0.0,
         sheen: 1.0,
-        sheenColor: new THREE.Color("#7e1024"),
-        sheenRoughness: 0.4,
+        sheenColor: new THREE.Color("#95152A"),
+        sheenRoughness: 0.35,
       })
     );
 
     // ── 6. ARCHITECTURAL LIGHTING SETUP ───────────────────────────────────────
-    // Low ambient fill in deep burgundy (preserves rich dark shadows, no pitch black)
-    scene.add(new THREE.AmbientLight(0x38060E, 0.95));
+    // Warm rich wine ambient fill (illuminates shadows with glowing atmosphere)
+    scene.add(new THREE.AmbientLight(0x6A1422, 1.45));
+
+    // Atmospheric hemisphere light: champagne ivory sky + deep maroon bounce
+    scene.add(new THREE.HemisphereLight(0xfff3e8, 0x5B0F1A, 0.95));
 
     // Warm overhead key light grazing facade and steps
-    const keyLight = new THREE.DirectionalLight(0xfff6ec, 1.65);
+    const keyLight = new THREE.DirectionalLight(0xfff6ec, 2.05);
     keyLight.position.set(5.5, 12.0, 9.0);
     if (!isMobile) {
       keyLight.castShadow = true;
@@ -443,15 +445,29 @@ export default function Real3DEntranceCanvas({
     }
     scene.add(keyLight);
 
+    // Soft wide frontal backdrop wash to gently light the entire facade width
+    const backdropWash = new THREE.DirectionalLight(0x8B1E2D, 1.15);
+    backdropWash.position.set(0, 8.0, 16.0);
+    scene.add(backdropWash);
+
     // Faint cool silver rim light catching beveled edges and stanchions
-    const rimLight = new THREE.DirectionalLight(0xd0d8e2, 0.55);
+    const rimLight = new THREE.DirectionalLight(0xd8e0ec, 0.75);
     rimLight.position.set(-8.0, 7.0, 6.0);
     scene.add(rimLight);
 
     // Soft warm threshold wash: illuminates the red carpet on the steps
-    const doorwayGlow = new THREE.PointLight(0xffedd6, 1.8, 10, 1.6);
-    doorwayGlow.position.set(0, 2.5, 1.0);
+    const doorwayGlow = new THREE.PointLight(0xffeed8, 2.2, 12, 1.5);
+    doorwayGlow.position.set(0, 2.8, 1.2);
     scene.add(doorwayGlow);
+
+    // Symmetrical warm architectural uplights grazing the portal pillars
+    const leftWallWash = new THREE.PointLight(0xffebd2, 1.6, 9.0, 1.6);
+    leftWallWash.position.set(-3.6, 1.8, 3.2);
+    scene.add(leftWallWash);
+
+    const rightWallWash = new THREE.PointLight(0xffebd2, 1.6, 9.0, 1.6);
+    rightWallWash.position.set(3.6, 1.8, 3.2);
+    scene.add(rightWallWash);
 
     // ── 7. BUILD THE NINE PARTS ───────────────────────────────────────────────
     const root = new THREE.Group();
@@ -1107,12 +1123,12 @@ export default function Real3DEntranceCanvas({
       sideDecorationsGroup.add(pedShadow);
     });
 
-    // 3. Subtle Warm Architectural Lighting for Side Decorations
-    const leftSideLight = new THREE.PointLight(0xffeedd, 0.75, 7.0, 1.8);
+    // 3. Warm Architectural Lighting for Side Decorations
+    const leftSideLight = new THREE.PointLight(0xffeedd, 1.35, 9.0, 1.6);
     leftSideLight.position.set(-4.2, 2.6, 5.4);
     sideDecorationsGroup.add(leftSideLight);
 
-    const rightSideLight = new THREE.PointLight(0xffeedd, 0.75, 7.0, 1.8);
+    const rightSideLight = new THREE.PointLight(0xffeedd, 1.35, 9.0, 1.6);
     rightSideLight.position.set(4.2, 2.6, 5.4);
     sideDecorationsGroup.add(rightSideLight);
 
