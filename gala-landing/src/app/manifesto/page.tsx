@@ -28,50 +28,26 @@ export default function ManifestoSection() {
 
       <div className="max-w-6xl w-full mx-auto relative z-10 flex flex-col justify-center">
         {/* Category Label */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.8 }}
-          className="mb-6 sm:mb-8"
-        >
+        <div className="mb-6 sm:mb-8">
           <span className="text-xs font-semibold uppercase tracking-[0.28em] text-[var(--color-silver)]">
             {texts.manifesto?.label || "THE GALA EXPERIENCE"}
           </span>
-        </motion.div>
+        </div>
 
         {/* Large Cinzel Statement */}
-        <motion.h2
-          initial={{ opacity: 0, y: 25 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ delay: 0.15, duration: 1, ease: [0.16, 1, 0.3, 1] }}
-          className="font-cinzel text-3xl sm:text-5xl lg:text-7xl font-light text-[var(--color-cream)] leading-[1.12] mb-6 sm:mb-8 whitespace-pre-line"
-        >
+        <h2 className="font-cinzel text-3xl sm:text-5xl lg:text-7xl font-light text-[var(--color-cream)] leading-[1.12] mb-6 sm:mb-8 whitespace-pre-line">
           {texts.manifesto?.headline ||
             "One day.\nThe right people.\nEndless possibilities."}
-        </motion.h2>
+        </h2>
 
         {/* Expanding Silver Line Divider */}
-        <motion.div
-          initial={{ scaleX: 0 }}
-          whileInView={{ scaleX: 1 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ delay: 0.2, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-          className="origin-left w-full h-[1px] bg-gradient-to-r from-[var(--color-silver)] via-[var(--color-silver-light)] to-transparent mb-8 sm:mb-10"
-        />
+        <div className="origin-left w-full h-[1px] bg-gradient-to-r from-[var(--color-silver)] via-[var(--color-silver-light)] to-transparent mb-8 sm:mb-10" />
 
         {/* Editorial Sanctuary Lead Statement */}
-        <motion.p
-          initial={{ opacity: 0, y: 15 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.35, duration: 0.8 }}
-          className="max-w-2xl text-base sm:text-lg text-[var(--color-cream)]/85 font-light leading-relaxed"
-        >
+        <p className="max-w-2xl text-base sm:text-lg text-[var(--color-cream)]/85 font-light leading-relaxed">
           {texts.manifesto?.paragraph1 ||
             "GALA is not merely an annual gathering. It is an intentional sanctuary designed for high-calibre engineering minds and forward-thinking corporate titans to cross paths."}
-        </motion.p>
+        </p>
       </div>
     </section>
   );

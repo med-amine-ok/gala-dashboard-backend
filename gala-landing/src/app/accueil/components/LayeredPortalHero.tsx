@@ -25,8 +25,9 @@ export default function LayeredPortalHero() {
   const layerL1RevealRef = useRef<HTMLDivElement>(null);
   const layerL5ContentRef = useRef<HTMLDivElement>(null);
 
-  // Scroll progress state for 3D camera flight
-  const [scrollProgress, setScrollProgress] = useState<number>(0);
+  // High-performance scroll progress ref for 3D camera flight (ZERO React re-renders on scroll)
+  const scrollProgressRef = useRef<number>(0);
+  const debugScrollSpanRef = useRef<HTMLSpanElement>(null);
 
   // Debug overlay state & FPS tracking
   const [isDebug, setIsDebug] = useState<boolean>(false);
@@ -121,7 +122,10 @@ export default function LayeredPortalHero() {
           scrub: 0.6,
           onUpdate: (self) => {
             const p = self.progress;
-            setScrollProgress(p);
+            scrollProgressRef.current = p;
+            if (debugScrollSpanRef.current) {
+              debugScrollSpanRef.current.textContent = p.toFixed(3);
+            }
           },
         },
       });
@@ -143,13 +147,9 @@ export default function LayeredPortalHero() {
         );
       }
 
-
-
-
-
       // Layer 1: Next-Section Arrival (Manifesto)
-      // As the camera passes between the open glass doors into the warm ivory lobby (0.58 -> 1.0),
-      // the arrival unmasks smoothly from the glowing lobby aperture to full screen (100svh).
+      // As the camera passes between the open glass doors into the lobby (0.42 -> 1.0),
+      // the arrival unmasks smoothly from the doorway aperture to full screen (100svh).
       if (layerL1RevealRef.current) {
         tl.fromTo(
           layerL1RevealRef.current,
@@ -157,7 +157,7 @@ export default function LayeredPortalHero() {
             opacity: 0,
             clipPath: isMobile
               ? "inset(24% 12% 24% 12% round 120px 120px 0 0)"
-              : "inset(18% 30% 18% 30% round 180px 180px 0 0)",
+              : "inset(18% 28% 18% 28% round 180px 180px 0 0)",
             scale: 0.94,
           },
           {
@@ -165,9 +165,9 @@ export default function LayeredPortalHero() {
             clipPath: "inset(0% 0% 0% 0% round 0px 0px 0 0)",
             scale: 1.0,
             ease: "power2.inOut",
-            duration: 0.42,
+            duration: 0.58,
           },
-          0.58
+          0.42
         );
       }
     }, container);
@@ -181,18 +181,17 @@ export default function LayeredPortalHero() {
       className="relative w-full"
       id="home"
     >
-      {/* Pinned Stage Element: GSAP pins this inner stage so containerRef remains untouched in React */}
+      {/* Pinned Stage Element: EXACT website background token var(--color-dark) (#2D070D) */}
       <div
         ref={stageRef}
-        className="relative w-full h-[100svh] min-h-[100svh] overflow-hidden bg-[#140206] text-[var(--color-cream)]"
+        className="relative w-full h-[100svh] min-h-[100svh] overflow-hidden bg-[var(--color-dark)] text-[var(--color-cream)]"
       >
-        {/* Deep Imperial Burgundy Radial Atmosphere Backing (Pure oxblood dusk, zero pink) */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(46,8,16,0.65)_0%,rgba(20,2,6,0.92)_55%,#100104_100%)] pointer-events-none" />
-
         {/* REAL 3D BURGUNDY & SILVER ENTRANCE MODEL (Live Three.js) */}
-        <div className="absolute inset-0 w-full h-full z-0 pointer-events-auto">
-          <Real3DEntranceCanvas scrollProgress={scrollProgress} />
+        <div className="absolute inset-0 w-full h-full z-[1] pointer-events-auto">
+          <Real3DEntranceCanvas scrollProgressRef={scrollProgressRef} />
         </div>
+
+      
 
         {/* =====================================================================
             3. PINNED VIEWPORT STAGE & DOM OVERLAYS
@@ -223,11 +222,11 @@ export default function LayeredPortalHero() {
             {/* Main Centered Composition */}
             <div className="my-auto flex flex-col items-center text-center max-w-3xl mx-auto pointer-events-auto relative">
               {/* Soft subtle contrast vignette behind typography */}
-              <div className="absolute -inset-8 bg-[radial-gradient(ellipse_at_center,rgba(16,2,6,0.25)_0%,transparent_70%)] pointer-events-none -z-1" />
+              <div className="absolute -inset-8 bg-[radial-gradient(ellipse_at_center,rgba(45,7,13,0.30)_0%,transparent_70%)] pointer-events-none -z-1" />
 
               {/* Top Edition & Venue Badge */}
               <div className="flex items-center gap-2 sm:gap-4 mb-3 sm:mb-5">
-                <span className="text-[9px] sm:text-xs font-semibold uppercase tracking-[0.24em] text-[var(--color-silver)] px-4 py-1.5 border border-[var(--color-silver)]/25 rounded-full bg-[#1c0308]/80 backdrop-blur-sm">
+                <span className="text-[9px] sm:text-xs font-semibold uppercase tracking-[0.24em] text-[var(--color-silver)] px-4 py-1.5 border border-[var(--color-silver)]/25 rounded-full bg-[#2D040B]/80 backdrop-blur-sm shadow-[0_4px_12px_rgba(45,7,13,0.4)]">
                   {(texts.hero?.edition || "ALGIERS · 2026") + " · ENP"}
                 </span>
               </div>
@@ -240,12 +239,12 @@ export default function LayeredPortalHero() {
                   width={540}
                   height={175}
                   priority
-                  className="w-[220px] xs:w-[280px] sm:w-[410px] md:w-[480px] lg:w-[530px] h-auto object-contain select-none drop-shadow-[0_15px_35px_rgba(0,0,0,0.95)] brightness-105"
+                  className="w-[220px] xs:w-[280px] sm:w-[410px] md:w-[480px] lg:w-[530px] h-auto object-contain select-none drop-shadow-[0_15px_35px_rgba(0,0,0,0.85)] brightness-105"
                 />
               </div>
 
               {/* Architectural Headline */}
-              <h2 className="font-cinzel text-xl sm:text-3xl md:text-5xl font-light text-[var(--color-cream)] leading-[1.2] mb-5 sm:mb-7 max-w-2xl whitespace-pre-line tracking-tight drop-shadow-[0_4px_24px_rgba(0,0,0,0.95)]">
+              <h2 className="font-cinzel text-xl sm:text-3xl md:text-5xl font-light text-[var(--color-cream)] leading-[1.2] mb-5 sm:mb-7 max-w-2xl whitespace-pre-line tracking-tight drop-shadow-[0_4px_24px_rgba(0,0,0,0.85)]">
                 {texts.hero?.headline || "Where ambition\nmeets opportunity."}
               </h2>
 
@@ -253,7 +252,7 @@ export default function LayeredPortalHero() {
               <div className="flex items-center justify-center">
                 <Link href="/register">
                   <button
-                    className="group flex items-center justify-center gap-3 px-7 sm:px-10 py-3 sm:py-3.5 rounded-full border border-[var(--color-silver)]/55 hover:border-[var(--color-silver-light)] bg-gradient-to-r from-[#3D0812] to-[#5C0D1B] hover:from-[#4D0C18] hover:to-[#731323] text-[10px] sm:text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-cream)] transition-all duration-300 shadow-[0_10px_30px_rgba(45,7,13,0.7)] hover:shadow-[0_12px_35px_rgba(229,229,229,0.25)] backdrop-blur-md cursor-pointer luxury-focus-ring"
+                    className="group flex items-center justify-center gap-3 px-7 sm:px-10 py-3 sm:py-3.5 rounded-full border border-[var(--color-silver)]/55 hover:border-[var(--color-silver-light)] bg-gradient-to-r from-[#4A0A16] to-[#660E1E] hover:from-[#5A0C1B] hover:to-[#7A1224] text-[10px] sm:text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-cream)] transition-all duration-300 shadow-[0_10px_30px_rgba(45,7,13,0.6)] hover:shadow-[0_12px_35px_rgba(229,229,229,0.25)] backdrop-blur-md cursor-pointer luxury-focus-ring"
                     aria-label="Request invitation for Engineers Gala 2026"
                   >
                     <span>{texts.hero?.requestCTA || "REQUEST INVITATION"}</span>
@@ -295,7 +294,7 @@ export default function LayeredPortalHero() {
               <div className="text-[var(--color-cream)] font-bold text-[11px] tracking-wide border-b border-white/20 pb-1">
                 ENGINEERS&apos; GALA 3D HERO
               </div>
-              <div>Scroll Progress: {scrollProgress.toFixed(3)}</div>
+              <div>Scroll Progress: <span ref={debugScrollSpanRef}>0.000</span></div>
               <div>FPS: <span className={fps < 30 ? "text-red-400" : fps < 55 ? "text-yellow-300" : "text-green-400"}>{fps}</span></div>
             </div>
           )}
