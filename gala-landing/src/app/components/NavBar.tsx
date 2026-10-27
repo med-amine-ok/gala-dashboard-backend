@@ -43,6 +43,21 @@ export default function NavBar() {
 
   const handleScrollTo = (id: string) => {
     setMenuOpen(false);
+    if (id === "home") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    if (id === "manifesto") {
+      const home = document.getElementById("home");
+      if (home) {
+        const isMobile = window.innerWidth < 768;
+        const pinMultiplier = isMobile ? 1.4 : 1.8;
+        const targetScroll =
+          home.offsetTop + window.innerHeight * pinMultiplier * 0.85;
+        window.scrollTo({ top: targetScroll, behavior: "smooth" });
+        return;
+      }
+    }
     const section = document.getElementById(id);
     if (section) {
       section.scrollIntoView({ behavior: "smooth" });
@@ -83,11 +98,11 @@ export default function NavBar() {
       <header
         className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 font-sans ${
           scrolled
-            ? "py-3.5 sm:py-4 bg-[var(--color-dark)]/85 backdrop-blur-md border-b border-[var(--color-silver)]/15 shadow-[0_10px_30px_rgba(0,0,0,0.6)]"
-            : "py-6 sm:py-8 bg-transparent"
+            ? "py-3 sm:py-4 pt-[max(0.75rem,env(safe-area-inset-top))] bg-[var(--color-dark)]/85 backdrop-blur-md border-b border-[var(--color-silver)]/15 shadow-[0_10px_30px_rgba(0,0,0,0.6)]"
+            : "py-4 sm:py-8 pt-[max(1rem,env(safe-area-inset-top))] bg-transparent"
         }`}
       >
-        <div className="max-w-7xl mx-auto px-6 sm:px-10 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-10 flex items-center justify-between">
           {/* LEFT: GALA Logo */}
           <button
             onClick={() => handleScrollTo("home")}
@@ -155,26 +170,20 @@ export default function NavBar() {
               </div>
             </button>
 
-            {/* Bespoke Luxury CTA Button with Radiant Aura */}
-            <Link href="/register" className="hidden sm:block group relative">
-              {/* Luminous Luxury Wine & Silver Aura Halo */}
-              <span
-                aria-hidden="true"
-                className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-[var(--color-primary)] via-[#B52B3E] to-[var(--color-silver)] opacity-45 blur-sm group-hover:opacity-90 group-hover:blur-md transition-all duration-500 animate-pulse pointer-events-none"
-              />
-              <button className="relative inline-flex items-center gap-2.5 px-6 py-2.5 rounded-full bg-gradient-to-r from-[#5B0F1A] via-[#7B1726] to-[#450912] text-[var(--color-cream)] group-hover:text-white text-[10.5px] font-semibold uppercase tracking-[0.24em] transition-all duration-300 cursor-pointer overflow-hidden border border-[var(--color-silver)]/80 group-hover:border-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.35),0_10px_25px_-5px_rgba(45,7,13,0.9)] group-hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.5),0_15px_30px_-5px_rgba(139,30,45,0.7)] luxury-focus-ring">
-                {/* Diagonal Light Shimmer Sweep */}
+            {/* Couture Editorial Navbar Invitation Link */}
+            <Link
+              href="/register"
+              className="group relative hidden sm:inline-flex items-center text-[10.5px] md:text-[11px] font-medium uppercase tracking-[0.20em] text-[var(--color-cream)]/90 hover:text-white transition-colors duration-200 py-1 px-1 ml-1 luxury-focus-ring"
+              aria-label={texts.nav?.requestInvitation || "Request Invitation"}
+            >
+              <span className="relative pb-0.5">
+                {texts.nav?.requestInvitation || "REQUEST INVITATION"}
+                {/* Thin, refined animated underline */}
                 <span
                   aria-hidden="true"
-                  className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out bg-gradient-to-r from-transparent via-white/25 to-transparent pointer-events-none"
+                  className="absolute bottom-0 left-0 w-0 group-hover:w-full h-[1px] bg-[var(--color-cream)]/75 transition-all duration-300 ease-out motion-reduce:transition-none"
                 />
-
-                <span className="relative z-10 font-sans">
-                  {texts.nav?.requestInvitation || "REQUEST INVITATION"}
-                </span>
-
-                <ArrowRight className="relative z-10 w-3.5 h-3.5 text-[var(--color-silver-light)] group-hover:text-white transition-all duration-300 group-hover:translate-x-1" />
-              </button>
+              </span>
             </Link>
           </div>
         </div>
@@ -301,13 +310,19 @@ export default function NavBar() {
               <p className="tracking-wider uppercase text-[11px]">
                 ALGIERS · HOTEL MERCURE · NOVEMBER 08, 2026
               </p>
-              <Link href="/register" onClick={() => setMenuOpen(false)}>
-                <span className="text-xs uppercase tracking-[0.24em] font-semibold text-[var(--color-silver)] hover:text-[var(--color-cream)] transition-colors cursor-pointer inline-flex items-center gap-2">
-                  <span>
-                    {texts.nav?.requestInvitation || "REQUEST INVITATION"}
-                  </span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+              <Link
+                href="/register"
+                onClick={() => setMenuOpen(false)}
+                className="group inline-flex items-center gap-2.5 py-1"
+              >
+                <span className="text-[11px] uppercase tracking-[0.22em] font-medium text-[var(--color-cream)]/90 group-hover:text-white transition-colors relative pb-0.5">
+                  {texts.nav?.requestInvitation || "REQUEST INVITATION"}
+                  <span
+                    aria-hidden="true"
+                    className="absolute bottom-0 left-0 w-0 group-hover:w-full h-[1px] bg-[var(--color-cream)]/75 transition-all duration-300 ease-out motion-reduce:transition-none"
+                  />
                 </span>
+                <ArrowRight className="w-3.5 h-3.5 text-[var(--color-silver-light)] group-hover:text-white transition-transform duration-300 group-hover:translate-x-0.5 motion-reduce:transform-none" />
               </Link>
             </div>
           </motion.div>

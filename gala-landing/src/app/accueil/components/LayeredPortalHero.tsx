@@ -25,6 +25,13 @@ export default function LayeredPortalHero() {
   const layerL1RevealRef = useRef<HTMLDivElement>(null);
   const layerL5ContentRef = useRef<HTMLDivElement>(null);
 
+  // Discrete typography & UI references for coordinated typography-led transition
+  const heroTitleRef = useRef<HTMLDivElement>(null);
+  const heroSubtitleRef = useRef<HTMLHeadingElement>(null);
+  const heroCtaRef = useRef<HTMLDivElement>(null);
+  const heroBackdropVignetteRef = useRef<HTMLDivElement>(null);
+  const heroCountdownRef = useRef<HTMLDivElement>(null);
+
   // High-performance scroll progress ref for 3D camera flight (ZERO React re-renders on scroll)
   const scrollProgressRef = useRef<number>(0);
   const debugScrollSpanRef = useRef<HTMLSpanElement>(null);
@@ -99,15 +106,20 @@ export default function LayeredPortalHero() {
     if (!container || !stage) return;
 
     const prefersReducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
+      "(prefers-reduced-motion: reduce)",
     ).matches;
 
     if (prefersReducedMotion) {
+      if (layerL1RevealRef.current) {
+        layerL1RevealRef.current.style.opacity = "1";
+        layerL1RevealRef.current.style.pointerEvents = "auto";
+      }
       return;
     }
 
+    // Balanced pacing: 1.5 - 2.5s of deliberate scrolling (crisp, elegant, never sluggish)
     const isMobile = window.innerWidth < 768;
-    const pinDistance = isMobile ? "+=160%" : "+=220%";
+    const pinDistance = isMobile ? "+=140%" : "+=180%";
 
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({
@@ -126,49 +138,189 @@ export default function LayeredPortalHero() {
             if (debugScrollSpanRef.current) {
               debugScrollSpanRef.current.textContent = p.toFixed(3);
             }
+            // Ensure next section is interactive when established, hero interactive when resting
+            if (layerL1RevealRef.current) {
+              layerL1RevealRef.current.style.pointerEvents =
+                p >= 0.70 ? "auto" : "none";
+            }
+            if (layerL5ContentRef.current) {
+              layerL5ContentRef.current.style.pointerEvents =
+                p <= 0.20 ? "auto" : "none";
+            }
           },
         },
       });
 
-      // Layer 5: Hero Content (Logo, headline, metadata, countdown, CTA)
-      // Moves toward camera slightly, then fades & blurs out in the first 0.0 -> 0.35
-      if (layerL5ContentRef.current) {
+      // ── PHASE 3: TYPOGRAPHY-LED HERO RETREAT (0.00 -> 0.28) ────────────────
+      // 1. Large "ENGINEERS' GALA" title recedes smoothly from focus first
+      if (heroTitleRef.current) {
         tl.to(
-          layerL5ContentRef.current,
+          heroTitleRef.current,
           {
-            scale: 1.15,
-            y: -35,
+            y: -30,
+            scale: 1.05,
             opacity: 0,
-            filter: "blur(8px)",
-            ease: "power1.out",
-            duration: 0.35,
+            filter: "blur(5px)",
+            ease: "power1.inOut",
+            duration: 0.20,
           },
-          0
+          0,
         );
       }
 
-      // Layer 1: Next-Section Arrival (Manifesto)
-      // As the camera passes between the open glass doors into the lobby (0.42 -> 1.0),
-      // the arrival unmasks smoothly from the doorway aperture to full screen (100svh).
-      if (layerL1RevealRef.current) {
-        tl.fromTo(
-          layerL1RevealRef.current,
+      // 2. Subtitle "WHERE AMBITION MEETS OPPORTUNITY." fades SLIGHTLY LATER than main title
+      if (heroSubtitleRef.current) {
+        tl.to(
+          heroSubtitleRef.current,
+          {
+            y: -18,
+            opacity: 0,
+            filter: "blur(4px)",
+            ease: "power1.inOut",
+            duration: 0.20,
+          },
+          0.08,
+        );
+      }
+
+      // 2b. Hero Invitation CTA button fades out with subtitle
+      if (heroCtaRef.current) {
+        tl.to(
+          heroCtaRef.current,
+          {
+            y: -14,
+            opacity: 0,
+            filter: "blur(3px)",
+            ease: "power1.inOut",
+            duration: 0.18,
+          },
+          0.06,
+        );
+      }
+
+      // 3. Central countdown bar fades out cleanly
+      if (heroCountdownRef.current) {
+        tl.to(
+          heroCountdownRef.current,
+          {
+            y: 15,
+            opacity: 0,
+            ease: "power1.inOut",
+            duration: 0.18,
+          },
+          0.02,
+        );
+      }
+
+      // 4. Subtle contrast vignette behind typography fades away
+      if (heroBackdropVignetteRef.current) {
+        tl.to(
+          heroBackdropVignetteRef.current,
           {
             opacity: 0,
-            clipPath: isMobile
-              ? "inset(24% 12% 24% 12% round 120px 120px 0 0)"
-              : "inset(18% 28% 18% 28% round 180px 180px 0 0)",
-            scale: 0.94,
+            ease: "power1.inOut",
+            duration: 0.18,
           },
+          0,
+        );
+      }
+
+      // ── PHASE 5: ABOUT THE EVENT SECTION & TYPOGRAPHY REVEAL (0.48 -> 0.78) ───
+      // The section emerges beyond the entrance as the camera passes through the doorway
+      if (layerL1RevealRef.current) {
+        const aboutRoot = layerL1RevealRef.current;
+        const aboutBg = aboutRoot.querySelector(".about-bg");
+        const aboutLabel = aboutRoot.querySelector(".about-label");
+        const aboutHeading = aboutRoot.querySelector(".about-heading");
+        const aboutDivider = aboutRoot.querySelector(".about-divider");
+        const aboutBody = aboutRoot.querySelector(".about-body");
+
+        // Section container emergence
+        tl.fromTo(
+          aboutRoot,
+          { opacity: 0 },
           {
             opacity: 1,
-            clipPath: "inset(0% 0% 0% 0% round 0px 0px 0 0)",
-            scale: 1.0,
-            ease: "power2.inOut",
-            duration: 0.58,
+            ease: "power1.inOut",
+            duration: 0.22,
           },
-          0.42
+          0.48,
         );
+
+        // Atmosphere & attendee photography
+        if (aboutBg) {
+          tl.fromTo(
+            aboutBg,
+            { opacity: 0, scale: 1.06 },
+            {
+              opacity: 1,
+              scale: 1.0,
+              ease: "power2.out",
+              duration: 0.24,
+            },
+            0.48,
+          );
+        }
+
+        // Category label ("THE GALA MANIFESTO") with subtle lift
+        if (aboutLabel) {
+          tl.fromTo(
+            aboutLabel,
+            { opacity: 0, y: 16 },
+            {
+              opacity: 1,
+              y: 0,
+              ease: "power2.out",
+              duration: 0.18,
+            },
+            0.52,
+          );
+        }
+
+        // About Heading ("One day. The right people. Endless possibilities.") with refined upward movement
+        if (aboutHeading) {
+          tl.fromTo(
+            aboutHeading,
+            { opacity: 0, y: 28 },
+            {
+              opacity: 1,
+              y: 0,
+              ease: "power2.out",
+              duration: 0.22,
+            },
+            0.56,
+          );
+        }
+
+        // Silver divider line expands smoothly
+        if (aboutDivider) {
+          tl.fromTo(
+            aboutDivider,
+            { scaleX: 0, opacity: 0 },
+            {
+              scaleX: 1,
+              opacity: 1,
+              ease: "power2.out",
+              duration: 0.18,
+            },
+            0.60,
+          );
+        }
+
+        // Editorial lead paragraph fades in
+        if (aboutBody) {
+          tl.fromTo(
+            aboutBody,
+            { opacity: 0, y: 16 },
+            {
+              opacity: 1,
+              y: 0,
+              ease: "power2.out",
+              duration: 0.20,
+            },
+            0.64,
+          );
+        }
       }
     }, container);
 
@@ -176,36 +328,29 @@ export default function LayeredPortalHero() {
   }, []);
 
   return (
-    <div
-      ref={containerRef}
-      className="relative w-full"
-      id="home"
-    >
+    <div ref={containerRef} className="relative w-full" id="home">
       {/* Pinned Stage Element: EXACT website background token var(--color-dark) (#2D070D) */}
       <div
         ref={stageRef}
-        className="relative w-full h-[100svh] min-h-[100svh] overflow-hidden text-[var(--color-cream)] bg-[#450A14] bg-[radial-gradient(ellipse_at_50%_40%,#5B101D_0%,#460C16_55%,#2D070D_100%)]"
+        className="relative w-full h-[100svh] min-h-[100svh] overflow-hidden text-[var(--color-cream)] bg-[#2D070D] bg-[radial-gradient(ellipse_at_50%_35%,#3D0812_0%,#2D070D_65%,#1E0409_100%)]"
       >
         {/* REAL 3D BURGUNDY & SILVER ENTRANCE MODEL (Live Three.js) */}
         <div className="absolute inset-0 w-full h-full z-[1] pointer-events-auto">
           <Real3DEntranceCanvas scrollProgressRef={scrollProgressRef} />
         </div>
 
-      
-
         {/* =====================================================================
             3. PINNED VIEWPORT STAGE & DOM OVERLAYS
             ===================================================================== */}
         <div className="relative w-full h-full overflow-hidden flex flex-col justify-between z-10 pointer-events-none">
-          {/* Layer 1: Next-Section Arrival (Manifesto) */}
+          {/* Layer 1: Next-Section Arrival (Manifesto / About the Event) */}
           <div
             ref={layerL1RevealRef}
             id="manifesto-arrival"
             className="absolute inset-0 z-20 pointer-events-none will-change-transform overflow-hidden"
             style={{
-              transformOrigin: "50% 48%",
+              transformOrigin: "50% 50%",
               opacity: 0,
-              clipPath: "inset(18% 30% 18% 30% round 180px 180px 0 0)",
             }}
           >
             <ManifestoSection />
@@ -217,69 +362,102 @@ export default function LayeredPortalHero() {
           <div
             ref={layerL5ContentRef}
             className="relative z-50 flex flex-col justify-between h-full pt-20 sm:pt-24 pb-6 sm:pb-8 px-4 sm:px-10 max-w-7xl mx-auto w-full pointer-events-none will-change-transform"
-            style={{ transformOrigin: "50% 48%" }}
+            style={{ transformOrigin: "50% 50%" }}
           >
             {/* Main Centered Composition */}
-            <div className="my-auto flex flex-col items-center text-center max-w-3xl mx-auto pointer-events-auto relative">
-              {/* Soft subtle contrast vignette behind typography */}
-              <div className="absolute -inset-8 bg-[radial-gradient(ellipse_at_center,rgba(45,7,13,0.30)_0%,transparent_70%)] pointer-events-none -z-1" />
-
-              {/* Top Edition & Venue Badge */}
-              <div className="flex items-center gap-2 sm:gap-4 mb-3 sm:mb-5">
-                <span className="text-[9px] sm:text-xs font-semibold uppercase tracking-[0.24em] text-[var(--color-silver)] px-4 py-1.5 border border-[var(--color-silver)]/25 rounded-full bg-[#2D040B]/80 backdrop-blur-sm shadow-[0_4px_12px_rgba(45,7,13,0.4)]">
-                  {(texts.hero?.edition || "ALGIERS · 2026") + " · ENP"}
-                </span>
-              </div>
+            <div className="my-auto flex flex-col items-center justify-center text-center max-w-3xl mx-auto pointer-events-auto relative px-3">
+              {/* Soft subtle architectural contrast vignette behind typography */}
+              <div
+                ref={heroBackdropVignetteRef}
+                className="absolute -inset-10 sm:-inset-16 bg-[radial-gradient(ellipse_at_center,rgba(25,3,7,0.50)_0%,rgba(35,5,10,0.25)_45%,transparent_75%)] pointer-events-none -z-1 will-change-transform"
+              />
 
               {/* Monumental Brand Logo (Original High-Res Silver Artwork) */}
-              <div className="flex justify-center mb-4 sm:mb-6 relative">
+              <div
+                ref={heroTitleRef}
+                className="flex justify-center mb-3 xs:mb-4 sm:mb-6 relative will-change-transform"
+              >
                 <Image
                   src="/GALA-silver.png"
                   alt="ENGINEERS' GALA 2026"
                   width={540}
                   height={175}
                   priority
-                  className="w-[220px] xs:w-[280px] sm:w-[410px] md:w-[480px] lg:w-[530px] h-auto object-contain select-none drop-shadow-[0_15px_35px_rgba(0,0,0,0.85)] brightness-105"
+                  className="w-[240px] xs:w-[290px] sm:w-[360px] md:w-[460px] lg:w-[520px] h-auto object-contain select-none drop-shadow-[0_12px_28px_rgba(0,0,0,0.95)] drop-shadow-[0_2px_8px_rgba(0,0,0,0.80)] brightness-110 contrast-105"
                 />
               </div>
 
-              {/* Architectural Headline */}
-              <h2 className="font-cinzel text-xl sm:text-3xl md:text-5xl font-light text-[var(--color-cream)] leading-[1.2] mb-5 sm:mb-7 max-w-2xl whitespace-pre-line tracking-tight drop-shadow-[0_4px_24px_rgba(0,0,0,0.85)]">
+              {/* Architectural Headline (All Caps matching reference) */}
+              <h2
+                ref={heroSubtitleRef}
+                className="font-cinzel text-[15px] xs:text-xl sm:text-2xl md:text-4xl lg:text-5xl font-medium sm:font-light text-[var(--color-cream)] leading-[1.35] sm:leading-[1.2] mb-4 sm:mb-6 max-w-[285px] xs:max-w-[360px] sm:max-w-2xl whitespace-pre-line uppercase tracking-[0.18em] sm:tracking-wide drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] drop-shadow-[0_1px_4px_rgba(0,0,0,0.90)] will-change-transform"
+              >
                 {texts.hero?.headline || "Where ambition\nmeets opportunity."}
               </h2>
 
-              {/* Restrained Luxury Silver Invitation CTA */}
-              <div className="flex items-center justify-center">
-                <Link href="/register">
+              {/* Couture Editorial Hero Invitation CTA (Letterpress Plaque) */}
+              <div
+                ref={heroCtaRef}
+                className="mt-2 xs:mt-3 sm:mt-5 md:mt-6 pointer-events-auto will-change-transform flex justify-center w-full"
+              >
+                <Link href="/register" className="group inline-flex items-center">
                   <button
-                    className="group flex items-center justify-center gap-3 px-7 sm:px-10 py-3 sm:py-3.5 rounded-full border border-[var(--color-silver)]/55 hover:border-[var(--color-silver-light)] bg-gradient-to-r from-[#4A0A16] to-[#660E1E] hover:from-[#5A0C1B] hover:to-[#7A1224] text-[10px] sm:text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-cream)] transition-all duration-300 shadow-[0_10px_30px_rgba(45,7,13,0.6)] hover:shadow-[0_12px_35px_rgba(229,229,229,0.25)] backdrop-blur-md cursor-pointer luxury-focus-ring"
-                    aria-label="Request invitation for Engineers Gala 2026"
+                    type="button"
+                    className="relative inline-flex items-center justify-center gap-2.5 px-6 sm:px-8 py-3 min-h-[44px] rounded-[2px] bg-[#30070E]/85 hover:bg-[#400A14]/95 border border-[var(--color-cream)]/40 hover:border-[var(--color-cream)]/85 text-[var(--color-cream)] hover:text-white text-[11px] xs:text-[11.5px] sm:text-[12px] md:text-[12.5px] font-medium uppercase tracking-[0.20em] sm:tracking-[0.22em] transition-all duration-300 cursor-pointer backdrop-blur-[2px] luxury-focus-ring motion-reduce:transition-none"
                   >
-                    <span>{texts.hero?.requestCTA || "REQUEST INVITATION"}</span>
-                    <ArrowRight className="w-4 h-4 text-[var(--color-silver)] transition-transform duration-300 group-hover:translate-x-1" />
+                    <span className="relative pb-0.5">
+                      {texts.hero?.requestCTA || "REQUEST YOUR INVITATION"}
+                      {/* Thin, refined animated underline */}
+                      <span
+                        aria-hidden="true"
+                        className="absolute bottom-0 left-0 w-0 group-hover:w-full h-[1px] bg-[var(--color-cream)]/75 transition-all duration-300 ease-out motion-reduce:transition-none"
+                      />
+                    </span>
+
+                    <ArrowRight
+                      aria-hidden="true"
+                      className="w-3.5 h-3.5 text-[var(--color-silver-light)] group-hover:text-white transition-transform duration-300 group-hover:translate-x-0.5 shrink-0 motion-reduce:transform-none"
+                    />
                   </button>
                 </Link>
               </div>
             </div>
 
-            {/* Footer Countdown Bar */}
-            <div className="w-full pt-3 sm:pt-5 border-t border-[var(--color-silver)]/25 flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-3 pointer-events-auto">
-              <p className="text-[9px] sm:text-[11px] uppercase tracking-[0.22em] text-[var(--color-silver)]/90 font-medium">
-                {texts.hero?.countdownLabel || "INVITATION WINDOW CLOSES IN"}
-              </p>
+            {/* Footer Countdown Bar (Clean, compact, borderless over glossy floor) */}
+            <div
+              ref={heroCountdownRef}
+              className="w-full pt-2 sm:pt-4 flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-1.5 sm:gap-3 pointer-events-auto will-change-transform pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+            >
+              <div className="flex items-center justify-center gap-2">
+                <p className="text-[8.5px] xs:text-[9.5px] sm:text-[11px] uppercase tracking-[0.24em] text-[var(--color-silver-light)] font-semibold text-center sm:text-left drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]">
+                  {texts.hero?.countdownLabel || "INVITATION WINDOW CLOSES IN"}
+                </p>
+              </div>
 
-              <div className="flex items-center gap-3 xs:gap-4 sm:gap-8">
+              <div className="flex items-center justify-center gap-3 xs:gap-4 sm:gap-8">
                 {[
-                  { label: texts.hero?.countdown?.[0] || "DAYS", val: timeLeft.days },
-                  { label: texts.hero?.countdown?.[1] || "HOURS", val: timeLeft.hours },
-                  { label: texts.hero?.countdown?.[2] || "MINUTES", val: timeLeft.minutes },
-                  { label: texts.hero?.countdown?.[3] || "SECONDS", val: timeLeft.seconds },
+                  {
+                    label: texts.hero?.countdown?.[0] || "DAYS",
+                    val: timeLeft.days,
+                  },
+                  {
+                    label: texts.hero?.countdown?.[1] || "HOURS",
+                    val: timeLeft.hours,
+                  },
+                  {
+                    label: texts.hero?.countdown?.[2] || "MINUTES",
+                    val: timeLeft.minutes,
+                  },
+                  {
+                    label: texts.hero?.countdown?.[3] || "SECONDS",
+                    val: timeLeft.seconds,
+                  },
                 ].map((item, idx) => (
                   <div key={idx} className="flex items-baseline gap-1">
-                    <span className="font-cinzel text-base xs:text-lg sm:text-2xl font-bold text-[var(--color-cream)] tabular-nums drop-shadow-[0_2px_10px_rgba(0,0,0,0.7)]">
+                    <span className="font-cinzel text-base xs:text-lg sm:text-2xl font-bold text-white tabular-nums drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">
                       {item.val}
                     </span>
-                    <span className="text-[8px] xs:text-[9px] uppercase tracking-wider text-[var(--color-silver)] font-semibold">
+                    <span className="text-[8px] xs:text-[8.5px] sm:text-[10px] uppercase tracking-[0.16em] text-[var(--color-silver)] font-medium">
                       {item.label}
                     </span>
                   </div>
@@ -294,8 +472,23 @@ export default function LayeredPortalHero() {
               <div className="text-[var(--color-cream)] font-bold text-[11px] tracking-wide border-b border-white/20 pb-1">
                 ENGINEERS&apos; GALA 3D HERO
               </div>
-              <div>Scroll Progress: <span ref={debugScrollSpanRef}>0.000</span></div>
-              <div>FPS: <span className={fps < 30 ? "text-red-400" : fps < 55 ? "text-yellow-300" : "text-green-400"}>{fps}</span></div>
+              <div>
+                Scroll Progress: <span ref={debugScrollSpanRef}>0.000</span>
+              </div>
+              <div>
+                FPS:{" "}
+                <span
+                  className={
+                    fps < 30
+                      ? "text-red-400"
+                      : fps < 55
+                        ? "text-yellow-300"
+                        : "text-green-400"
+                  }
+                >
+                  {fps}
+                </span>
+              </div>
             </div>
           )}
         </div>
