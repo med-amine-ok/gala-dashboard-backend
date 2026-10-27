@@ -1,17 +1,29 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useLanguage } from "../../../context/LanguageContext";
 import ManifestoSection from "../../manifesto/page";
-import Real3DEntranceCanvas from "./Real3DEntranceCanvas";
+import Real3DEntranceCanvas, { type EntranceFrame } from "./Real3DEntranceCanvas";
 
-if (typeof window !== "undefined") {
-  gsap.registerPlugin(ScrollTrigger);
+// Attendee photo (5472 x 3648) used for the out-of-focus hall beyond the doors
+const HALL_PHOTO_ASPECT = 1.5;
+const HALL_PHOTO_BASE_W = 100;
+
+const smoothstep01 = (t: number) => {
+  const c = t < 0 ? 0 : t > 1 ? 1 : t;
+  return c * c * (3 - 2 * c);
+};
+
+function setLayer(el: HTMLElement | null, opacity: number, y = 0, scale = 1) {
+  if (!el) return;
+  el.style.opacity = opacity.toFixed(3);
+  el.style.transform =
+    y === 0 && scale === 1
+      ? ""
+      : `translate3d(0, ${y.toFixed(2)}px, 0) scale(${scale.toFixed(4)})`;
 }
 
 export default function LayeredPortalHero() {
@@ -39,6 +51,7 @@ export default function LayeredPortalHero() {
   // Debug overlay state & FPS tracking
   const [isDebug, setIsDebug] = useState<boolean>(false);
   const [fps, setFps] = useState<number>(60);
+  const [reducedMotion, setReducedMotion] = useState<boolean>(false);
 
   // Event countdown state (Target: Nov 8, 2026)
   const eventDate = new Date("2026-11-08T09:00:00");
@@ -99,263 +112,272 @@ export default function LayeredPortalHero() {
     };
   }, []);
 
-  // GSAP ScrollTrigger orchestration for the pinned scroll & unpin handoff
+  // Reduced motion: no pin, no camera flight; About is laid out in normal flow
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const sync = () => setReducedMotion(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  // The stage is held with CSS position: sticky inside a tall container, so the
+  // browser compositor keeps it fixed (no main-thread pin/unpin swap, no jitter
+  // at either end). Scroll only reports raw progress; all motion is derived from
+  // the camera's own per-frame state in handleFrame below.
   useEffect(() => {
     const container = containerRef.current;
     const stage = stageRef.current;
     if (!container || !stage) return;
 
-    const prefersReducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-
-    if (prefersReducedMotion) {
-      if (layerL1RevealRef.current) {
-        layerL1RevealRef.current.style.opacity = "1";
-        layerL1RevealRef.current.style.pointerEvents = "auto";
-      }
+    if (reducedMotion) {
+      scrollProgressRef.current = 0;
       return;
     }
 
-    // Balanced pacing: 1.5 - 2.5s of deliberate scrolling (crisp, elegant, never sluggish)
-    const isMobile = window.innerWidth < 768;
-    const pinDistance = isMobile ? "+=140%" : "+=180%";
+    const update = () => {
+      const travel = container.offsetHeight - stage.offsetHeight;
+      const top = container.getBoundingClientRect().top;
+      const p = travel > 0 ? -top / travel : 0;
+      scrollProgressRef.current = p < 0 ? 0 : p > 1 ? 1 : p;
+    };
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, [reducedMotion]);
 
-    const ctx = gsap.context(() => {
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: container,
-          pin: stage, // Pin inner stage so container's parent hierarchy in React is never disrupted
-          start: "top top",
-          end: pinDistance,
-          pinSpacing: true,
-          anticipatePin: 1,
-          invalidateOnRefresh: true,
-          scrub: 0.6,
-          onUpdate: (self) => {
-            const p = self.progress;
-            scrollProgressRef.current = p;
-            if (debugScrollSpanRef.current) {
-              debugScrollSpanRef.current.textContent = p.toFixed(3);
-            }
-            // Ensure next section is interactive when established, hero interactive when resting
-            if (layerL1RevealRef.current) {
-              layerL1RevealRef.current.style.pointerEvents =
-                p >= 0.70 ? "auto" : "none";
-            }
-            if (layerL5ContentRef.current) {
-              layerL5ContentRef.current.style.pointerEvents =
-                p <= 0.20 ? "auto" : "none";
-            }
-          },
-        },
-      });
+  // About text elements, faded in as the hero title gives way (bg is always there:
+  // it is the hall seen beyond the doors)
+  const aboutTextRef = useRef<HTMLElement[]>([]);
+  const aboutBloomRef = useRef<HTMLDivElement>(null);
+  const hallGlowRef = useRef<HTMLDivElement>(null);
+  const hallPhotoRef = useRef<HTMLCanvasElement>(null);
 
-      // ── PHASE 3: TYPOGRAPHY-LED HERO RETREAT (0.00 -> 0.28) ────────────────
-      // 1. Large "ENGINEERS' GALA" title recedes smoothly from focus first
-      if (heroTitleRef.current) {
-        tl.to(
-          heroTitleRef.current,
-          {
-            y: -30,
-            scale: 1.05,
-            opacity: 0,
-            filter: "blur(5px)",
-            ease: "power1.inOut",
-            duration: 0.20,
-          },
-          0,
+  // Paint the hall photo once into a tiny canvas: upscaling it on screen gives
+  // a soft, out-of-focus room for free (no per-frame CSS blur filter).
+  useEffect(() => {
+    const canvas = hallPhotoRef.current;
+    if (!canvas) return;
+    const img = new window.Image();
+    img.decoding = "async";
+    img.onload = () => {
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      // Same burgundy atmosphere as the About section's own photo treatment
+      ctx.fillStyle = "rgba(30, 5, 9, 0.72)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // Darker towards the edges so the light gathers around the section
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+      const vignette = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.hypot(cx, cy));
+      vignette.addColorStop(0, "rgba(26, 4, 8, 0)");
+      vignette.addColorStop(1, "rgba(26, 4, 8, 0.75)");
+      ctx.fillStyle = vignette;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    };
+    // Small optimised variant: it only feeds a 64px canvas
+    img.src = "/_next/image?url=%2FAIMG_7652.jpg&w=256&q=60";
+    return () => {
+      img.onload = null;
+    };
+  }, [reducedMotion]);
+  useEffect(() => {
+    const root = layerL1RevealRef.current;
+    aboutTextRef.current = root
+      ? (["about-label", "about-heading", "about-divider", "about-body"]
+          .map((c) => root.querySelector<HTMLElement>(`.${c}`))
+          .filter(Boolean) as HTMLElement[])
+      : [];
+  }, [reducedMotion]);
+
+  // Single per-frame writer for every DOM layer, called by the 3D canvas right
+  // after it positions the camera. Only transform/opacity are touched.
+  const handleFrame = useCallback((frame: EntranceFrame) => {
+    const a = frame.approach;
+    // All timings are in scroll progress of the pinned hero (0..1)
+    const p = frame.progress;
+    const span = (start: number, end: number) =>
+      smoothstep01((p - start) / (end - start));
+
+    // 1. The hero typography holds through most of the approach, then recedes
+    //    as the doorway fills the frame, just before About appears (~88%). Depth-consistent drift:
+    //    elements above the horizon slide up, those below slide down.
+    const titleK = span(0.5, 0.84);
+    setLayer(heroTitleRef.current, 1 - titleK, -32 * titleK, 1 + 0.03 * titleK);
+    setLayer(heroBackdropVignetteRef.current, 1 - titleK);
+    const subtitleK = span(0.45, 0.8);
+    setLayer(heroSubtitleRef.current, 1 - subtitleK, -12 * subtitleK);
+    const ctaK = span(0.3, 0.6);
+    setLayer(heroCtaRef.current, 1 - ctaK, 16 * ctaK);
+    const countdownK = span(0.2, 0.5);
+    setLayer(heroCountdownRef.current, 1 - countdownK, 24 * countdownK);
+
+    if (layerL5ContentRef.current) {
+      layerL5ContentRef.current.style.pointerEvents = p < 0.3 ? "" : "none";
+    }
+
+    // 2. About the Event is seen through the doorway. Its transform is the
+    //    doorway's projection through the same camera, so it grows with real
+    //    perspective and is exactly 1:1 when the camera comes to rest.
+    //    Nothing of it shows from afar: the doorway stays dark until the doors
+    //    are open, then the hall beyond materialises, unfolding from the centre
+    //    of the opening behind a brief warm bloom of light.
+    const about = layerL1RevealRef.current;
+    if (about) {
+      // Nothing of it until ~88% of the scroll, then it materialises quickly
+      const revealK = span(0.88, 0.96);
+      const { x, y, scale } = frame.doorway;
+      about.style.visibility = revealK > 0 ? "visible" : "hidden";
+      about.style.transform = frame.arrived
+        ? "none"
+        : `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0) scale(${scale.toFixed(5)})`;
+      about.style.pointerEvents = frame.arrived ? "auto" : "none";
+      // (a) Soft-edged ellipse growing from the middle of the doorway past the corners.
+      // (b) Feathered edges, so the section melts into the lit hall instead of
+      //     reading as a box; they tighten to nothing as the camera arrives,
+      //     where the section fills the viewport exactly.
+      const inner = revealK * 120;
+      const feather = 14 * (1 - smoothstep01((a - 0.8) / 0.2));
+      const layers: string[] = [];
+      if (revealK < 1) {
+        layers.push(
+          `radial-gradient(ellipse 50% 50% at 50% 50%, #000 ${inner.toFixed(1)}%, transparent ${(inner + 45).toFixed(1)}%)`,
         );
       }
-
-      // 2. Subtitle "WHERE AMBITION MEETS OPPORTUNITY." fades SLIGHTLY LATER than main title
-      if (heroSubtitleRef.current) {
-        tl.to(
-          heroSubtitleRef.current,
-          {
-            y: -18,
-            opacity: 0,
-            filter: "blur(4px)",
-            ease: "power1.inOut",
-            duration: 0.20,
-          },
-          0.08,
+      if (feather > 0.05) {
+        const f = feather.toFixed(2);
+        const g = (100 - feather).toFixed(2);
+        layers.push(
+          `linear-gradient(to right, transparent 0%, #000 ${f}%, #000 ${g}%, transparent 100%)`,
+          `linear-gradient(to bottom, transparent 0%, #000 ${f}%, #000 ${g}%, transparent 100%)`,
         );
       }
-
-      // 2b. Hero Invitation CTA button fades out with subtitle
-      if (heroCtaRef.current) {
-        tl.to(
-          heroCtaRef.current,
-          {
-            y: -14,
-            opacity: 0,
-            filter: "blur(3px)",
-            ease: "power1.inOut",
-            duration: 0.18,
-          },
-          0.06,
-        );
+      const mask = layers.length ? layers.join(", ") : "none";
+      about.style.maskImage = mask;
+      about.style.setProperty("-webkit-mask-image", mask);
+      about.style.maskComposite = "intersect";
+      about.style.setProperty("-webkit-mask-composite", "source-in");
+      if (aboutBloomRef.current) {
+        aboutBloomRef.current.style.opacity = (Math.sin(Math.PI * revealK) * 0.85).toFixed(3);
       }
 
-      // 3. Central countdown bar fades out cleanly
-      if (heroCountdownRef.current) {
-        tl.to(
-          heroCountdownRef.current,
-          {
-            y: 15,
-            opacity: 0,
-            ease: "power1.inOut",
-            duration: 0.18,
-          },
-          0.02,
-        );
+      // The hall beyond the doors: dark until they open, then warmly lit around
+      // the section, so the opening has depth and the glass leaves read as glass.
+      const hallK = span(0.84, 0.93);
+      const hallGlow = hallGlowRef.current;
+      if (hallGlow) {
+        hallGlow.style.opacity = hallK.toFixed(3);
+        hallGlow.style.transform = `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0) scale(${scale.toFixed(5)})`;
       }
-
-      // 4. Subtle contrast vignette behind typography fades away
-      if (heroBackdropVignetteRef.current) {
-        tl.to(
-          heroBackdropVignetteRef.current,
-          {
-            opacity: 0,
-            ease: "power1.inOut",
-            duration: 0.18,
-          },
-          0,
-        );
+      // The gala itself fills the whole opening: a soft, out-of-focus view of
+      // the room (cover-fitted to the hall seen beyond the doors), so the
+      // tall doorway is never empty around the section.
+      const hallPhoto = hallPhotoRef.current;
+      if (hallPhoto) {
+        const { left, top, width, height } = frame.hall;
+        const w = Math.max(width, height * HALL_PHOTO_ASPECT);
+        const h = w / HALL_PHOTO_ASPECT;
+        const px = left + (width - w) / 2;
+        const py = top + (height - h) / 2;
+        // Appears with the reveal, so nothing of the gala shows from afar
+        hallPhoto.style.opacity = span(0.87, 0.95).toFixed(3);
+        hallPhoto.style.transform = `translate3d(${px.toFixed(1)}px, ${py.toFixed(1)}px, 0) scale(${(w / HALL_PHOTO_BASE_W).toFixed(4)})`;
       }
+    }
 
-      // ── PHASE 5: ABOUT THE EVENT SECTION & TYPOGRAPHY REVEAL (0.48 -> 0.78) ───
-      // The section emerges beyond the entrance as the camera passes through the doorway
-      if (layerL1RevealRef.current) {
-        const aboutRoot = layerL1RevealRef.current;
-        const aboutBg = aboutRoot.querySelector(".about-bg");
-        const aboutLabel = aboutRoot.querySelector(".about-label");
-        const aboutHeading = aboutRoot.querySelector(".about-heading");
-        const aboutDivider = aboutRoot.querySelector(".about-divider");
-        const aboutBody = aboutRoot.querySelector(".about-body");
+    // 3. Its heading settles in once the hall has appeared (long after the
+    //    hero title has gone, so the two headlines never overlap).
+    const [label, heading, divider, body] = aboutTextRef.current;
+    const labelK = span(0.9, 0.95);
+    const headingK = span(0.905, 0.96);
+    const dividerK = span(0.92, 0.97);
+    const bodyK = span(0.925, 0.975);
+    setLayer(label, labelK, 8 * (1 - labelK));
+    setLayer(heading, headingK, 14 * (1 - headingK));
+    if (divider) {
+      divider.style.opacity = dividerK.toFixed(3);
+      divider.style.transform = dividerK >= 1 ? "" : `scaleX(${dividerK.toFixed(4)})`;
+    }
+    setLayer(body, bodyK, 10 * (1 - bodyK));
 
-        // Section container emergence
-        tl.fromTo(
-          aboutRoot,
-          { opacity: 0 },
-          {
-            opacity: 1,
-            ease: "power1.inOut",
-            duration: 0.22,
-          },
-          0.48,
-        );
-
-        // Atmosphere & attendee photography
-        if (aboutBg) {
-          tl.fromTo(
-            aboutBg,
-            { opacity: 0, scale: 1.06 },
-            {
-              opacity: 1,
-              scale: 1.0,
-              ease: "power2.out",
-              duration: 0.24,
-            },
-            0.48,
-          );
-        }
-
-        // Category label ("THE GALA MANIFESTO") with subtle lift
-        if (aboutLabel) {
-          tl.fromTo(
-            aboutLabel,
-            { opacity: 0, y: 16 },
-            {
-              opacity: 1,
-              y: 0,
-              ease: "power2.out",
-              duration: 0.18,
-            },
-            0.52,
-          );
-        }
-
-        // About Heading ("One day. The right people. Endless possibilities.") with refined upward movement
-        if (aboutHeading) {
-          tl.fromTo(
-            aboutHeading,
-            { opacity: 0, y: 28 },
-            {
-              opacity: 1,
-              y: 0,
-              ease: "power2.out",
-              duration: 0.22,
-            },
-            0.56,
-          );
-        }
-
-        // Silver divider line expands smoothly
-        if (aboutDivider) {
-          tl.fromTo(
-            aboutDivider,
-            { scaleX: 0, opacity: 0 },
-            {
-              scaleX: 1,
-              opacity: 1,
-              ease: "power2.out",
-              duration: 0.18,
-            },
-            0.60,
-          );
-        }
-
-        // Editorial lead paragraph fades in
-        if (aboutBody) {
-          tl.fromTo(
-            aboutBody,
-            { opacity: 0, y: 16 },
-            {
-              opacity: 1,
-              y: 0,
-              ease: "power2.out",
-              duration: 0.20,
-            },
-            0.64,
-          );
-        }
-      }
-    }, container);
-
-    return () => ctx.revert();
+    if (debugScrollSpanRef.current) {
+      debugScrollSpanRef.current.textContent = frame.progress.toFixed(3);
+    }
   }, []);
 
+
   return (
-    <div ref={containerRef} className="relative w-full" id="home">
-      {/* Pinned Stage Element: EXACT website background token var(--color-dark) (#2D070D) */}
+    <div
+      ref={containerRef}
+      // Scroll length of the move: 1 viewport of stage + 120% (phones) / 150%
+      className={`relative w-full ${reducedMotion ? "" : "h-[220svh] md:h-[250svh]"}`}
+      id="home"
+    >
+      {/* Sticky Stage Element: EXACT website background token var(--color-dark) (#2D070D) */}
       <div
         ref={stageRef}
-        className="relative w-full h-[100svh] min-h-[100svh] overflow-hidden text-[var(--color-cream)] bg-[#2D070D] bg-[radial-gradient(ellipse_at_50%_35%,#3D0812_0%,#2D070D_65%,#1E0409_100%)]"
+        className={`${reducedMotion ? "relative" : "sticky top-0"} w-full h-[100svh] min-h-[100svh] overflow-hidden text-[var(--color-cream)] bg-[#2D070D] bg-[radial-gradient(ellipse_at_50%_35%,#3D0812_0%,#2D070D_65%,#1E0409_100%)]`}
       >
+        {/* About the Event, BEHIND the 3D canvas: it is seen through the doorway,
+            where the scene clears the canvas to transparent. Transform written
+            per frame by handleFrame from the doorway's projection. */}
+        {/* The hall beyond the doors (only ever seen through the doorway) */}
+        {!reducedMotion && (
+          <div aria-hidden="true" className="absolute inset-0 z-0 bg-[#1a0408] pointer-events-none overflow-hidden">
+            <canvas
+              ref={hallPhotoRef}
+              width={64}
+              height={Math.round(64 / HALL_PHOTO_ASPECT)}
+              className="absolute left-0 top-0 will-change-transform"
+              style={{
+                width: HALL_PHOTO_BASE_W,
+                height: HALL_PHOTO_BASE_W / HALL_PHOTO_ASPECT,
+                transformOrigin: "0 0",
+                opacity: 0,
+              }}
+            />
+            <div
+              ref={hallGlowRef}
+              className="absolute -inset-[60%] will-change-transform bg-[radial-gradient(ellipse_32%_34%_at_50%_50%,rgba(122,26,42,0.75)_0%,rgba(70,12,22,0.55)_45%,rgba(26,4,8,0)_100%)]"
+              style={{ opacity: 0, transformOrigin: "50% 50%" }}
+            />
+          </div>
+        )}
+        {!reducedMotion && (
+          <div
+            ref={layerL1RevealRef}
+            id="manifesto-arrival"
+            className="absolute inset-0 z-0 pointer-events-none will-change-transform overflow-hidden"
+            style={{ transformOrigin: "50% 50%", visibility: "hidden" }}
+          >
+            <ManifestoSection />
+            {/* Warm light blooming in the doorway as the hall appears */}
+            <div
+              ref={aboutBloomRef}
+              aria-hidden="true"
+              className="absolute inset-0 pointer-events-none mix-blend-screen bg-[radial-gradient(ellipse_at_center,rgba(242,232,216,0.55)_0%,rgba(190,70,90,0.22)_38%,transparent_72%)]"
+              style={{ opacity: 0 }}
+            />
+          </div>
+        )}
+
         {/* REAL 3D BURGUNDY & SILVER ENTRANCE MODEL (Live Three.js) */}
-        <div className="absolute inset-0 w-full h-full z-[1] pointer-events-auto">
-          <Real3DEntranceCanvas scrollProgressRef={scrollProgressRef} />
+        <div className="absolute inset-0 w-full h-full z-[1] pointer-events-none">
+          <Real3DEntranceCanvas
+            scrollProgressRef={scrollProgressRef}
+            onFrame={handleFrame}
+          />
         </div>
 
         {/* =====================================================================
             3. PINNED VIEWPORT STAGE & DOM OVERLAYS
             ===================================================================== */}
         <div className="relative w-full h-full overflow-hidden flex flex-col justify-between z-10 pointer-events-none">
-          {/* Layer 1: Next-Section Arrival (Manifesto / About the Event) */}
-          <div
-            ref={layerL1RevealRef}
-            id="manifesto-arrival"
-            className="absolute inset-0 z-20 pointer-events-none will-change-transform overflow-hidden"
-            style={{
-              transformOrigin: "50% 50%",
-              opacity: 0,
-            }}
-          >
-            <ManifestoSection />
-          </div>
-
           {/* =====================================================================
               LAYER 5 (L5): HERO CONTENT & BRANDING (Top Readable Layer)
               ===================================================================== */}
@@ -493,6 +515,9 @@ export default function LayeredPortalHero() {
           )}
         </div>
       </div>
+
+      {/* Reduced motion: the hero stays still and About follows in normal flow */}
+      {reducedMotion && <ManifestoSection />}
     </div>
   );
 }

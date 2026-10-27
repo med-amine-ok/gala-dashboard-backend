@@ -13,13 +13,92 @@ import {
   createGalaStudioEnvironmentMap,
 } from "./TextureGenerator";
 
+/**
+ * Per-frame state of the single scroll-driven camera move. Everything the DOM
+ * layers do (hero typography, About section) is derived from this so that the
+ * camera, the type and the section reveal can never drift apart.
+ */
+export interface EntranceFrame {
+  /** Smoothed scroll progress of the pinned hero, 0..1 */
+  progress: number;
+  /** Camera travel from its resting spot to its final spot in the doorway, 0..1 */
+  approach: number;
+  /** Camera has reached its final position: the doorway fills the viewport 1:1 */
+  arrived: boolean;
+  /** CSS transform placing the viewport-sized About section in the doorway opening */
+  doorway: { x: number; y: number; scale: number };
+  /** Screen rectangle (px) of the hall seen beyond the doors (the see-through plane) */
+  hall: { left: number; top: number; width: number; height: number };
+}
+
 interface Real3DEntranceCanvasProps {
   scrollProgress?: number;
   scrollProgressRef?:
     | React.RefObject<number | null>
     | React.MutableRefObject<number>;
   onLoaded?: () => void;
+  onFrame?: (frame: EntranceFrame) => void;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   CAMERA RIG
+   A short push up the red carpet into the portal's own passage. The About
+   section is seen through the doorway: it is laid out on a plane just behind
+   the open doors, contained within the 2.4m x 3.2m door opening. The camera
+   stops exactly where that plane fills the viewport, so the section is at 1:1
+   when the hero releases.
+   ───────────────────────────────────────────────────────────────────────────── */
+const FLOOR_IN = 0.48; // top of the entrance platform
+const DOOR_OPEN_H = 3.2; // threshold (0.48) to transom bar (3.68)
+const DOOR_CENTER_Y = FLOOR_IN + DOOR_OPEN_H / 2;
+// Clear view between the open leaves: at 85° their free edges sit at |x| = 1.09m,
+// so the section is fitted inside that, leaving every leaf fully out of frame on arrival
+const VIEW_MAX_W = 2.16;
+const VIEW_MAX_H = 3.1;
+// Just beyond the swing of the open leaves (1.2m), inside the existing foyer
+const BEYOND_Z = -1.26;
+// See-through plane spans the foyer cross-section (4.6m x 6.4m above the floor)
+const HALL_HALF_W = 2.3;
+const HALL_TOP_Y = 6.88;
+// Standing eye height on the platform, level with the middle of the doorway
+const EYE_Y = DOOR_CENTER_Y;
+
+interface CameraRig {
+  fov: number;
+  startZ: number;
+  startY: number;
+  startPitch: number;
+  endZ: number;
+  /** About section's rectangle in the doorway (same aspect as the viewport) */
+  viewW: number;
+  viewH: number;
+}
+
+function getCameraRig(aspect: number): CameraRig {
+  const fov = aspect < 0.65 ? 58 : aspect < 1.0 ? 44 : 34;
+  const startZ = aspect < 0.65 ? 20.5 : aspect < 1.0 ? 17.2 : 14.2;
+  const startY = aspect < 0.65 ? 2.45 : aspect < 1.0 ? 1.95 : 1.65;
+  const startLookY = aspect < 1.0 ? 3.05 : 2.85;
+  // Contain the viewport-shaped section inside the door opening
+  const viewH = Math.min(VIEW_MAX_H, VIEW_MAX_W / aspect);
+  const viewW = viewH * aspect;
+  const fillDistance = viewH / (2 * Math.tan(THREE.MathUtils.degToRad(fov / 2)));
+  return {
+    fov,
+    startZ,
+    startY,
+    startPitch: Math.atan2(startLookY - startY, startZ),
+    endZ: BEYOND_Z + fillDistance,
+    viewW,
+    viewH,
+  };
+}
+
+const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
+const smoothstep = (edge0: number, edge1: number, v: number) => {
+  const t = clamp01((v - edge0) / (edge1 - edge0));
+  return t * t * (3 - 2 * t);
+};
 
 /* ─────────────────────────────────────────────────────────────────────────────
    PBR OFFICIAL BANNER TEXTURES
@@ -480,9 +559,15 @@ export default function Real3DEntranceCanvas({
   scrollProgress,
   scrollProgressRef,
   onLoaded,
+  onFrame,
 }: Real3DEntranceCanvasProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<number>(0);
+  const onFrameRef = useRef(onFrame);
+
+  useEffect(() => {
+    onFrameRef.current = onFrame;
+  }, [onFrame]);
 
   useEffect(() => {
     if (typeof scrollProgress === "number" && !isNaN(scrollProgress)) {
@@ -520,6 +605,10 @@ export default function Real3DEntranceCanvas({
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.shadowMap.enabled = !isMobile;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    // Every shadow caster is static (the doors cast none), so the shadow map is
+    // rendered once instead of every frame; refreshed on resize.
+    renderer.shadowMap.autoUpdate = false;
+    renderer.shadowMap.needsUpdate = true;
 
     renderer.domElement.style.position = "absolute";
     renderer.domElement.style.top = "0";
@@ -537,14 +626,11 @@ export default function Real3DEntranceCanvas({
 
     // ── 3. CAMERA SETUP ──────────────────────────────────────────────────────
     const aspect = width / height;
-    const baseFov = aspect < 0.65 ? 58 : aspect < 1.0 ? 44 : 34;
-    const camera = new THREE.PerspectiveCamera(baseFov, aspect, 0.1, 100);
-
-    const baseZ = aspect < 0.65 ? 20.5 : aspect < 1.0 ? 17.2 : 14.2;
-    const baseY = aspect < 0.65 ? 2.45 : aspect < 1.0 ? 1.95 : 1.65;
-    camera.position.set(0, baseY, baseZ);
-    const initialLookY = aspect < 1.0 ? 3.05 : 2.85;
-    camera.lookAt(0, initialLookY, 0);
+    let rig = getCameraRig(aspect);
+    // Near plane kept small: the camera passes within ~1m of the door reveals
+    const camera = new THREE.PerspectiveCamera(rig.fov, aspect, 0.05, 100);
+    camera.position.set(0, rig.startY, rig.startZ);
+    camera.rotation.set(rig.startPitch, 0, 0, "YXZ");
 
     // Resource tracking for leak-free unmount
     const geometries: THREE.BufferGeometry[] = [];
@@ -672,6 +758,10 @@ export default function Real3DEntranceCanvas({
         envMapIntensity: 2.2,
       }),
     );
+    // envMapIntensity is ignored for scene.environment; with the full-strength
+    // studio map, the leaves read as pale grey slabs once swung to ~45°.
+    matDoorGlass.envMap = envTarget.texture;
+    matDoorGlass.envMapIntensity = 0.12;
 
     // 5. Red carpet velvet (Deep royal gala crimson: #B81D35 with woven microtexture & cloth sheen)
     const matRedCarpet = trackMat(
@@ -1112,6 +1202,8 @@ export default function Real3DEntranceCanvas({
     const DOOR_FRAME_T = 0.045;
     const DOOR_THICK = 0.035;
 
+    // Leaves are hinged on the outer jambs (x = ±1.2) and swing INTO the foyer,
+    // so once open they stand clear beside the camera path instead of in the passage.
     const createDoorAssembly = (side: -1 | 1): THREE.Group => {
       const doorPivot = new THREE.Group();
       doorPivot.position.set(side * DOOR_LEAF_W, 0.48, 0.0);
@@ -1254,9 +1346,51 @@ export default function Real3DEntranceCanvas({
     const CORRIDOR_D = 12.0;
     const CORRIDOR_Z = -CORRIDOR_D / 2;
 
-    createBox(0.2, CORRIDOR_H, CORRIDOR_D, matPortalStone, [-CORRIDOR_W / 2 - 0.1, 0.48 + CORRIDOR_H / 2, CORRIDOR_Z], false, true);
-    createBox(0.2, CORRIDOR_H, CORRIDOR_D, matPortalStone, [CORRIDOR_W / 2 + 0.1, 0.48 + CORRIDOR_H / 2, CORRIDOR_Z], false, true);
-    createBox(CORRIDOR_W + 0.4, 0.2, CORRIDOR_D, matPortalStone, [0, 0.48 + CORRIDOR_H + 0.1, CORRIDOR_Z], false, true);
+    // Foyer shell casts shadows so the exterior key light cannot flood the interior
+    // through a roof that should be solid. Same stone, but in interior light: the
+    // unshadowed exterior fills would otherwise wash the walls cream.
+    // Interior surfaces ignore the exterior directional and spot lights (key, rim,
+    // wash, sconces, grazers): none of them cast shadows, so they would shine
+    // straight through the façade. Only ambient/hemisphere fill and the foyer's own
+    // point light reach them, which also stays correct on mobile (no shadow maps).
+    const interiorLightingOnly = <T extends THREE.Material>(m: T): T => {
+      m.onBeforeCompile = (shader) => {
+        shader.fragmentShader = shader.fragmentShader.replace(
+          "#include <lights_fragment_begin>",
+          THREE.ShaderChunk.lights_fragment_begin
+            .replace("#if ( NUM_DIR_LIGHTS > 0 ) && defined( RE_Direct )", "#if 0")
+            .replace("#if ( NUM_SPOT_LIGHTS > 0 ) && defined( RE_Direct )", "#if 0"),
+        );
+      };
+      m.customProgramCacheKey = () => "gala-interior-lighting";
+      return m;
+    };
+    const matFoyerStone = trackMat(interiorLightingOnly(matPortalStone.clone()));
+    matFoyerStone.color.set(0xb07a84);
+    // The exterior studio environment would read as daylight indoors (and at the
+    // foyer's grazing angles its Fresnel reflection washes the walls cream).
+    // envMapIntensity only applies to a material's own envMap, not scene.environment.
+    matFoyerStone.envMap = envTarget.texture;
+    matFoyerStone.envMapIntensity = 0.12;
+    createBox(0.2, CORRIDOR_H, CORRIDOR_D, matFoyerStone, [-CORRIDOR_W / 2 - 0.1, 0.48 + CORRIDOR_H / 2, CORRIDOR_Z], true, true);
+    createBox(0.2, CORRIDOR_H, CORRIDOR_D, matFoyerStone, [CORRIDOR_W / 2 + 0.1, 0.48 + CORRIDOR_H / 2, CORRIDOR_Z], true, true);
+    createBox(CORRIDOR_W + 0.4, 0.2, CORRIDOR_D, matFoyerStone, [0, 0.48 + CORRIDOR_H + 0.1, CORRIDOR_Z], true, true);
+
+    // Foyer floor (previously missing: the void beside the carpet showed through)
+    const foyerFloorG = trackGeom(new THREE.PlaneGeometry(CORRIDOR_W, CORRIDOR_D));
+    // Match the plaza's slab scale (its 38m x 24m plane maps the full texture repeat)
+    const foyerUv = foyerFloorG.attributes.uv as THREE.BufferAttribute;
+    for (let i = 0; i < foyerUv.count; i++) {
+      foyerUv.setXY(i, foyerUv.getX(i) * (CORRIDOR_W / 38), foyerUv.getY(i) * (CORRIDOR_D / 24));
+    }
+    const matFoyerFloor = trackMat(interiorLightingOnly(matPlazaFloor.clone()));
+    matFoyerFloor.envMap = envTarget.texture;
+    matFoyerFloor.envMapIntensity = 0.25;
+    const foyerFloorMesh = new THREE.Mesh(foyerFloorG, matFoyerFloor);
+    foyerFloorMesh.rotation.x = -Math.PI / 2;
+    foyerFloorMesh.position.set(0, 0.48 + 0.001, CORRIDOR_Z);
+    foyerFloorMesh.receiveShadow = true;
+    root.add(foyerFloorMesh);
 
     // Warm illuminated feature wall at corridor end in deep burgundy
     const corridorEndG = trackGeom(new THREE.PlaneGeometry(CORRIDOR_W, CORRIDOR_H));
@@ -1271,9 +1405,32 @@ export default function Real3DEntranceCanvas({
     root.add(corridorEndMesh);
 
     // Warm inviting corridor light glowing subtly through the glass doors
-    const corridorLight = new THREE.PointLight(0xffdcb4, 0.55, 14.0, 2.0);
+    const corridorLight = new THREE.PointLight(0xffdcb4, 2.4, 14.0, 2.0);
     corridorLight.position.set(0, 3.4, -4.5);
     root.add(corridorLight);
+
+    // See-through to the About section. A plane spanning the foyer just beyond the
+    // open door leaves clears the canvas to transparent, so the real About section
+    // (laid out behind the canvas) is seen through the doorway. Depth testing keeps
+    // everything in front of it correct: door frames, glass, sidelights, transom.
+    const seeThroughMat = trackMat(
+      new THREE.MeshBasicMaterial({
+        blending: THREE.CustomBlending,
+        blendEquation: THREE.AddEquation,
+        blendSrc: THREE.ZeroFactor,
+        blendDst: THREE.ZeroFactor,
+        blendSrcAlpha: THREE.ZeroFactor,
+        blendDstAlpha: THREE.ZeroFactor,
+        fog: false,
+        toneMapped: false,
+      }),
+    );
+    const seeThroughMesh = new THREE.Mesh(
+      trackGeom(new THREE.PlaneGeometry(CORRIDOR_W, CORRIDOR_H)),
+      seeThroughMat,
+    );
+    seeThroughMesh.position.set(0, 0.48 + CORRIDOR_H / 2, BEYOND_Z);
+    root.add(seeThroughMesh);
 
     /* ─────────────────────────────────────────────────────────────────────────
        PART 5: ARCHITECTURAL ENTRANCE STEPS
@@ -1983,6 +2140,9 @@ export default function Real3DEntranceCanvas({
       window.addEventListener("mouseleave", onMouseLeave, { passive: true });
     }
 
+    // Set whenever the DOM layers need a fresh frame state even if progress is unchanged
+    let frameDirty = true;
+
     const handleResize = () => {
       if (!mount) return;
       width = mount.clientWidth || window.innerWidth;
@@ -1990,9 +2150,12 @@ export default function Real3DEntranceCanvas({
       isMobile = width < 768;
 
       const newAspect = width / height;
+      rig = getCameraRig(newAspect);
       camera.aspect = newAspect;
-      camera.fov = newAspect < 0.65 ? 58 : newAspect < 1.0 ? 44 : 34;
+      camera.fov = rig.fov;
       camera.updateProjectionMatrix();
+      renderer.shadowMap.needsUpdate = true;
+      frameDirty = true;
 
       if (sideDecorationsGroup) {
         sideDecorationsGroup.visible = !isMobile && newAspect >= 1.0;
@@ -2064,21 +2227,84 @@ export default function Real3DEntranceCanvas({
     };
     document.addEventListener("visibilitychange", onVisibilityChange);
 
-    // ── 10. SCROLL-DRIVEN CAMERA TRAJECTORY & DYNAMIC DOORS ANIMATION ─────────
+    // ── 10. SCROLL-DRIVEN CAMERA MOVE ────────────────────────────────────────
+    // One progress value drives one short camera path: establish → approach up
+    // the carpet → climb the steps → come to rest in the portal's own passage,
+    // looking through the open doors at the About section beyond. Position and
+    // orientation are pure functions of progress, so scrolling back retraces
+    // exactly the same path.
     let animId: number;
     let lastTime = performance.now();
+    let smoothP = -1; // < 0 snaps to the current scroll position on the first frame
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    const lookTarget = new THREE.Vector3();
+    const projCenter = new THREE.Vector3();
+    const projTop = new THREE.Vector3();
+    const projBottom = new THREE.Vector3();
+    const hallTL = new THREE.Vector3();
+    const hallBR = new THREE.Vector3();
 
-    const activeBaseZ = aspect < 0.65 ? 20.5 : aspect < 1.0 ? 17.2 : 14.2;
-    const activeBaseY = aspect < 0.65 ? 2.45 : aspect < 1.0 ? 1.95 : 1.65;
-    let camZ = activeBaseZ;
-    let camY = activeBaseY;
+    const STEP_CLIMB_START_Z = 4.6; // in front of the first riser (z = 3.35)
+    // Doors swing open over this part of the move (same rhythm on every screen size);
+    // the About section only materialises in the doorway once they are open
+    const DOOR_OPEN_START = 0.28;
+    const DOOR_OPEN_END = 0.6;
 
-    const computeTrajectory = (p: number, bZ: number, bY: number) => {
-      const eased = Math.pow(p, 1.15);
-      const targetZ = bZ - eased * (bZ + 7.5);
-      const stepLift = Math.sin(Math.min(1.0, p / 0.60) * Math.PI * 0.5) * 0.48;
-      const targetY = bY + stepLift - p * 0.15;
-      return { targetZ, targetY };
+    // Scroll ranges: a short stable opening, the move, then a short hold on the
+    // arrival so the camera has fully settled before the hero releases.
+    const JOURNEY_START = 0.04;
+    // About appears from ~88%; the camera is still walking in as it does
+    const JOURNEY_END = 0.97;
+
+    // Sine ease blended with constant speed: gentle start, soft controlled finish
+    // as the doorway fills the frame, no mid-path rush
+    const easeJourney = (p: number) => {
+      const t = clamp01((p - JOURNEY_START) / (JOURNEY_END - JOURNEY_START));
+      return 0.65 * t + 0.35 * (0.5 - 0.5 * Math.cos(Math.PI * t));
+    };
+
+    // Critically damped spring on progress: wheel notches blend into one
+    // continuous move with no velocity jumps, and it never overshoots from rest.
+    const SPRING_W = 11; // ~0.35s to cover 90% of a scroll step
+    let springV = 0;
+
+    const readTargetProgress = () => {
+      const fromRef = scrollProgressRef?.current;
+      if (typeof fromRef === "number" && !isNaN(fromRef)) return clamp01(fromRef);
+      if (typeof scrollRef.current === "number" && !isNaN(scrollRef.current)) {
+        return clamp01(scrollRef.current);
+      }
+      return 0;
+    };
+
+    const emitFrame = (s: number) => {
+      const cb = onFrameRef.current;
+      if (!cb) return;
+      camera.updateMatrixWorld();
+      projCenter.set(0, DOOR_CENTER_Y, BEYOND_Z).project(camera);
+      projTop.set(0, DOOR_CENTER_Y + rig.viewH / 2, BEYOND_Z).project(camera);
+      projBottom.set(0, DOOR_CENTER_Y - rig.viewH / 2, BEYOND_Z).project(camera);
+      hallTL.set(-HALL_HALF_W, HALL_TOP_Y, BEYOND_Z).project(camera);
+      hallBR.set(HALL_HALF_W, FLOOR_IN, BEYOND_Z).project(camera);
+      cb({
+        progress: smoothP,
+        approach: s,
+        arrived: s >= 1,
+        doorway: {
+          x: (projCenter.x * width) / 2,
+          y: (-projCenter.y * height) / 2,
+          // NDC spans 2 units across the viewport
+          scale: (projTop.y - projBottom.y) / 2,
+        },
+        hall: {
+          left: ((hallTL.x + 1) * width) / 2,
+          top: ((1 - hallTL.y) * height) / 2,
+          width: ((hallBR.x - hallTL.x) * width) / 2,
+          height: ((hallTL.y - hallBR.y) * height) / 2,
+        },
+      });
     };
 
     let hasRenderedFirstFrame = false;
@@ -2090,71 +2316,73 @@ export default function Real3DEntranceCanvas({
       lastTime = currentTime;
       hasRenderedFirstFrame = true;
 
-      if (!isMobile) {
-        currentParallaxX += (mouseX - currentParallaxX) * 0.05;
-        currentParallaxY += (mouseY - currentParallaxY) * 0.05;
+      const parallaxK = 1 - Math.exp(-delta * 3.2);
+      currentParallaxX += ((isMobile ? 0 : mouseX) - currentParallaxX) * parallaxK;
+      currentParallaxY += ((isMobile ? 0 : mouseY) - currentParallaxY) * parallaxK;
+
+      // Frame-rate independent spring (fixed sub-steps). At rest it converges
+      // exactly on the scroll position, so the camera state stays deterministic.
+      const targetP = readTargetProgress();
+      const prevP = smoothP;
+      if (smoothP < 0 || prefersReducedMotion) {
+        smoothP = targetP;
+        springV = 0;
       } else {
-        currentParallaxX += (0 - currentParallaxX) * 0.1;
-        currentParallaxY += (0 - currentParallaxY) * 0.1;
+        for (let remaining = delta; remaining > 1e-6; ) {
+          const h = Math.min(remaining, 1 / 240);
+          springV +=
+            (SPRING_W * SPRING_W * (targetP - smoothP) - 2 * SPRING_W * springV) * h;
+          smoothP += springV * h;
+          remaining -= h;
+        }
+        if (Math.abs(targetP - smoothP) < 1e-4 && Math.abs(springV) < 1e-3) {
+          smoothP = targetP;
+          springV = 0;
+        }
       }
 
-      // Safe, zero-latency scroll progress read
-      let rawP = 0;
-      if (
-        scrollProgressRef &&
-        typeof scrollProgressRef.current === "number" &&
-        !isNaN(scrollProgressRef.current)
-      ) {
-        rawP = scrollProgressRef.current;
-      } else if (
-        typeof scrollRef.current === "number" &&
-        !isNaN(scrollRef.current)
-      ) {
-        rawP = scrollRef.current;
-      } else if (typeof scrollProgress === "number" && !isNaN(scrollProgress)) {
-        rawP = scrollProgress;
-      }
-      const p = Math.max(0, Math.min(1.0, rawP));
+      const s = easeJourney(smoothP);
+      const z = THREE.MathUtils.lerp(rig.startZ, rig.endZ, s);
+      // Rise onto the platform while physically passing over the steps, arriving
+      // at eye level with the middle of the doorway
+      const y = THREE.MathUtils.lerp(
+        rig.startY,
+        EYE_Y,
+        smoothstep(STEP_CLIMB_START_Z, rig.endZ, z),
+      );
+      // The establishing shot's slight upward tilt levels out on arrival
+      const pitch = rig.startPitch * (1 - smoothstep(rig.startZ, rig.endZ, z));
+      // Mouse parallax only while standing back; centred on the doorway long before arrival
+      const parallax = 1 - smoothstep(0, 0.3, s);
 
-      const curAspect = width / height;
-      const curBaseZ = curAspect < 0.65 ? 20.5 : curAspect < 1.0 ? 17.2 : 14.2;
-      const curBaseY = curAspect < 0.65 ? 2.45 : curAspect < 1.0 ? 1.95 : 1.65;
+      camera.position.set(
+        currentParallaxX * 0.15 * parallax,
+        y + currentParallaxY * 0.1 * parallax,
+        z,
+      );
+      lookTarget.set(
+        currentParallaxX * 0.04 * parallax,
+        camera.position.y + Math.tan(pitch) * rig.startZ - currentParallaxY * 0.04 * parallax,
+        z - rig.startZ,
+      );
+      camera.lookAt(lookTarget);
 
-      const { targetZ, targetY } = computeTrajectory(p, curBaseZ, curBaseY);
+      // Doors swing into the foyer as the visitor walks up, fully open before the steps
+      const doorAngle = smoothstep(DOOR_OPEN_START, DOOR_OPEN_END, s) * Math.PI * 0.47;
+      leftDoorPivot.rotation.y = doorAngle;
+      rightDoorPivot.rotation.y = -doorAngle;
 
-      // Frame-rate independent responsive tracking tightly synchronized with GSAP scrub
-      const lerpFactor = Math.min(1.0, delta * 24);
-      camZ += (targetZ - camZ) * lerpFactor;
-      camY += (targetY - camY) * lerpFactor;
+      // The foyer warms gently as the visitor walks in (no exposure jumps)
+      corridorLight.intensity = 2.0 + s * 1.2;
 
-      // Damping mouse parallax as the camera approaches doorway to guarantee center alignment (x = 0)
-      const parallaxFade = Math.max(0, 1.0 - p * 2.2);
-      camera.position.x = currentParallaxX * 0.15 * parallaxFade;
-      camera.position.y = camY + currentParallaxY * 0.10 * parallaxFade;
-      camera.position.z = camZ;
-
-      const lookZ = Math.min(0, camZ - 8.0);
-      const baseLookY = curAspect < 1.0 ? 3.05 : 2.85;
-      const lookY = baseLookY + currentParallaxY * 0.06 * parallaxFade - p * 0.35;
-      camera.lookAt(currentParallaxX * 0.04 * parallaxFade, lookY, lookZ);
-
-      // Dynamic door swinging inward as user scrolls toward entrance threshold (opens smoothly between p: 0.16 -> 0.52)
-      const doorT = Math.max(0, Math.min(1.0, (p - 0.16) / 0.36));
-      const doorSmooth = doorT * doorT * (3 - 2 * doorT);
-      const targetDoorAngle = doorSmooth * Math.PI * 0.46;
-      leftDoorPivot.rotation.y = -targetDoorAngle;
-      rightDoorPivot.rotation.y = targetDoorAngle;
-
-      // Warm interior atmosphere bloom as visitor passes through the doorway
-      if (corridorLight) {
-        corridorLight.intensity = 0.55 + p * 0.65;
+      if (smoothP !== prevP || frameDirty) {
+        frameDirty = false;
+        emitFrame(s);
       }
 
-      // Extremely subtle, slow procedural fabric breathing in still gala hall indoor air (Requirement 5)
-      if (
-        typeof window !== "undefined" &&
-        !window.matchMedia("(prefers-reduced-motion: reduce)").matches
-      ) {
+      // Extremely subtle, slow procedural fabric breathing in still gala hall indoor air.
+      // Skipped once the banners are behind the camera.
+      if (!prefersReducedMotion && z > WALL_Z - 0.4) {
         const clothT = currentTime * 0.00085; // Slow, continuous ~7.4s cycle
         for (let bIdx = 0; bIdx < activeBannerClothList.length; bIdx++) {
           const { geom, phase } = activeBannerClothList[bIdx];
