@@ -89,6 +89,8 @@
     ]
   },
   "archives": {
+    "roomLabel": "LA GALERIE",
+    "joinCTA": "REJOIGNEZ L'ÉDITION 2026",
     "label": "LES ARCHIVES",
     "headline": "Chaque édition\nlaisse une histoire.",
     "subheadline": "Explorez les chapitres précédents d'excellence technique, de partenariats et de prestige.",
@@ -141,6 +143,7 @@
     }
   },
   "thisYear": {
+    "roomLabel": "LE PROGRAMME",
     "label": "CETTE ANNÉE",
     "headline": "Voici\nGALA 2026.",
     "intro": "Une soirée d'exception structurée autour de quatre piliers majeurs de luxe et d'opportunités.",
@@ -191,6 +194,8 @@
     ]
   },
   "invitations": {
+    "roomLabel": "L'INVITATION",
+    "flipHint": "Touchez le billet pour le retourner",
     "label": "BILLET D'ADMISSION OFFICIEL",
     "headline": "Votre entrée\nvers l'exception.",
     "description": "Un tarif unique symbolique donnant accès à l'ensemble des activités, conférences, stands entreprises, salon de revue de CV et cocktail de networking.",
@@ -240,6 +245,7 @@
     ]
   },
   "story": {
+    "roomLabel": "LES HÔTES",
     "label": "NOTRE HISTOIRE",
     "headline": "L'histoire\nderrière la nuit.",
     "lead": "GALA a été créé autour d'une conviction profonde :\nUne rencontre décisive peut transformer un destin.",
@@ -387,6 +393,10 @@
     }
   },
   "footer": {
+    "countdown": "Les portes s’ouvrent dans {days} jours",
+    "eventLabel": "LA SOIRÉE",
+    "followLabel": "SUIVRE LE CLUB",
+    "backToTop": "Retour à l’entrée",
     "brand": "GALA",
     "tagline": "UNE SOIRÉE D'AMBITION · DE CONNEXION · D'OPPORTUNITÉ",
     "description": "Le rendez-vous d'exception où se rencontrent l'ingénierie d'élite et le leadership industriel.",

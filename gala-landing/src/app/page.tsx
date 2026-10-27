@@ -24,30 +24,30 @@ export default function Home() {
       <NavBar />
 
       <main className="w-full overflow-x-clip">
-        {/* 01 & 02 — HERO PORTAL JOURNEY & THE MANIFESTO */}
+        {/* I & II — THE ENTRANCE (HERO) & THE MANIFESTO */}
         <Accueil />
 
-        {/* 03 — THE FOUR PILLARS */}
-        {/* <section id="piliers">
-          <ExperiencePillars />
-        </section> */}
-
-        {/* 04 — GALA ARCHIVES */}
+        {/* III — THE GALLERY (ARCHIVES) */}
         <section id="historique">
           <Historique />
         </section>
 
-        {/* 05 — INVITATION / TICKET PASS */}
+        {/* IV — THE PROGRAMME (GALA 2026) */}
+        <section id="piliers">
+          <ExperiencePillars />
+        </section>
+
+        {/* V — THE INVITATION */}
         <section id="tarification">
           <Pricing />
         </section>
 
-        {/* 05 — THE STORY (HERITAGE & VIC) */}
+        {/* VI — THE HOSTS (VIC) */}
         <section id="apropos">
           <Apropos />
         </section>
 
-        {/* 06 — FOOTER */}
+        {/* THE FAREWELL (FOOTER) */}
         <section id="footer">
           <Footer />
         </section>

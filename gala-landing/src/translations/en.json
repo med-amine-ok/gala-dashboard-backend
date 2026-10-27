@@ -88,6 +88,8 @@
     ]
   },
   "archives": {
+    "roomLabel": "THE GALLERY",
+    "joinCTA": "JOIN THE 2026 EDITION",
     "label": "THE ARCHIVES",
     "headline": "Every edition\nleaves a story.",
     "subheadline": "Explore previous chapters of engineering excellence, partnership, and prestige.",
@@ -140,6 +142,7 @@
     }
   },
   "thisYear": {
+    "roomLabel": "THE PROGRAMME",
     "label": "THIS YEAR",
     "headline": "This is\nGALA 2026.",
     "intro": "A transcendent evening built around four core pillars of luxury and opportunity.",
@@ -190,6 +193,8 @@
     ]
   },
   "invitations": {
+    "roomLabel": "THE INVITATION",
+    "flipHint": "Tap the ticket to turn it over",
     "label": "OFFICIAL ADMISSION PASS",
     "headline": "Your entrance\nto the evening.",
     "description": "A single symbolic pass granting full access to the complete GALA experience — keynote conferences, corporate exhibition stands, CV review corner, and networking cocktail.",
@@ -239,6 +244,7 @@
     ]
   },
   "story": {
+    "roomLabel": "THE HOSTS",
     "label": "THE STORY",
     "headline": "The story\nbehind the night.",
     "lead": "GALA was created around a simple belief:\nThe right connection can change everything.",
@@ -386,6 +392,10 @@
     }
   },
   "footer": {
+    "countdown": "The doors open in {days} days",
+    "eventLabel": "THE EVENING",
+    "followLabel": "FOLLOW THE CLUB",
+    "backToTop": "Return to the entrance",
     "brand": "GALA",
     "tagline": "AN EVENING OF AMBITION · CONNECTION · OPPORTUNITY",
     "description": "Where ambitious engineers and industry leaders converge in a 5-star digital and live luxury experience.",

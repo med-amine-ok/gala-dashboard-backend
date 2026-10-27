@@ -1,154 +1,149 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useLanguage } from "../../context/LanguageContext";
+import {
+  CountUp,
+  GALA_EASE,
+  RevealHeading,
+  RoomOrnament,
+  RoomSpotlight,
+} from "../components/gala/Room";
 
+/**
+ * VI · THE HOSTS
+ * The Vision & Innovation Club, presented like a house crest: their story on one
+ * side, the club's seal on the other, then the figures and the three principles.
+ */
 export default function AboutUsSection() {
+  const { texts } = useLanguage();
+  const s = texts.story || {};
+  const stats: { value: string; label: string }[] = s.stats || [];
+  const pillars: { title: string; desc: string }[] = s.pillars || [];
+
   return (
-    <section
-      id="apropos"
-      className="relative w-full min-h-[85vh] px-8 py-16 lg:px-20 lg:py-24 flex flex-col justify-between bg-[var(--color-dark)] text-[var(--color-cream)] border-t border-[var(--color-silver)]/20 font-sans overflow-hidden"
-    >
-      {/* Subtle Animated Dark Gradient Atmosphere matching Ticket Section */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-dark)] via-[#360810]/30 to-[var(--color-dark)] pointer-events-none" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(139,30,45,0.22)_0%,transparent_75%)] pointer-events-none" />
+    <section className="relative w-full overflow-hidden bg-[var(--color-dark)] px-6 py-28 text-[var(--color-cream)] sm:px-12 sm:py-36 font-sans">
+      <RoomSpotlight x="72%" y="38%" />
 
-      {/* Floating Animated Luxury Glows */}
-      <div className="absolute top-[10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-[radial-gradient(circle,rgba(139,30,45,0.45)_0%,transparent_70%)] opacity-35 blur-3xl pointer-events-none animate-glow-slow" />
-      <div className="absolute bottom-[10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-[radial-gradient(circle,rgba(192,192,192,0.12)_0%,transparent_70%)] opacity-30 blur-3xl pointer-events-none animate-glow-reverse" />
+      <div className="relative z-10 mx-auto max-w-6xl">
+        <RoomOrnament numeral="VI" label={s.roomLabel || "THE HOSTS"} className="mb-16 sm:mb-24" />
 
-      {/* Top Content: Title + Horizontal Layout */}
-      <motion.div
-        initial={{ y: -20, opacity: 0 }}
-        whileInView={{ y: 0, opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ delay: 0.2, duration: 0.6, ease: "easeOut" }}
-        className="relative z-10"
-      >
-        <div className="flex flex-col items-start gap-2">
-          <span className="text-xs font-semibold uppercase tracking-[0.28em] text-[var(--color-silver)] block">
-            ABOUT US
-          </span>
-          <h2 className="font-cinzel uppercase text-[var(--color-cream)] text-[32px] sm:text-[45px] lg:text-[64px] font-light tracking-wider leading-none">
-            Who are we
-          </h2>
-        </div>
-
-        <div className="flex flex-col lg:flex-row items-start lg:items-center mt-8 lg:mt-12 gap-6 lg:gap-16">
-          {/* VIC Logo Plaque */}
-          <div className="p-3.5 sm:p-5  shrink-0 flex items-center justify-center ">
-            <img
-              src="/vic.png"
-              alt="Vision & Innovation Club"
-              className="w-[120px] h-[120px] lg:w-[190px] lg:h-[190px] object-contain select-none   brightness-2 invert"
+        <div className="grid grid-cols-1 items-center gap-16 lg:grid-cols-12 lg:gap-20">
+          {/* Story */}
+          <div className="lg:col-span-7">
+            <RevealHeading
+              text={s.headline || "The story\nbehind the night."}
+              className="font-cinzel text-[34px] font-light leading-[1.08] sm:text-6xl"
             />
+            {s.lead && (
+              <motion.blockquote
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ duration: 1, delay: 0.25, ease: GALA_EASE }}
+                className="mt-8 border-l border-[var(--color-silver)]/40 pl-6 font-cinzel text-lg leading-relaxed text-[var(--color-cream)]/90 sm:text-xl whitespace-pre-line"
+              >
+                {s.lead}
+              </motion.blockquote>
+            )}
+            {[s.paragraph1, s.paragraph2].filter(Boolean).map((p: string, i: number) => (
+              <motion.p
+                key={i}
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ duration: 1, delay: 0.35 + i * 0.1, ease: GALA_EASE }}
+                className="mt-6 max-w-xl text-[15px] font-light leading-relaxed text-[var(--color-cream)]/75 sm:text-base"
+              >
+                {p}
+              </motion.p>
+            ))}
           </div>
 
-          {/* Silver Divider Line */}
-          <div className="h-[200px] w-[1px] bg-[var(--color-silver)]/20 hidden lg:inline" />
-          <div className="w-[160px] h-[1px] bg-[var(--color-silver)]/20 lg:hidden" />
-
-          {/* Narrative & Stats */}
-          <div className="flex flex-col gap-3 lg:gap-2">
-            <h3 className="text-[20px] lg:text-[34px] font-cinzel text-[var(--color-cream)] font-bold tracking-[0.08em]">
-              VISION & INNOVATION CLUB
-            </h3>
-            <p className="text-[13px] sm:text-[15px] lg:text-[17px] text-[var(--color-cream)]/85 lg:max-w-[700px] font-light leading-relaxed">
-              {`A scientific club founded in 2014 at the National Polytechnic School of Algiers under the supervision of the scientific and cultural association "EL–MAARIFA", which aims to foster creativity, communication, and innovation among students.`}
-            </p>
-
-            {/* Metric Counters */}
-            <div className="flex flex-col lg:flex-row gap-4 lg:gap-12 mt-4 lg:mt-6">
-              <p className="uppercase text-[12px] lg:text-[16px] font-cinzel text-[var(--color-cream)] tracking-wider">
-                <span className="font-cinzel font-bold text-[28px] lg:text-[38px] mr-2 text-[var(--color-silver-light)]">
-                  10+
-                </span>{" "}
-                Major Events
-              </p>
-              <div className="w-[80px] h-px bg-[var(--color-silver)]/20 lg:hidden" />
-              <p className="uppercase text-[12px] lg:text-[16px] font-cinzel text-[var(--color-cream)] tracking-wider">
-                <span className="font-cinzel font-bold text-[28px] lg:text-[38px] mr-2 text-[var(--color-silver-light)]">
-                  200+
-                </span>{" "}
-                Active Members
-              </p>
-            </div>
-          </div>
+          {/* Crest */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 1.4, ease: GALA_EASE }}
+            className="flex justify-center lg:col-span-5"
+          >
+            <ClubCrest />
+          </motion.div>
         </div>
-      </motion.div>
 
-      {/* Bottom Metadata & Institutional Footer */}
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        whileInView={{ y: 0, opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ delay: 0.3, duration: 0.6, ease: "easeOut" }}
-        className="relative z-10 w-full pt-12 lg:pt-16"
-      >
-        <div className="h-[1px] w-full bg-[var(--color-silver)]/20 lg:mb-6" />
+        {/* Figures */}
+        {stats.length > 0 && (
+          <dl className="mt-20 grid grid-cols-1 divide-y divide-[var(--color-silver)]/12 border-y border-[var(--color-silver)]/12 sm:mt-28 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+            {stats.map((st) => (
+              <div key={st.label} className="flex flex-col items-center gap-2 py-8 text-center">
+                <dd className="font-cinzel text-4xl font-light text-[var(--color-silver-light)] sm:text-5xl">
+                  <CountUp value={st.value} />
+                </dd>
+                <dt className="text-[10.5px] font-semibold uppercase tracking-[0.28em] text-[var(--color-cream)]/65">
+                  {st.label}
+                </dt>
+              </div>
+            ))}
+          </dl>
+        )}
 
-        <div className="flex flex-wrap gap-8 sm:gap-12 lg:gap-24 mb-4 lg:mb-0 text-[10px] sm:text-[12px] uppercase font-sans tracking-[0.2em] text-[var(--color-silver)]/75">
-          <div className="flex flex-col gap-1.5 font-semibold text-[var(--color-cream)]">
-            <a
-              href="https://www.enp.edu.dz/en/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="cursor-pointer hover:text-[var(--color-silver)] transition-colors"
-            >
-              NATIONAL POLYTECHNIC SCHOOL
-            </a>
-            <a
-              href="mailto:vic@g.enp.edu.dz"
-              className="cursor-pointer hover:text-[var(--color-silver)] transition-colors font-normal text-[var(--color-cream)]/70"
-            >
-              vic@g.enp.edu.dz
-            </a>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <span className="cursor-pointer hover:text-[var(--color-cream)] transition-colors text-[var(--color-silver)]">
-              WHAT IS GALA®
-            </span>
-            <span className="cursor-pointer hover:text-[var(--color-cream)] transition-colors text-[var(--color-silver)]/70">
-              ABOUT US
-            </span>
-          </div>
-
-          <div className="flex flex-wrap gap-4 sm:gap-6 items-center">
-            <a
-              href="https://www.facebook.com/vic.enpa"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="cursor-pointer hover:text-[var(--color-cream)] transition-colors"
-            >
-              FACEBOOK
-            </a>
-            <a
-              href="https://www.instagram.com/vic.enp/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="cursor-pointer hover:text-[var(--color-cream)] transition-colors"
-            >
-              INSTAGRAM
-            </a>
-            <a
-              href="https://www.linkedin.com/company/vicenp/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="cursor-pointer hover:text-[var(--color-cream)] transition-colors"
-            >
-              LINKEDIN
-            </a>
-            <a
-              href="https://www.tiktok.com/@vic.enp"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="cursor-pointer hover:text-[var(--color-cream)] transition-colors"
-            >
-              TIKTOK
-            </a>
-          </div>
-        </div>
-      </motion.div>
+        {/* Principles */}
+        {pillars.length > 0 && (
+          <ol className="mt-16 grid grid-cols-1 gap-12 sm:mt-20 md:grid-cols-3 md:gap-10">
+            {pillars.map((p, i) => (
+              <motion.li
+                key={p.title}
+                initial={{ opacity: 0, y: 18 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ duration: 1, delay: i * 0.1, ease: GALA_EASE }}
+              >
+                <span className="font-cinzel text-sm tracking-[0.3em] text-[var(--color-silver)]">
+                  {["I", "II", "III"][i]}
+                </span>
+                <h3 className="mt-3 font-cinzel text-xl font-light text-[var(--color-cream)] sm:text-2xl">
+                  {p.title}
+                </h3>
+                <p className="mt-3 text-[15px] font-light leading-relaxed text-[var(--color-cream)]/72">
+                  {p.desc}
+                </p>
+              </motion.li>
+            ))}
+          </ol>
+        )}
+      </div>
     </section>
+  );
+}
+
+/** The club's seal: logo inside a fine double ring, engraved text turning slowly around it */
+function ClubCrest() {
+  const ring = "VISION & INNOVATION CLUB · ÉCOLE NATIONALE POLYTECHNIQUE · SINCE 2014 · ";
+  return (
+    <div className="relative aspect-square w-[min(78vw,340px)]">
+      <svg
+        viewBox="0 0 200 200"
+        className="absolute inset-0 h-full w-full animate-[crest-turn_90s_linear_infinite] motion-reduce:animate-none"
+        aria-hidden="true"
+      >
+        <defs>
+          <path id="crest-path" d="M100,100 m-84,0 a84,84 0 1,1 168,0 a84,84 0 1,1 -168,0" />
+        </defs>
+        <text className="fill-[var(--color-silver)]" style={{ fontSize: 8.4, letterSpacing: 2.6 }}>
+          <textPath href="#crest-path">{ring}</textPath>
+        </text>
+      </svg>
+      <div className="absolute inset-[13%] rounded-full p-1.5 ring-1 ring-[var(--color-silver)]/35">
+        <div className="flex h-full w-full items-center justify-center rounded-full bg-[radial-gradient(circle_at_50%_35%,#4a0c17_0%,#2a060c_75%)] ring-1 ring-[var(--color-silver)]/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.08),0_30px_60px_-30px_rgba(10,1,3,0.9)]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/vic.png"
+            alt="Vision & Innovation Club"
+            className="w-[76%] select-none object-contain [filter:grayscale(1)_invert(1)_brightness(0.92)]"
+          />
+        </div>
+      </div>
+    </div>
   );
 }

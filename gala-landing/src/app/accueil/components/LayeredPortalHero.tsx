@@ -189,7 +189,7 @@ export default function LayeredPortalHero() {
   useEffect(() => {
     const root = layerL1RevealRef.current;
     aboutTextRef.current = root
-      ? (["about-label", "about-heading", "about-divider", "about-body"]
+      ? (["about-label", "about-heading", "about-divider", "about-body", "about-facts"]
           .map((c) => root.querySelector<HTMLElement>(`.${c}`))
           .filter(Boolean) as HTMLElement[])
       : [];
@@ -292,7 +292,7 @@ export default function LayeredPortalHero() {
 
     // 3. Its heading settles in once the hall has appeared (long after the
     //    hero title has gone, so the two headlines never overlap).
-    const [label, heading, divider, body] = aboutTextRef.current;
+    const [label, heading, divider, body, facts] = aboutTextRef.current;
     const labelK = span(0.9, 0.95);
     const headingK = span(0.905, 0.96);
     const dividerK = span(0.92, 0.97);
@@ -304,6 +304,8 @@ export default function LayeredPortalHero() {
       divider.style.transform = dividerK >= 1 ? "" : `scaleX(${dividerK.toFixed(4)})`;
     }
     setLayer(body, bodyK, 10 * (1 - bodyK));
+    const factsK = span(0.94, 0.985);
+    setLayer(facts, factsK, 8 * (1 - factsK));
 
     if (debugScrollSpanRef.current) {
       debugScrollSpanRef.current.textContent = frame.progress.toFixed(3);

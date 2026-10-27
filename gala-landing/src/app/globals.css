@@ -275,6 +275,32 @@ body {
   animation-play-state: paused;
 }
 
+/* Slow light passing across the admission ticket's card stock */
+@keyframes ticket-sheen {
+  0%,
+  100% {
+    background-position: 150% 0;
+  }
+
+  50% {
+    background-position: -50% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [class*="animate-[ticket-sheen"],
+  .animate-ribbon-loop {
+    animation: none !important;
+  }
+}
+
+/* Engraved ring slowly turning around the club crest */
+@keyframes crest-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* Accessible focus ring for interactive elements */
 .luxury-focus-ring:focus-visible {
   outline: 2px solid var(--color-silver);
