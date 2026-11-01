@@ -1,12 +1,11 @@
 from django.db import models
 from django.utils import timezone
-import uuid
 import secrets
-import string
 
 def generate_serial_number():
-    """Generate a unique ticket number"""
-    return f"GT{timezone.now().year}{secrets.token_hex(4).upper()}"
+    """Generate an unguessable ticket number: GT<year> + 64 random bits.
+    (Older tickets with 8 hex chars stay valid.)"""
+    return f"GT{timezone.now().year}{secrets.token_hex(8).upper()}"
 
 class Ticket(models.Model):
     STATUS_CHOICES = [
@@ -17,7 +16,7 @@ class Ticket(models.Model):
     ]
     
     # Ticket Identity
-    serial_number = models.CharField(max_length=20, unique=True, default=generate_serial_number)
+    serial_number = models.CharField(max_length=32, unique=True, default=generate_serial_number)
     participant = models.OneToOneField('participants.Participant', on_delete=models.CASCADE, related_name='ticket', null=True, blank=True)
 
     # # QR Code and Security
@@ -42,7 +41,8 @@ class Ticket(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     def __str__(self):
-        return f"Ticket {self.serial_number} - {self.participant.full_name}"
+        holder = self.participant.full_name if self.participant else "unassigned"
+        return f"Ticket {self.serial_number} - {holder}"
     
     @property
     def is_valid(self):
@@ -54,12 +54,10 @@ class Ticket(models.Model):
         """Check if ticket has been assigned"""
         return self.status in ['assigned', 'checked_in'] or self.participant_id is not None
     
-    def mark_as_assigned(self, user=None):
+    def mark_as_assigned(self):
         """Mark ticket as assigned"""
         self.status = 'assigned'
         self.assigned_at = timezone.now()
-        if user:
-            self.checked_in_by = user
         self.save()
     
     def check_in(self, user=None):
@@ -88,8 +86,10 @@ class TicketScan(models.Model):
     scan_location = models.CharField(max_length=100, blank=True, null=True)  # Entry point
     scan_result = models.CharField(max_length=20, choices=[
         ('valid', 'Valid'),
+        ('checked_out', 'Checked Out'),
         ('invalid', 'Invalid'),
         ('already_assigned', 'Already Assigned'),
+        ('already_checked_in', 'Already Checked In'),
         ('cancelled', 'Cancelled'),
     ])
     

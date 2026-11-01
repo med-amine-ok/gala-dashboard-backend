@@ -1,9 +1,10 @@
 import { serve } from "inngest/next";
-import { helloWorld, inngestSendEmail } from "@/lib/inngest/functions";
+import { inngestSendEmail } from "@/lib/inngest/functions";
 import inngest from "@/lib/inngest/inngest-client";
 
-// Create an API that serves zero functions
+// Inngest calls this endpoint; in production it only accepts requests signed
+// with INNGEST_SIGNING_KEY (set it in Vercel).
 export const { GET, POST, PUT } = serve({
   client: inngest,
-  functions: [helloWorld, inngestSendEmail],
+  functions: [inngestSendEmail],
 });

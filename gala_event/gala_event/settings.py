@@ -21,25 +21,46 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Initialize environ
 env = environ.Env(
     DEBUG=(bool, False),
-    SECRET_KEY=(str, 'default-secret-key-for-dev')
 )
 
-# Take environment variables from .env file
+# Take environment variables from .env file (real environment variables win)
 env_file = os.path.join(os.path.dirname(__file__), '.env')
-print(f"Looking for .env file at: {env_file}")
-print(f"File exists: {os.path.exists(env_file)}")
-environ.Env.read_env(env_file)
+if os.path.exists(env_file):
+    environ.Env.read_env(env_file)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
+# No default on purpose: the app must refuse to boot without a real key,
+# otherwise JWTs would be signed with a value that is public in the repo.
 SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env('DEBUG')
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = env.list(
+    'ALLOWED_HOSTS',
+    default=['localhost', '127.0.0.1', 'gala-dashboard-backend.onrender.com'],
+)
+# Render exposes the service hostname; trust it automatically
+_render_host = env('RENDER_EXTERNAL_HOSTNAME', default='')
+if _render_host and _render_host not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(_render_host)
+CSRF_TRUSTED_ORIGINS = env.list(
+    'CSRF_TRUSTED_ORIGINS',
+    default=['https://gala-dashboard-backend.onrender.com'],
+)
+
+# HTTPS hardening (Render terminates TLS and forwards X-Forwarded-Proto)
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = env.bool('SECURE_SSL_REDIRECT', default=True)
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = env.int('SECURE_HSTS_SECONDS', default=60 * 60 * 24 * 30)
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+    SECURE_CONTENT_TYPE_NOSNIFF = True
 
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
@@ -75,8 +96,6 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': env('CLOUDINARY_API_SECRET'),
 }
 
-
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -213,14 +232,27 @@ REST_FRAMEWORK = {
         'rest_framework.filters.SearchFilter',
         'rest_framework.filters.OrderingFilter',
     ],
+    # Per-endpoint limits; views opt in with `throttle_scope = '<name>'`
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.ScopedRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'login': env('THROTTLE_LOGIN', default='30/min'),
+        # Registrations arrive through the landing proxy (one Vercel IP), so keep this generous
+        'register': env('THROTTLE_REGISTER', default='120/hour'),
+        'set_password': env('THROTTLE_SET_PASSWORD', default='60/hour'),
+        'feedback': env('THROTTLE_FEEDBACK', default='20/hour'),
+        'ticket_verify': env('THROTTLE_TICKET_VERIFY', default='30/min'),
+    },
+    # Render puts one proxy in front of the app; use its X-Forwarded-For entry
+    'NUM_PROXIES': env.int('NUM_PROXIES', default=1),
 }
 
 
 # Simple JWT settings
-from datetime import timedelta
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=30),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=35),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=env.int('JWT_ACCESS_MINUTES', default=60)),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=env.int('JWT_REFRESH_DAYS', default=30)),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
     'UPDATE_LAST_LOGIN': True,
@@ -238,18 +270,53 @@ CELERY_TIMEZONE = TIME_ZONE
 # Email configuration
 EMAIL_BACKEND = env('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
 EMAIL_HOST = env('EMAIL_HOST', default='smtp.gmail.com')
-EMAIL_PORT = env('EMAIL_PORT', default=587)
-EMAIL_USE_TLS = env('EMAIL_USE_TLS', default=True)
+EMAIL_PORT = env.int('EMAIL_PORT', default=587)
+EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=True)
+EMAIL_TIMEOUT = env.int('EMAIL_TIMEOUT', default=15)
 EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default=EMAIL_HOST_USER)
 
-FRONTEND_URL = 'https://your-frontend-url.com'
+# Public landing site: payment links in emails point here
+LANDING_URL = env('LANDING_URL', default='https://gala.vic-enp.com').rstrip('/')
+# One-time activation codes used by the mobile app to create an account
+ACTIVATION_CODE_TTL_MINUTES = env.int('ACTIVATION_CODE_TTL_MINUTES', default=15)
+ACTIVATION_CODE_MAX_ATTEMPTS = env.int('ACTIVATION_CODE_MAX_ATTEMPTS', default=5)
+# Send the payment link inside the approval email
+PAYMENT_LINK_IN_APPROVAL_EMAIL = env.bool('PAYMENT_LINK_IN_APPROVAL_EMAIL', default=True)
 
-# Cache settings
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-        'LOCATION': env('REDIS_URL', default='redis://localhost:6379/1'),
+# Cache settings: used by DRF throttling. Use Redis only when CACHE_URL is set
+# explicitly, so a missing Redis never breaks requests.
+_cache_url = env('CACHE_URL', default='')
+if _cache_url:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': _cache_url,
+        }
     }
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        }
+    }
+
+# Logging: send app logs to stdout so Render shows them
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {'class': 'logging.StreamHandler'},
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': env('LOG_LEVEL', default='INFO'),
+    },
+    'loggers': {
+        'django.request': {'handlers': ['console'], 'level': 'WARNING', 'propagate': False},
+    },
 }
+
+# API docs (Swagger/ReDoc) are only public in DEBUG unless explicitly enabled
+API_DOCS_PUBLIC = env.bool('API_DOCS_PUBLIC', default=DEBUG)

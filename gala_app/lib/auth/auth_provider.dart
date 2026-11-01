@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,23 +15,36 @@ class AuthController extends AsyncNotifier<void> {
     // Controller only manages state
   }
 
-  Future<void> createAccount(String email, String password) async {
+  /// Step 1 of account creation: the server emails a one-time code to the
+  /// participant. Knowing an email address is not enough to take an account.
+  /// Returns the message to show. Does not touch [state] (no navigation).
+  Future<String> requestActivationCode(String email) async {
+    final api = ref.read(apiServiceProvider);
+    final response = await api.post(
+      '/accounts/set-password/',
+      data: {'email': email},
+    );
+    if (response is Map && response['detail'] != null) {
+      return response['detail'].toString();
+    }
+    return 'We sent a 6-digit code to your email.';
+  }
+
+  /// Step 2: email + code from the email + new password -> logged in.
+  Future<void> createAccount(String email, String password, String code) async {
     state = const AsyncLoading();
 
     final api = ref.read(apiServiceProvider);
 
-    // ✅ Assign the result of AsyncValue.guard to state
     state = await AsyncValue.guard(() async {
       try {
         final response = await api.post(
           '/accounts/set-password/',
-          data: {'email': email, 'password': password},
+          data: {'email': email, 'code': code, 'password': password},
         );
 
         final token = response['access_token'];
-        log(token);
         final refreshToken = response['refresh_token'];
-        log(refreshToken);
 
         if (token != null) {
           await SecureStorage.write('auth_token', token);

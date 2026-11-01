@@ -240,6 +240,9 @@ export const participantsParticipant = pgTable("participants_participant", {
 	email: varchar({ length: 254 }),
 	firstName: varchar("first_name", { length: 150 }),
 	lastName: varchar("last_name", { length: 150 }),
+	currentYear: varchar("current_year", { length: 10 }).notNull(),
+	// Secret used in payment / ticket links instead of the numeric id (added by Django migration participants.0017)
+	publicToken: varchar("public_token", { length: 64 }).notNull(),
 }, (table) => [
 	index("participants_participant_approved_by_id_bdf59a9e").using("btree", table.approvedById.asc().nullsLast().op("int8_ops")),
 	foreignKey({
@@ -267,7 +270,7 @@ export const djangoSession = pgTable("django_session", {
 export const ticketsTicket = pgTable("tickets_ticket", {
 	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
 	id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity({ name: "tickets_ticket_id_seq", startWith: 1, increment: 1, minValue: 1, maxValue: 9223372036854775807, cache: 1 }),
-	serialNumber: varchar("serial_number", { length: 20 }).notNull(),
+	serialNumber: varchar("serial_number", { length: 32 }).notNull(),
 	status: varchar({ length: 20 }).notNull(),
 	issuedAt: timestamp("issued_at", { withTimezone: true, mode: 'string' }).notNull(),
 	assignedAt: timestamp("assigned_at", { withTimezone: true, mode: 'string' }),
@@ -574,6 +577,8 @@ export const payments = pgTable("payments", {
 	status: status().notNull(),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }),
+	// Added by Django migration tickets.0007
+	chargilyCheckoutId: varchar("chargily_checkout_id", { length: 64 }),
 }, (table) => [
 	unique("payments_participant_id_key").on(table.participantId),
 ]);

@@ -142,7 +142,7 @@ export default function TicketsPage() {
 
   const cancelTicketMutation = useMutation({
     mutationFn: (id: number) => {
-      return apiClient.post(`/api/tickets/tickets/${id}/cancel_ticket/`);
+      return apiClient.post(`/api/tickets/${id}/cancel_ticket/`);
     },
     onSuccess: () => {
       toast.success('Ticket cancelled.');

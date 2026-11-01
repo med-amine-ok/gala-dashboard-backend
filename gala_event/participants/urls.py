@@ -1,8 +1,8 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
-    ParticipantRegistrationView, 
-    ParticipantViewSet, 
+    ParticipantRegistrationView,
+    ParticipantViewSet,
     ParticipantProfileView,
     ParticipantProfileUpdateView,
     ParticipantManualyRegistrationView,
@@ -17,7 +17,7 @@ from .views import (
 )
 
 router = DefaultRouter()
-# Only using ViewSet for read-only admin operations
+# HR-only: list / read / delete participants and approve or reject them
 router.register(r'view', ParticipantViewSet, basename='participant-admin')
 
 urlpatterns = [

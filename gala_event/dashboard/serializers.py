@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from participants.models import Participant
-from accounts.models import CustomUser
+
 
 class DashboardParticipantSerializer(serializers.ModelSerializer):
     """
@@ -8,10 +8,10 @@ class DashboardParticipantSerializer(serializers.ModelSerializer):
     Includes all necessary fields for the dashboard display and actions
     """
     full_name = serializers.SerializerMethodField()
-    email = serializers.EmailField(source='user.email')
-    registration_date = serializers.DateTimeField(source='registered_at')
-    approved_by_name = serializers.CharField(source='approved_by.username', read_only=True)
-    approval_date = serializers.DateTimeField(source='approved_at')
+    email = serializers.SerializerMethodField()
+    registration_date = serializers.DateTimeField(source='registered_at', read_only=True)
+    approved_by_name = serializers.SerializerMethodField()
+    approval_date = serializers.DateTimeField(source='approved_at', read_only=True)
 
     class Meta:
         model = Participant
@@ -26,15 +26,16 @@ class DashboardParticipantSerializer(serializers.ModelSerializer):
             'status',
             'approved_by_name',
             'approval_date',
-
         ]
+        read_only_fields = fields
 
     def get_full_name(self, obj):
-        if obj.user:
-            return f"{obj.user.first_name} {obj.user.last_name}".strip()
-        return ""
+        return obj.full_name
+
+    def get_email(self, obj):
+        return obj.user.email if obj.user else obj.email
 
     def get_approved_by_name(self, obj):
         if obj.approved_by:
-            return f"{obj.approved_by.first_name} {obj.approved_by.last_name}".strip()
+            return f"{obj.approved_by.first_name} {obj.approved_by.last_name}".strip() or obj.approved_by.username
         return None

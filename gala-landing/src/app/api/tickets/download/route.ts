@@ -1,41 +1,32 @@
 import { db } from "@/db/client";
 import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
-import { participantsParticipant, ticketsTicket } from "../../../../../drizzle/schema";
+import { participantsParticipant, ticketsTicket } from "@/db/schema";
 import fs from "fs";
 import path from "path";
 import { PDFDocument } from "pdf-lib";
 import QRCode from "qrcode";
 
+/**
+ * Download the PDF ticket. Only with the participant's secret token
+ * (`?token=`), never with the numeric id or the serial number, because the
+ * PDF's QR code is the entry pass.
+ */
 export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    const participantId = searchParams.get("participant_id");
-    const serialNumber = searchParams.get("serial_number");
-
-    let ticket;
-    let participant;
-
-    if (serialNumber) {
-      ticket = await db.query.ticketsTicket.findFirst({
-        where: eq(ticketsTicket.serialNumber, serialNumber),
-      });
-      if (ticket?.participantId) {
-        participant = await db.query.participantsParticipant.findFirst({
-          where: eq(participantsParticipant.id, ticket.participantId),
-        });
-      }
-    } else if (participantId) {
-      const pId = Number(participantId);
-      participant = await db.query.participantsParticipant.findFirst({
-        where: eq(participantsParticipant.id, pId),
-      });
-      ticket = await db.query.ticketsTicket.findFirst({
-        where: eq(ticketsTicket.participantId, pId),
-      });
+    const token = new URL(req.url).searchParams.get("token") || "";
+    if (!token || /^\d+$/.test(token)) {
+      return NextResponse.json({ error: "Ticket or participant not found" }, { status: 404 });
     }
 
-    if (!ticket || !participant) {
+    const participant = await db.query.participantsParticipant.findFirst({
+      where: eq(participantsParticipant.publicToken, token),
+    });
+    const ticket = participant
+      ? await db.query.ticketsTicket.findFirst({ where: eq(ticketsTicket.participantId, participant.id) })
+      : undefined;
+
+    if (!ticket || !participant || ticket.status === "cancelled") {
       return NextResponse.json({ error: "Ticket or participant not found" }, { status: 404 });
     }
 
@@ -52,22 +43,18 @@ export async function GET(req: NextRequest) {
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
     const page = pdfDoc.getPage(0);
 
-    // Generate QR code data
-    const qrData = JSON.stringify({
-      lastName: participant.lastName || "",
-      firstName: participant.firstName || "",
-      serialNumber: ticket.serialNumber,
-      email: participant.email || "",
-    });
-
-    const qrDataUrl = await QRCode.toDataURL(qrData);
-    const qrImageBytes = Buffer.from(
-      qrDataUrl.replace(/^data:image\/png;base64,/, ""),
-      "base64"
+    const qrDataUrl = await QRCode.toDataURL(
+      JSON.stringify({
+        lastName: participant.lastName || "",
+        firstName: participant.firstName || "",
+        serialNumber: ticket.serialNumber,
+        email: participant.email || "",
+      })
     );
-    const qrImage = await pdfDoc.embedPng(qrImageBytes);
+    const qrImage = await pdfDoc.embedPng(
+      Buffer.from(qrDataUrl.replace(/^data:image\/png;base64,/, ""), "base64")
+    );
 
-    // Draw QR code onto template
     page.drawImage(qrImage, {
       x: 944.49,
       y: 113.49,
@@ -83,13 +70,11 @@ export async function GET(req: NextRequest) {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="ticket-${ticket.serialNumber}.pdf"`,
         "Content-Length": String(pdfBytes.length),
+        "Cache-Control": "private, no-store",
       },
     });
-  } catch (err: any) {
+  } catch (err) {
     console.error("Download ticket error:", err);
-    return NextResponse.json(
-      { error: err.message || "Failed to generate ticket PDF" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to generate ticket PDF" }, { status: 500 });
   }
 }

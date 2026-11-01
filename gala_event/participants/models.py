@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 import random
+import secrets
 
 
 _RANDOM_ID_GENERATOR = random.SystemRandom()
@@ -9,11 +10,16 @@ MAX_PARTICIPANT_ID = (10 ** 10) - 1
 
 
 def generate_participant_id():
-    """Generate a unique 18-digit random participant identifier."""
+    """Generate a unique random 10-digit participant identifier."""
     while True:
         candidate = _RANDOM_ID_GENERATOR.randint(MIN_PARTICIPANT_ID, MAX_PARTICIPANT_ID)
         if not Participant.objects.filter(pk=candidate).exists():
             return candidate
+
+
+def generate_public_token():
+    """Unguessable token used in payment / ticket links instead of the numeric id."""
+    return secrets.token_urlsafe(24)
 
 
 class Participant(models.Model):
@@ -43,7 +49,6 @@ class Participant(models.Model):
     last_name = models.CharField(max_length=150, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
     phone = models.CharField(max_length=20, blank=True)
-    field_of_study = models.CharField(max_length=100, blank=True)
     university = models.CharField(max_length=255, blank=True)
     university_other = models.CharField(max_length=255, blank=True)
     field_of_study = models.CharField(max_length=255, blank=True)
@@ -52,6 +57,7 @@ class Participant(models.Model):
     academic_level_other = models.CharField(max_length=255, blank=True)
     graduation_year = models.CharField(max_length=50, blank=True)
     graduation_year_other = models.CharField(max_length=50, blank=True)
+    current_year = models.CharField(max_length=10, blank=True)
     plans_next_year = models.TextField(blank=True)
     personal_description = models.TextField(blank=True)
     perspective_gala = models.TextField(blank=True)
@@ -92,7 +98,9 @@ class Participant(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     rejection_reason = models.TextField(blank=True)
     approved_at = models.DateTimeField(null=True, blank=True)
-    
+    # Secret used in public links (payment page, ticket download). Never the numeric id.
+    public_token = models.CharField(max_length=64, unique=True, default=generate_public_token, editable=False)
+
     def __str__(self):
         if self.user:
             return f"{self.user.first_name} {self.user.last_name} ({self.user.email})"
@@ -110,6 +118,12 @@ class Participant(models.Model):
 
     class Meta:
         ordering = ['-registered_at']
+        indexes = [
+            models.Index(fields=['status']),
+            models.Index(fields=['payment_status']),
+            models.Index(fields=['registered_at']),
+            models.Index(fields=['email']),
+        ]
 
 
 class Feedback(models.Model):

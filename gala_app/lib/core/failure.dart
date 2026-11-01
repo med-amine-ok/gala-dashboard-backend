@@ -53,6 +53,15 @@ class ServerFailure extends Failure {
       return const ServerFailure('Unknown error, no status code');
     }
 
+    // Prefer the server's own message whatever the status (400, 404, 429, 503...)
+    if (response is Map && statusCode != 500) {
+      for (final key in ['error', 'detail', 'message']) {
+        if (response[key] != null) {
+          return ServerFailure(response[key].toString());
+        }
+      }
+    }
+
     if (statusCode == 400 || statusCode == 401 || statusCode == 403) {
       if (response is Map) {
         log('Error response: $response');

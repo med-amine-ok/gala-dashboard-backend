@@ -3,76 +3,72 @@ from django.contrib.auth import authenticate
 
 from companies.models import Company
 from .models import CustomUser
+from .services import DuplicateEmail, get_user_by_email
 from participants.models import Participant
+
 
 class CustomUserSerializer(serializers.ModelSerializer):
     """Serializer for all users (HR Admin and Participants)"""
     role_display = serializers.CharField(source='get_role_display', read_only=True)
-    
+
     class Meta:
         model = CustomUser
         fields = [
-            'id', 'username', 'email', 'first_name', 'last_name', 
+            'id', 'username', 'email', 'first_name', 'last_name',
             'role_display',
             'is_active', 'date_joined', 'last_login', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'date_joined', 'last_login', 'created_at', 'updated_at']
 
+
 class LoginSerializer(serializers.Serializer):
     """Serializer for both HR Admin and Participant login"""
     email = serializers.CharField()
     password = serializers.CharField(write_only=True)
-    
+
     def validate(self, data):
         email = data.get('email')
         password = data.get('password')
-        
+
         if not email or not password:
             raise serializers.ValidationError('Must include email and password.')
-        
-        # Normalize email
-        email = email.strip().lower()
-        
-        # First check if user exists
+
         try:
-            user_exists = CustomUser.objects.get(email__iexact=email)
-        except CustomUser.DoesNotExist:
+            user_exists = get_user_by_email(email)
+        except DuplicateEmail:
+            raise serializers.ValidationError(
+                'Several accounts use this email. Please contact the organisers.'
+            )
+        if user_exists is None:
             raise serializers.ValidationError('Invalid email or password.')
-        
-        # Try to authenticate
+
         request = self.context.get('request')
         user = authenticate(request=request, username=user_exists.email, password=password)
-        
+
         if not user:
-            user = authenticate(request=request, username=user_exists.username, password=password)
-            
-        if not user:
-            if user_exists.check_password(password):
-                user = user_exists
-            else:
-                raise serializers.ValidationError('Invalid email or password.')
-        
-        if not user.is_active:
-            # Check if it's a participant who needs approval
-            if user.role == CustomUser.Role.PARTICIPANT:
-                if hasattr(user, 'participant_profile'):
-                    if user.participant_profile.status == Participant.Status.PENDING:
-                        raise serializers.ValidationError(
-                            'Your account is pending approval. We will notify you via email once approved.'
-                        )
-                    elif user.participant_profile.status == Participant.Status.REJECTED:
-                        raise serializers.ValidationError(
-                            'Your account has been rejected.'
-                        )
-                raise serializers.ValidationError(
-                    'Your account is not yet approved. We will notify you via email once activated.'
-                )
-            else:
-                raise serializers.ValidationError('User account is disabled.')
-        
+            # authenticate() refuses inactive users. Only when the password is
+            # right do we explain *why* the account can't log in yet.
+            if not user_exists.is_active and user_exists.check_password(password):
+                self._raise_inactive(user_exists)
+            raise serializers.ValidationError('Invalid email or password.')
+
         data['user'] = user
         return data
-    
+
+    @staticmethod
+    def _raise_inactive(user):
+        if user.role == CustomUser.Role.PARTICIPANT and hasattr(user, 'participant_profile'):
+            if user.participant_profile.status == Participant.Status.PENDING:
+                raise serializers.ValidationError(
+                    'Your account is pending approval. We will notify you via email once approved.'
+                )
+            if user.participant_profile.status == Participant.Status.REJECTED:
+                raise serializers.ValidationError('Your account has been rejected.')
+            raise serializers.ValidationError(
+                'Your account is not yet approved. We will notify you via email once activated.'
+            )
+        raise serializers.ValidationError('User account is disabled.')
+
     def to_representation(self, instance):
         """Add role information to login response"""
         user = instance.get('user')
@@ -86,57 +82,17 @@ class LoginSerializer(serializers.Serializer):
                 'role_display': user.get_role_display(),
             }
         return super().to_representation(instance)
-class ParticipantProfileSerializer(serializers.ModelSerializer):
-    """Serializer for participants to view/edit their own profile"""
-    # Include user fields
-    first_name = serializers.CharField(source='user.first_name')
-    last_name = serializers.CharField(source='user.last_name')
-    email = serializers.EmailField(source='user.email', read_only=True)  
-    
-    # Include participant fields
-    class Meta:
-        model = Participant
-        fields = [
-            'id', 'first_name', 'last_name', 'email','field_of_study', 'university', 'graduation_year', 'linkedin_url', 
-            'participant_type', 
-            'registered_at'
-        ]
-        read_only_fields = ['id', 'email', 'registered_at']
-    
-    def update(self, instance, validated_data):
-        """Update both User and Participant data"""
-        # Update user fields
-        user_data = {
-            'first_name': validated_data.pop('user', {}).get('first_name', instance.user.first_name),
-            'last_name': validated_data.pop('user', {}).get('last_name', instance.user.last_name),
-        }
-        
-        # Update the user
-        for attr, value in user_data.items():
-            setattr(instance.user, attr, value)
-        instance.user.save()
-        
-        # Update participant fields
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        instance.save()
-        
-        return instance
-
 
 
 class CompanyProfileSerializer(serializers.ModelSerializer):
-    """Serializer for companies to view/edit their own profile"""
-    # Include user fields
-    name = serializers.CharField(source='user.name')
-    email = serializers.EmailField(source='user.email', read_only=True)
-    
+    """Serializer for companies to view their own profile"""
+    email = serializers.EmailField(read_only=True)
+
     class Meta:
         model = Company
         fields = [
-            'id', 'email', 'name', 'description', 
+            'id', 'email', 'name', 'description',
             'website', 'field', 'contact_person', 'phone', 'address', 'logo',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'email', 'created_at', 'updated_at']
-    

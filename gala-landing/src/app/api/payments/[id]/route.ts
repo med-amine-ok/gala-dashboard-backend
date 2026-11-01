@@ -1,12 +1,17 @@
 import { db } from "@/db/client";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import {
-  participantsParticipant,
-  payments,
-  ticketsTicket,
-} from "@/db/schema";
+import { payments, ticketsTicket } from "@/db/schema";
+import { appUrl, findParticipantByRef } from "@/lib/participants/lookup";
 
+const AMOUNT_DZD = Number(process.env.TICKET_PRICE_DZD) || 1000;
+
+/**
+ * Start a Chargily checkout for a participant.
+ * `id` is the participant's public token (links sent since the security fix)
+ * or, for links emailed before it, the numeric id. Starting a checkout reveals
+ * nothing about the participant, so both are accepted here.
+ */
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> | { id: string } }
@@ -17,128 +22,95 @@ export async function POST(
     (process.env.CHARGILY_API_KEY?.startsWith("test_")
       ? "https://pay.chargily.net/test/api/v2"
       : "https://pay.chargily.net/api/v2");
-  const url = `${chargilyBaseUrl}/checkouts`;
 
   try {
     const now = new Date().toISOString();
-
-    // Check participant
-    const participant = await db.query.participantsParticipant.findFirst({
-      where: eq(participantsParticipant.id, +id),
-    });
+    const participant = await findParticipantByRef(id);
 
     if (!participant) {
+      return NextResponse.json({ message: "Participant not found" }, { status: 404 });
+    }
+    if (participant.status !== "APPROVED") {
       return NextResponse.json(
-        { message: "Participant not found" },
-        { status: 404 }
+        { message: "Your registration has not been approved, so payment is not open for you." },
+        { status: 403 }
       );
     }
-
     if (participant.paymentStatus === "paid") {
-      return NextResponse.json(
-        { message: "Payment already completed" },
-        { status: 400 }
-      );
+      return NextResponse.json({ message: "Payment already completed" }, { status: 400 });
     }
 
     const ticket = await db.query.ticketsTicket.findFirst({
-      where: eq(ticketsTicket.participantId, +id),
+      where: eq(ticketsTicket.participantId, participant.id),
     });
-
     if (ticket) {
-      return NextResponse.json(
-        { message: "Ticket already issued for this participant" },
-        { status: 400 }
-      );
+      return NextResponse.json({ message: "Ticket already issued for this participant" }, { status: 400 });
     }
 
-    // Check if user already paid
     const existingPayment = await db.query.payments.findFirst({
-      where: eq(payments.participantId, +id),
+      where: eq(payments.participantId, participant.id),
     });
-
-    if (existingPayment && existingPayment.status === "succeeded") {
-      return NextResponse.json(
-        { message: "Payment already completed" },
-        { status: 400 }
-      );
+    if (existingPayment?.status === "succeeded") {
+      return NextResponse.json({ message: "Payment already completed" }, { status: 400 });
     }
 
-    // Create a new pending payment record
     let paymentRecord = existingPayment;
-
     if (!paymentRecord) {
       const [newPayment] = await db
         .insert(payments)
         .values({
           id: crypto.randomUUID(),
-          participantId: +id,
-          amount: 1000,
+          participantId: participant.id,
+          amount: AMOUNT_DZD,
           status: "pending",
           createdAt: now,
           updatedAt: now,
         })
         .returning();
-
       paymentRecord = newPayment;
     }
 
-    const origin =
-      process.env.NEXT_PUBLIC_APP_URL ||
-      request.headers.get("origin") ||
-      "https://gala.vic-enp.com";
-    const webhookEndpoint =
-      process.env.WEBHOOK_URL || `${origin}/api/webhook`;
+    // Never build these from request headers: they come from configuration only
+    const origin = appUrl();
+    const webhookEndpoint = process.env.WEBHOOK_URL || `${origin}/api/webhook`;
 
-    // Create a checkout on Chargily
-    const response = await fetch(url, {
+    const response = await fetch(`${chargilyBaseUrl}/checkouts`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${process.env.CHARGILY_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        amount: 1000,
+        amount: AMOUNT_DZD,
         currency: "dzd",
-        success_url: `${origin}/payment/success?participant_id=${id}`,
-        failure_url: `${origin}/payment/${id}?failed=true`,
+        success_url: `${origin}/payment/success?token=${participant.publicToken}`,
+        failure_url: `${origin}/payment/${participant.publicToken}?failed=true`,
         webhook_endpoint: webhookEndpoint,
         metadata: {
-          participantId: id,
+          participantId: String(participant.id),
           paymentId: paymentRecord.id,
         },
       }),
     });
 
     if (!response.ok) {
-      throw new Error("Chargily API request failed", {
-        cause: await response.text(),
-      });
+      console.error("Chargily checkout creation failed:", response.status, await response.text());
+      return NextResponse.json({ message: "Payment provider error. Please try again." }, { status: 502 });
     }
 
     const data = await response.json();
 
-    // Save checkout_id to payment record for easy lookup
-    if (data.id && paymentRecord.id) {
+    // Remember the checkout so verification can fetch exactly this one
+    if (data.id) {
       await db
         .update(payments)
-        .set({
-          updatedAt: now,
-        })
+        .set({ chargilyCheckoutId: data.id, status: "pending", updatedAt: now })
         .where(eq(payments.id, paymentRecord.id));
     }
 
-    console.log("Chargily checkout created:", data);
-
-    return NextResponse.json(data);
-  } catch (error: any) {
+    return NextResponse.json({ checkout_url: data.checkout_url });
+  } catch (error) {
     console.error("Payment creation failed:", error);
-    return NextResponse.json(
-      {
-        message: error?.message || "Payment creation failed",
-        cause: error?.cause || null,
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({ message: "Payment creation failed" }, { status: 500 });
   }
 }

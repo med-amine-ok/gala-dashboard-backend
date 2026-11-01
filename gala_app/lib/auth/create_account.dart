@@ -23,12 +23,17 @@ class _CreateAccountPageState extends ConsumerState<CreateAccountPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _codeController = TextEditingController();
   bool _hasNavigated = false;
+  // Step 1: send a one-time code to the email. Step 2: code + new password.
+  bool _codeSent = false;
+  bool _sendingCode = false;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _codeController.dispose();
     super.dispose();
   }
 
@@ -62,15 +67,51 @@ class _CreateAccountPageState extends ConsumerState<CreateAccountPage> {
     );
   }
 
+  void _showInfoSnackBar(String message) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: GoogleFonts.plusJakartaSans(color: AppColors.charcoalDark)),
+        backgroundColor: AppColors.goldPrimary,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        duration: const Duration(seconds: 5),
+      ),
+    );
+  }
+
+  Future<void> _sendCode() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _sendingCode = true);
+    try {
+      final message = await ref
+          .read(authControllerProvider.notifier)
+          .requestActivationCode(_emailController.text.trim());
+      if (!mounted) return;
+      setState(() => _codeSent = true);
+      _showInfoSnackBar(message);
+    } catch (e) {
+      log('Error while requesting the activation code: $e');
+      _showErrorSnackBar(_getErrorMessage(e));
+    } finally {
+      if (mounted) setState(() => _sendingCode = false);
+    }
+  }
+
   Future<void> _createAccount() async {
+    if (!_codeSent) return _sendCode();
     if (!_formKey.currentState!.validate()) return;
 
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
+    final code = _codeController.text.trim();
 
     try {
       final controller = ref.read(authControllerProvider.notifier);
-      await controller.createAccount(email, password);
+      await controller.createAccount(email, password, code);
     } catch (e) {
       log('Error during account creation: $e');
     }
@@ -106,7 +147,7 @@ class _CreateAccountPageState extends ConsumerState<CreateAccountPage> {
       );
     });
 
-    final isLoading = authState.isLoading;
+    final isLoading = authState.isLoading || _sendingCode;
 
     return Scaffold(
       backgroundColor: AppColors.bg,
@@ -152,7 +193,9 @@ class _CreateAccountPageState extends ConsumerState<CreateAccountPage> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Please create your account using the email address you registered with on the Gala website.',
+                      _codeSent
+                          ? 'Enter the 6-digit code we emailed you and choose your password.'
+                          : 'Enter the email address you registered with on the Gala website. We will send you a one-time code.',
                       textAlign: TextAlign.center,
                       style: GoogleFonts.plusJakartaSans(
                         color: AppColors.textSecondary,
@@ -170,7 +213,7 @@ class _CreateAccountPageState extends ConsumerState<CreateAccountPage> {
                         fontSize: 14.5,
                       ),
                       keyboardType: TextInputType.emailAddress,
-                      enabled: !isLoading,
+                      enabled: !isLoading && !_codeSent,
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'Email is required';
@@ -199,6 +242,52 @@ class _CreateAccountPageState extends ConsumerState<CreateAccountPage> {
                         errorStyle: GoogleFonts.plusJakartaSans(color: AppColors.error),
                         prefixIcon: const Icon(
                           Icons.email_outlined,
+                          color: AppColors.goldDark,
+                          size: 20,
+                        ),
+                        enabledBorder: _border(AppColors.border),
+                        focusedBorder: _border(AppColors.goldPrimary, width: 1.5),
+                        errorBorder: _border(AppColors.error),
+                        focusedErrorBorder: _border(AppColors.error, width: 1.5),
+                      ),
+                    ),
+                    if (_codeSent) ...[
+                    const SizedBox(height: 18),
+
+                    // One-time code from the email
+                    TextFormField(
+                      controller: _codeController,
+                      style: GoogleFonts.plusJakartaSans(
+                        color: AppColors.textPrimary,
+                        fontSize: 14.5,
+                        letterSpacing: 4,
+                      ),
+                      keyboardType: TextInputType.number,
+                      maxLength: 6,
+                      enabled: !isLoading,
+                      validator: (value) {
+                        if (value == null || !RegExp(r'^\d{6}$').hasMatch(value.trim())) {
+                          return 'Enter the 6-digit code from the email';
+                        }
+                        return null;
+                      },
+                      decoration: InputDecoration(
+                        labelText: 'Code from the email',
+                        hintText: '123456',
+                        counterText: '',
+                        labelStyle: GoogleFonts.plusJakartaSans(
+                          color: AppColors.textSecondary,
+                          fontSize: 14,
+                        ),
+                        hintStyle: GoogleFonts.plusJakartaSans(
+                          color: AppColors.textSubtle,
+                          fontSize: 13.5,
+                        ),
+                        filled: true,
+                        fillColor: AppColors.surface,
+                        errorStyle: GoogleFonts.plusJakartaSans(color: AppColors.error),
+                        prefixIcon: const Icon(
+                          Icons.verified_user_outlined,
                           color: AppColors.goldDark,
                           size: 20,
                         ),
@@ -270,6 +359,26 @@ class _CreateAccountPageState extends ConsumerState<CreateAccountPage> {
                         focusedErrorBorder: _border(AppColors.error, width: 1.5),
                       ),
                     ),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: isLoading
+                            ? null
+                            : () => setState(() {
+                                  _codeSent = false;
+                                  _codeController.clear();
+                                }),
+                        child: Text(
+                          "Didn't get the code? Send a new one",
+                          style: GoogleFonts.plusJakartaSans(
+                            color: AppColors.goldDark,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ),
+                    ],
                     const SizedBox(height: 28),
 
                     // Create Account button
@@ -305,7 +414,7 @@ class _CreateAccountPageState extends ConsumerState<CreateAccountPage> {
                                   ),
                                 )
                                 : Text(
-                                  'Create Account',
+                                  _codeSent ? 'Create Account' : 'Send me a code',
                                   style: GoogleFonts.plusJakartaSans(
                                     color: AppColors.charcoalDark,
                                     fontWeight: FontWeight.w700,

@@ -40,9 +40,10 @@ class EmailLogViewSet(viewsets.ReadOnlyModelViewSet):
         return EmailLogSerializer
 
 
-class NotificationViewSet(viewsets.ModelViewSet):
+class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    ViewSet for in-app notifications.
+    In-app notifications of the logged-in user: read and mark as read only.
+    They are created by the server, never by API clients.
     """
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = NotificationPagination

@@ -43,14 +43,22 @@ interface VerifyResponse {
 
 function SuccessContent() {
   const searchParams = useSearchParams();
+  // New links carry the participant's secret token; links created before
+  // the security update carry the numeric id (status only, no ticket shown)
+  const token = searchParams.get("token");
   const participantId = searchParams.get("participant_id");
+  const query = token
+    ? `token=${encodeURIComponent(token)}`
+    : participantId
+      ? `participant_id=${encodeURIComponent(participantId)}`
+      : "";
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<VerifyResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!participantId) {
+    if (!query) {
       setError("Aucun identifiant de participant n'a été fourni.");
       setLoading(false);
       return;
@@ -61,12 +69,12 @@ function SuccessContent() {
     async function verify() {
       try {
         const res = await fetch(
-          `/api/payments/verify?participant_id=${participantId}`,
+          `/api/payments/verify?${query}`,
         );
         const json: VerifyResponse = await res.json();
 
         if (isMounted) {
-          if (json.success) {
+          if (json.success && json.ticketSerial) {
             setData(json);
           } else {
             setError(
@@ -90,7 +98,7 @@ function SuccessContent() {
     return () => {
       isMounted = false;
     };
-  }, [participantId]);
+  }, [query]);
 
   const handlePrint = () => {
     window.print();

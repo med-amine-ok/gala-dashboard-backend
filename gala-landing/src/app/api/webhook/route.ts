@@ -1,6 +1,6 @@
 import { fulfillPayment } from "@/lib/payments/fulfill";
 import { verifySignature } from "@chargily/chargily-pay";
-import { eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db/client";
 import {
@@ -43,19 +43,24 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({
           message: "Payment fulfilled successfully",
-          result,
+          ticketIssued: Boolean(result.ticketSerial),
+          needsReview: result.needsReview,
         });
       }
 
-      case "checkout.failed": {
+      case "checkout.failed":
+      case "checkout.expired":
+      case "checkout.canceled": {
         const now = new Date().toISOString();
 
+        // A failed or abandoned checkout must never undo a payment that
+        // already succeeded (e.g. through a second checkout).
         await db.transaction(async (tx) => {
           if (paymentId) {
             await tx
               .update(payments)
               .set({ status: "failed", updatedAt: now })
-              .where(eq(payments.id, paymentId));
+              .where(and(eq(payments.id, paymentId), ne(payments.status, "succeeded")));
           }
 
           if (pId) {
@@ -65,7 +70,7 @@ export async function POST(req: NextRequest) {
                 paymentStatus: "failed",
                 updatedAt: now,
               })
-              .where(eq(participantsParticipant.id, pId));
+              .where(and(eq(participantsParticipant.id, pId), ne(participantsParticipant.paymentStatus, "paid")));
           }
         });
         break;
@@ -76,13 +81,8 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ message: "Webhook handled successfully" });
-  } catch (err: any) {
+  } catch (err) {
     console.error("Webhook error:", err);
-    return NextResponse.json(
-      { error: err.message || "Internal Server Error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
-
-

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, Suspense, useId } from "react";
+import { useMemo, useState, Suspense, useId, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { useForm, FormProvider, useFormContext } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,6 +11,7 @@ import {
   useSpring,
   useTransform,
   useReducedMotion,
+  useAnimate,
 } from "framer-motion";
 import { Loader2, ArrowRight, ArrowLeft, Check, ChevronDown, AlertCircle, PenLine, RotateCw } from "lucide-react";
 import Link from "next/link";
@@ -292,6 +293,18 @@ function RegistrationContent() {
   const prevStep = () => setStep((s) => Math.max(1, s - 1));
 
   const data = watch();
+  const [shake, setShake] = useState(0);
+  // Turn the card if the face is complete; otherwise a gentle shake and the
+  // first unwritten line takes focus
+  const turnCard = async () => {
+    await nextStep();
+    requestAnimationFrame(() => {
+      if (Object.keys(methods.formState.errors).length) {
+        setShake((n) => n + 1);
+        document.querySelector<HTMLElement>('[aria-invalid="true"]:not([inert] *)')?.focus({ preventScroll: false });
+      }
+    });
+  };
   const sendRequest = async () => {
     const valid = await trigger();
     if (valid) {
@@ -365,7 +378,7 @@ function RegistrationContent() {
 
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit)} noValidate className="mt-6 sm:mt-8">
-            <TheCard turns={turns}>
+            <TheCard turns={turns} shake={shake}>
               {{
                 front: renderFace(frontStage),
                 back: renderFace(backStage),
@@ -404,7 +417,7 @@ function RegistrationContent() {
                   ) : (
                     <span className="text-[10.5px] uppercase tracking-[0.24em] text-[var(--color-silver)]/60">I / IV</span>
                   )}
-                  <TurnButton onClick={nextStep}>
+                  <TurnButton onClick={turnCard}>
                     {texts.register?.buttons?.next || "Continue"}
                     <RotateCw className="h-4 w-4" aria-hidden />
                   </TurnButton>
@@ -500,15 +513,19 @@ function labelFor(list: { value: string; label: string }[], value: string | unde
 /* ───────────────────────────── The card ───────────────────────────── */
 
 /**
- * The card itself: two faces of heavy burgundy stock with a silver edge,
- * stacked in one grid cell so it sizes to its content. Each step turns it half
- * a revolution; the face being turned away is inert so it can't take focus.
+ * The card itself: two faces of heavy burgundy stock with a silver core,
+ * stacked in one grid cell so it sizes to its content. Each step is a small
+ * piece of theatre: the card lifts toward the guest, banks, turns half a
+ * revolution while a band of light crosses it and silver dust lifts from its
+ * edges, then settles back onto the table. The face turned away is inert.
  */
 function TheCard({
   turns,
+  shake,
   children,
 }: {
   turns: number;
+  shake: number;
   children: { front: React.ReactNode; back: React.ReactNode; frontActive: boolean };
 }) {
   const reduce = useReducedMotion();
@@ -517,6 +534,37 @@ function TheCard({
   const tiltX = useSpring(useTransform(my, [-0.5, 0.5], [3, -3]), { stiffness: 70, damping: 18 });
   const tiltY = useSpring(useTransform(mx, [-0.5, 0.5], [-4, 4]), { stiffness: 70, damping: 18 });
   const [typing, setTyping] = useState(false);
+  const [liftScope, animateLift] = useAnimate();
+  const [shadowScope, animateShadow] = useAnimate();
+  const prevTurns = useRef(turns);
+  const [burst, setBurst] = useState(0);
+  const [sweep, setSweep] = useState(0);
+
+  useEffect(() => {
+    if (prevTurns.current === turns) return;
+    const dir = turns > prevTurns.current ? 1 : -1;
+    prevTurns.current = turns;
+    if (reduce) return;
+    setBurst((b) => b + 1);
+    setSweep((w) => w + 1);
+    // Lift toward the guest and bank into the turn, then settle onto the table
+    animateLift(
+      liftScope.current,
+      { z: [0, 170, 0], y: [0, -24, 0], rotateX: [0, 8, 0], rotateZ: [0, -3 * dir, 0] },
+      { duration: 0.95, times: [0, 0.4, 1], ease: [0.3, 0.1, 0.2, 1] },
+    );
+    animateShadow(
+      shadowScope.current,
+      { scaleX: [1, 0.72, 1], opacity: [0.75, 0.3, 0.75], y: [0, 26, 0] },
+      { duration: 0.95, times: [0, 0.4, 1], ease: [0.3, 0.1, 0.2, 1] },
+    );
+  }, [turns, reduce, animateLift, animateShadow, liftScope, shadowScope]);
+
+  // A firm little shake when a line still needs writing
+  useEffect(() => {
+    if (!shake || reduce) return;
+    animateLift(liftScope.current, { x: [0, -14, 11, -7, 4, 0], rotateZ: [0, -1.2, 1, -0.5, 0, 0] }, { duration: 0.55, ease: "easeOut" });
+  }, [shake, reduce, animateLift, liftScope]);
 
   return (
     <div
@@ -539,35 +587,40 @@ function TheCard({
       }}
       onBlurCapture={() => setTyping(false)}
     >
-      <div aria-hidden className="absolute inset-x-[6%] -bottom-8 h-12 rounded-[50%] bg-black/70 blur-2xl" />
+      <div ref={shadowScope} aria-hidden className="absolute inset-x-[6%] -bottom-8 h-12 rounded-[50%] bg-black/70 opacity-75 blur-2xl" />
       <motion.div style={reduce ? undefined : { rotateX: tiltX, rotateY: tiltY }} className="[transform-style:preserve-3d]">
-        <motion.div
-          initial={false}
-          animate={{ rotateY: turns * 180 }}
-          transition={reduce ? { duration: 0 } : { duration: 1.15, ease: GALA_EASE }}
-          className="grid [transform-style:preserve-3d]"
-        >
-          {/* The card's silver edge, seen as it turns */}
-          {/* The card's silver core, sandwiched between its two faces */}
-          {[-1.6, 0, 1.6].map((z) => (
-            <div
-              key={z}
-              aria-hidden
-              className="rounded-[26px] bg-[linear-gradient(135deg,#d9dde3,#7d848f_50%,#c9ced6)] [grid-area:1/1]"
-              style={{ transform: `translateZ(${z}px)` }}
-            />
-          ))}
-          <Face active={children.frontActive}>{children.front}</Face>
-          <Face active={!children.frontActive} back>
-            {children.back}
-          </Face>
-        </motion.div>
+        <div ref={liftScope} className="[transform-style:preserve-3d]">
+          <motion.div
+            initial={false}
+            animate={{ rotateY: turns * 180 }}
+            transition={reduce ? { duration: 0 } : { duration: 0.95, ease: [0.3, 0.1, 0.15, 1] }}
+            className="grid [transform-style:preserve-3d]"
+          >
+            {/* The card's silver core, sandwiched between its two faces */}
+            {[-1.6, 0, 1.6].map((z) => (
+              <div
+                key={z}
+                aria-hidden
+                className="rounded-[26px] bg-[linear-gradient(135deg,#d9dde3,#7d848f_50%,#c9ced6)] [grid-area:1/1]"
+                style={{ transform: `translateZ(${z}px)` }}
+              />
+            ))}
+            <Face active={children.frontActive} sweep={sweep}>
+              {children.front}
+            </Face>
+            <Face active={!children.frontActive} sweep={sweep} back>
+              {children.back}
+            </Face>
+          </motion.div>
+        </div>
       </motion.div>
+      {burst > 0 && <DustBurst key={burst} />}
     </div>
   );
 }
 
-function Face({ children, back, active }: { children: React.ReactNode; back?: boolean; active: boolean }) {
+function Face({ children, back, active, sweep }: { children: React.ReactNode; back?: boolean; active: boolean; sweep: number }) {
+  const reduce = useReducedMotion();
   return (
     <div
       // The face turned away can't be reached by keyboard or screen reader
@@ -591,7 +644,69 @@ function Face({ children, back, active }: { children: React.ReactNode; back?: bo
       </svg>
       <div aria-hidden className="pointer-events-none absolute inset-[12px] rounded-[16px] border border-[#d6dbe2]/30 sm:inset-[16px]" />
       <div aria-hidden className="pointer-events-none absolute inset-[16px] rounded-[13px] border border-[#d6dbe2]/10 sm:inset-[21px]" />
-      <div className="relative px-6 pb-8 pt-7 sm:px-14 sm:pb-12 sm:pt-11">{children}</div>
+
+      {/* The writing settles onto the face as it comes round, and lifts off as it turns away */}
+      <motion.div
+        initial={false}
+        animate={active ? { opacity: 1, y: 0, filter: "blur(0px)" } : { opacity: 0, y: 10, filter: "blur(4px)" }}
+        transition={
+          reduce
+            ? { duration: 0 }
+            : active
+              ? { duration: 0.55, delay: 0.38, ease: GALA_EASE }
+              : { duration: 0.18, delay: 0, ease: "easeOut" }
+        }
+        className="relative px-6 pb-8 pt-7 sm:px-14 sm:pb-12 sm:pt-11"
+      >
+        {children}
+      </motion.div>
+
+      {/* A band of light crossing the stock as the card turns */}
+      {sweep > 0 && !reduce && (
+        <motion.div
+          key={sweep}
+          aria-hidden
+          initial={{ x: "-130%", opacity: 0 }}
+          animate={{ x: "130%", opacity: [0, 1, 1, 0] }}
+          transition={{ duration: 1.05, delay: 0.1, ease: [0.3, 0.1, 0.2, 1] }}
+          className="pointer-events-none absolute inset-y-0 left-0 w-full bg-[linear-gradient(100deg,transparent_30%,rgba(255,240,244,0.16)_46%,rgba(255,255,255,0.32)_50%,rgba(255,240,244,0.16)_54%,transparent_70%)] mix-blend-screen"
+        />
+      )}
+    </div>
+  );
+}
+
+/** Silver dust lifting from the card's edges as it turns */
+function DustBurst() {
+  const specks = useMemo(
+    () =>
+      Array.from({ length: 44 }, (_, i) => {
+        const a = (i / 44) * Math.PI * 2 + Math.random() * 0.3;
+        const r = 0.47 + Math.random() * 0.04;
+        return {
+          left: 50 + Math.cos(a) * r * 100,
+          top: 50 + Math.sin(a) * r * 100,
+          dx: Math.cos(a) * (40 + Math.random() * 120),
+          dy: Math.sin(a) * (40 + Math.random() * 120) - 30 - Math.random() * 50,
+          size: 1.5 + Math.random() * 2.5,
+          delay: 0.05 + Math.random() * 0.3,
+          dur: 1.1 + Math.random() * 0.9,
+        };
+      }),
+    [],
+  );
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 z-20">
+      {specks.map((p, i) => (
+        <motion.span
+          key={i}
+          initial={{ opacity: 0, x: 0, y: 0, scale: 0.6 }}
+          animate={{ opacity: [0, 1, 0], x: p.dx, y: p.dy, scale: [0.6, 1, 0.4] }}
+          transition={{ duration: p.dur, delay: p.delay, ease: [0.2, 0.7, 0.3, 1] }}
+          className="absolute rounded-full bg-[#f1f3f6] shadow-[0_0_8px_2px_rgba(232,236,242,0.55)]"
+          style={{ left: `${p.left}%`, top: `${p.top}%`, width: p.size, height: p.size }}
+        />
+      ))}
     </div>
   );
 }
@@ -600,6 +715,13 @@ function Face({ children, back, active }: { children: React.ReactNode; back?: bo
 function FaceHead({ numeral, title, right }: { numeral: string; title: string; right?: React.ReactNode }) {
   return (
     <div className="mb-8 flex items-start justify-between gap-4 sm:mb-10">
+      {/* The face's numeral, engraved large into the stock */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute -bottom-6 right-4 select-none font-cinzel text-[150px] font-semibold leading-none text-[#f3d6dc]/[0.045] sm:right-10 sm:text-[230px]"
+      >
+        {numeral}
+      </span>
       <div className="flex items-center gap-4">
         <Image src="/GALA-silver.png" alt="" width={631} height={215} className="h-auto w-[86px] opacity-95 sm:w-[112px]" />
         <span aria-hidden className="hidden h-8 w-px bg-[#d6dbe2]/25 sm:block" />
@@ -1051,10 +1173,14 @@ function FaceSeal({
 /** The silver VIC seal, pressed to send the card */
 function SealButton({ loading, onPress }: { loading: boolean; onPress: () => void }) {
   const reduce = useReducedMotion();
+  const [pressed, setPressed] = useState(0);
   return (
     <motion.button
       type="button"
-      onClick={onPress}
+      onClick={() => {
+        setPressed((n) => n + 1);
+        onPress();
+      }}
       disabled={loading}
       aria-label="Seal and send your request"
       whileHover={reduce ? undefined : { scale: 1.04, rotate: -3 }}
@@ -1081,6 +1207,17 @@ function SealButton({ loading, onPress }: { loading: boolean; onPress: () => voi
         alt=""
         className="absolute left-1/2 top-1/2 h-[38%] w-auto -translate-x-1/2 -translate-y-1/2 select-none [filter:grayscale(1)_brightness(0.42)_contrast(1.2)_drop-shadow(0_1px_0_rgba(255,255,255,0.85))]"
       />
+      {/* The impression spreading from the seal */}
+      {pressed > 0 && !reduce && (
+        <motion.span
+          key={pressed}
+          aria-hidden
+          initial={{ scale: 0.9, opacity: 0.7 }}
+          animate={{ scale: 2.4, opacity: 0 }}
+          transition={{ duration: 1.1, ease: "easeOut" }}
+          className="pointer-events-none absolute inset-0 rounded-full border-2 border-[#e8ecf2]/60"
+        />
+      )}
       {loading && <Loader2 className="absolute -right-2 -top-2 h-5 w-5 animate-spin text-[#e8ecf2]" aria-hidden />}
     </motion.button>
   );
@@ -1141,7 +1278,7 @@ function CardProgress({ step, titles, onJump }: { step: number; titles: string[]
               className="group flex min-h-[44px] cursor-pointer items-center gap-2 disabled:cursor-default"
             >
               <span
-                className={`flex h-8 w-8 items-center justify-center rounded-full border font-cinzel text-[11px] font-semibold transition-colors duration-500 ${
+                className={`relative flex h-8 w-8 items-center justify-center rounded-full border font-cinzel text-[11px] font-semibold transition-colors duration-500 ${
                   state === "current"
                     ? "border-[#e8ecf2] bg-[#7a1428] text-[var(--color-cream)]"
                     : state === "done"
@@ -1150,6 +1287,14 @@ function CardProgress({ step, titles, onJump }: { step: number; titles: string[]
                 }`}
               >
                 {state === "done" ? <Check className="h-3.5 w-3.5" aria-hidden /> : numerals[i]}
+                {state === "current" && (
+                  <motion.span
+                    aria-hidden
+                    className="absolute inset-0 rounded-full border border-[#e8ecf2]/70"
+                    animate={{ scale: [1, 1.55], opacity: [0.6, 0] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
+                  />
+                )}
               </span>
               <span
                 className={`hidden text-[10px] font-semibold uppercase tracking-[0.24em] md:inline ${
@@ -1159,7 +1304,16 @@ function CardProgress({ step, titles, onJump }: { step: number; titles: string[]
                 {t}
               </span>
             </button>
-            {i < titles.length - 1 && <span aria-hidden className={`h-px w-6 sm:w-10 ${n < step ? "bg-[#d6dbe2]/60" : "bg-[#d6dbe2]/15"}`} />}
+            {i < titles.length - 1 && (
+              <span aria-hidden className="relative h-px w-6 overflow-hidden bg-[#d6dbe2]/15 sm:w-10">
+                <motion.span
+                  initial={false}
+                  animate={{ scaleX: n < step ? 1 : 0 }}
+                  transition={{ duration: 0.9, delay: n < step ? 0.6 : 0, ease: GALA_EASE }}
+                  className="absolute inset-0 origin-left bg-[#e8ecf2]/70"
+                />
+              </span>
+            )}
           </div>
         );
       })}

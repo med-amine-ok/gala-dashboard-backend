@@ -93,9 +93,7 @@ class NotificationSerializer(serializers.ModelSerializer):
             'title', 'message', 'is_read', 'read_at', 'participant',
             'participant_name', 'created_at'
         ]
-        read_only_fields = [
-            'id', 'recipient_name', 'participant_name', 'read_at', 'created_at'
-        ]
+        read_only_fields = fields
 
 class NotificationListSerializer(serializers.ModelSerializer):
     """Simplified serializer for notification lists"""

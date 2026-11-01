@@ -8,13 +8,14 @@ from rest_framework.decorators import action
 from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Count
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db import transaction
 from accounts.permissions import IsHRAdmin , IsCompany, IsCompanyWithProfile,IsHRAdminOrReadOnly
 from accounts.models import CustomUser
 from .models import Company
 from .serializers import CompanySerializer
 from accounts.serializers import CompanyProfileSerializer
-from .serializers import CompanyCreateUpdateSerializer
 from django.shortcuts import get_object_or_404
 from participants.models import Participant
 from .models import CompanyParticipantLink
@@ -32,133 +33,38 @@ class CompanyViewSet(viewsets.ModelViewSet):
     ordering = ['name']
 
     def create(self, request, *args, **kwargs):
-        """Override create to handle duplicate company names and set password"""
-        name = request.data.get('name', '').strip()
-        email = request.data.get('email', '').strip()
-        password = request.data.get('password', '').strip()
-        
-        if not name:
+        """Create a company together with a NEW login account for it.
+        An email that already belongs to any account is refused, so HR can
+        never turn a participant or an admin into a company by mistake.
+        Name uniqueness is checked by CompanySerializer (create and update)."""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email']
+        password = (serializer.validated_data.get('password') or '').strip()
+
+        if CustomUser.objects.filter(email__iexact=email).exists():
             return Response(
-                {"error": "Company name is required."},
-                status=status.HTTP_400_BAD_REQUEST
+                {"email": ["An account already uses this email. Use a dedicated company email."]},
+                status=status.HTTP_400_BAD_REQUEST,
             )
-        
-        if Company.objects.filter(name__iexact=name).exists():
-            return Response(
-                {"error": "Company with this name already exists."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # Validate password if provided
         if password:
-            if len(password) < 8:
-                return Response(
-                    {"error": "Password must be at least 8 characters long."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-        
-        # Create or get the user for this company
-        try:
-            user, created = CustomUser.objects.get_or_create(
-                email__iexact=email,
-                defaults={
-                    'email': email,
-                    'username': email,  
-                    'role': CustomUser.Role.COMPANY,
-                    'is_active': True,
-                }
-            )
-            
-            # If user was just created and password provided, set it
-            if created and password:
-                user.set_password(password)
-                user.password_set = True
-                user.save()
-            elif not created and password:
-                # If user exists and new password provided, update it
-                user.set_password(password)
-                user.password_set = True
-                user.save()
-            
-            # Check if user already has a company profile
-            if hasattr(user, 'company_profile'):
-                return Response(
-                    {"error": "This user already has a company profile."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+            try:
+                validate_password(password)
+            except DjangoValidationError as exc:
+                return Response({"password": exc.messages}, status=status.HTTP_400_BAD_REQUEST)
 
-            # Add user to request data for serializer - handle both QueryDict and regular dict
-            if hasattr(request.data, '_mutable'):
-                request.data._mutable = True
-                request.data['user'] = user.id
-                request.data._mutable = False
-            else:
-                request.data['user'] = user.id
-
-        except Exception as e:
-            return Response(
-                {"error": f"Failed to create user: {str(e)}"},
-                status=status.HTTP_400_BAD_REQUEST
+        with transaction.atomic():
+            user = CustomUser.objects.create_user(
+                email=email,
+                username=email,
+                password=password or None,
+                role=CustomUser.Role.COMPANY,
+                is_active=True,
+                password_set=bool(password),
             )
+            company = serializer.save(user=user)
+        return Response(self.get_serializer(company).data, status=status.HTTP_201_CREATED)
 
-        # Try to create the company
-        try:
-            # First create the company without the user
-            company_data = request.data.copy()
-            if 'user' in company_data:
-                del company_data['user']  # Remove user from data
-            
-            serializer = self.get_serializer(data=company_data)
-            serializer.is_valid(raise_exception=True)
-            company = serializer.save()
-            
-            # Now link the user to the company profile
-            company.user = user
-            company.save()
-            
-            # Ensure user role is set to COMPANY
-            if user.role != CustomUser.Role.COMPANY:
-                user.role = CustomUser.Role.COMPANY
-                user.save()
-            
-            # Force refresh the user instance to ensure company_profile is loaded
-            user = CustomUser.objects.get(id=user.id)
-            
-            # Final verification
-            if not hasattr(user, 'company_profile'):
-                company.delete()  # Clean up if relationship failed
-                return Response(
-                    {"error": "Failed to establish company profile relationship"},
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
-                )
-            
-            # Return the response with company data
-            return Response(
-                self.get_serializer(company).data,
-                status=status.HTTP_201_CREATED
-            )
-        except Exception as e:
-            # If company creation failed and user was newly created, delete the user
-            if created:
-                user.delete()
-            return Response(
-                {"error": f"Failed to create company: {str(e)}"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-    def update(self, request, *args, **kwargs):
-        """Override update to handle name uniqueness"""
-        instance = self.get_object()
-        name = request.data.get('name', '').strip()
-        
-        if name and name.lower() != instance.name.lower():
-            if Company.objects.filter(name__iexact=name).exists():
-                return Response(
-                    {"error": "Company with this name already exists."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-        return super().update(request, *args, **kwargs)
-    
     @action(detail=False, methods=['get'])
     def statistics(self, request):
         """Enhanced statistics about companies for dashboard"""
@@ -237,40 +143,31 @@ class CompanyProfileView(APIView):
     permission_classes = [IsCompanyWithProfile]
 
     def get(self, request):
-        try:
-            company = request.user.company_profile
-            serializer = CompanyProfileSerializer(company)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+        serializer = CompanyProfileSerializer(request.user.company_profile)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
-        except Exception as e:
-            return Response(
-                {"error": "Unable to retrieve company profile."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-        
 
 @api_view(['POST'])
 @permission_classes([IsCompanyWithProfile])
 def link_participant(request, participant_id):
     """
-    Allows a company to link a participant to their company.
+    A company collects a participant's contact (e.g. by scanning their QR code).
+    Only approved participants can be collected.
     """
     company = request.user.company_profile
-    participant = get_object_or_404(Participant, id=participant_id)
-    
-    # Check if link already exists
-    if CompanyParticipantLink.objects.filter(company=company, participant=participant).exists():
-        return Response({'message': 'This participant is already linked to your company.'}, 
-                       status=status.HTTP_200_OK)
-    
-    # Create the link
-    link = CompanyParticipantLink.objects.create(company=company, participant=participant)
-    
+    participant = get_object_or_404(Participant, id=participant_id, status=Participant.Status.APPROVED)
+
+    link, created = CompanyParticipantLink.objects.get_or_create(company=company, participant=participant)
+    if not created:
+        return Response({'message': 'This participant is already linked to your company.'},
+                        status=status.HTTP_200_OK)
+
     return Response({
         'message': f'Successfully linked participant {participant.full_name} to {company.name}',
         'link_id': link.id,
         'created_at': link.created_at
     }, status=status.HTTP_201_CREATED)
+
 
 @api_view(['DELETE'])
 @permission_classes([IsCompanyWithProfile])
@@ -279,20 +176,18 @@ def unlink_participant(request, participant_id):
     Allows a company to unlink a participant from their company.
     """
     company = request.user.company_profile
-    participant = get_object_or_404(Participant, id=participant_id)
-    
-    # Find and delete the link
-    link = CompanyParticipantLink.objects.filter(company=company, participant=participant).first()
-    
+    link = CompanyParticipantLink.objects.filter(
+        company=company, participant_id=participant_id,
+    ).select_related('participant__user').first()
     if not link:
-        return Response({'error': 'This participant is not linked to your company.'}, 
-                       status=status.HTTP_404_NOT_FOUND)
-    
+        return Response({'error': 'This participant is not linked to your company.'},
+                        status=status.HTTP_404_NOT_FOUND)
+    name = link.participant.full_name
     link.delete()
-    
     return Response({
-        'message': f'Successfully unlinked participant {participant.full_name} from {company.name}'
+        'message': f'Successfully unlinked participant {name} from {company.name}'
     }, status=status.HTTP_200_OK)
+
 
 @api_view(['GET'])
 @permission_classes([IsCompanyWithProfile])
@@ -300,26 +195,10 @@ def list_linked_participants(request):
     """
     Returns a list of participants linked to the company.
     """
-    try:
-        print(f"User ID: {request.user.id}")
-        print(f"User Role: {request.user.role}")
-        print(f"Has company_profile: {hasattr(request.user, 'company_profile')}")
-        
-        company = request.user.company_profile
-        if not company:
-            return Response(
-                {"error": "Company profile not found"},
-                status=status.HTTP_404_NOT_FOUND
-            )
-    except Exception as e:
-        print(f"Error: {str(e)}")
-        return Response(
-            {"error": f"Error retrieving company profile: {str(e)}"},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-    
+    company = request.user.company_profile
+
     # Get all links for this company
-    links = CompanyParticipantLink.objects.filter(company=company).select_related('participant')
+    links = CompanyParticipantLink.objects.filter(company=company).select_related('participant__user')
     
     participants = []
     for link in links:

@@ -33,9 +33,10 @@ class AgendaSerializer(serializers.ModelSerializer):
     
     def validate(self, data):
         """Validate start and end time"""
-        start_time = data.get('start_time')
-        end_time = data.get('end_time')
-        
+        # On partial updates fall back to the stored value
+        start_time = data.get('start_time', getattr(self.instance, 'start_time', None))
+        end_time = data.get('end_time', getattr(self.instance, 'end_time', None))
+
         if start_time and end_time:
             if end_time <= start_time:
                 raise serializers.ValidationError({

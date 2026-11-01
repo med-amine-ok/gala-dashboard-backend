@@ -1,16 +1,6 @@
 import inngest from "@/lib/inngest/inngest-client";
 import { sendEmail } from "../tickets/send-email";
 
-export const helloWorld = inngest.createFunction(
-  { id: "hello-world" },
-  { event: "test/hello.world" },
-  async ({ event, step }) => {
-    await step.sleep("wait-a-moment", "1s");
-    throw new Error("Something went wrong");
-    return { message: `Hello ${event.data.email}!` };
-  }
-);
-
 export const inngestSendEmail = inngest.createFunction(
   { id: "inngest-send-email" },
   { event: "test/email.sent" },

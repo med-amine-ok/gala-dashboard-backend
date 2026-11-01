@@ -1,13 +1,12 @@
 from rest_framework import serializers
-from django.contrib.auth.hashers import make_password
 from .models import Company
-from accounts.models import CustomUser
 
 class CompanySerializer(serializers.ModelSerializer):
-   
+    """HR manages companies. The linked login account is created by the view
+    (never re-used from an existing user) and cannot be re-pointed here."""
     password = serializers.CharField(write_only=True, required=False, allow_blank=True, min_length=8)
-    user = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.all(), required=False)
-   
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
+
     class Meta:
         model = Company
         fields = [
@@ -15,29 +14,28 @@ class CompanySerializer(serializers.ModelSerializer):
             'field', 'contact_person', 'phone', 'address',
             'logo', 'created_at', 'updated_at', 'password', 'user'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
-    
+        read_only_fields = ['id', 'created_at', 'updated_at', 'user']
+
+    def validate_email(self, value):
+        return value.strip().lower()
+
+    def validate_name(self, value):
+        value = value.strip()
+        qs = Company.objects.filter(name__iexact=value)
+        if self.instance:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise serializers.ValidationError("A company with this name already exists.")
+        return value
+
     def create(self, validated_data):
-        """Create a Company and ensure proper user role and relationship"""
-        # Remove password as it's not a Company model field
-        password = validated_data.pop('password', None)
-        user = validated_data.get('user')
-        
-        if user:
-            # Set the user's role to COMPANY if it isn't already
-            if user.role != CustomUser.Role.COMPANY:
-                user.role = CustomUser.Role.COMPANY
-                user.save()
-        
-        # Create the company instance
-        company = super().create(validated_data)
-        return company
-    
+        validated_data.pop('password', None)
+        return super().create(validated_data)
+
     def update(self, instance, validated_data):
-        """Remove password from validated data before updating Company"""
-        # Remove password as it's not a Company model field
         validated_data.pop('password', None)
         return super().update(instance, validated_data)
+
 
 class CompanyListSerializer(serializers.ModelSerializer):
     """Simplified serializer for company lists (for dropdowns, etc.)"""
@@ -45,23 +43,3 @@ class CompanyListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Company
         fields = ['id', 'name', 'logo']
-
-class CompanyCreateUpdateSerializer(serializers.ModelSerializer):
-    """Serializer for creating/updating companies"""
-    
-    class Meta:
-        model = Company
-        fields = [
-            'name', 'description', 'email', 'website', 
-            'field', 'contact_person', 'phone', 'address',
-            'logo'
-        ]
-    
-    def validate_name(self, value):
-        """Validate company name uniqueness"""
-        if Company.objects.filter(name__iexact=value.strip()).exists():
-            if self.instance and self.instance.name.lower() != value.strip().lower():
-                raise serializers.ValidationError("A company with this name already exists.")
-            elif not self.instance:
-                raise serializers.ValidationError("A company with this name already exists.")
-        return value.strip()

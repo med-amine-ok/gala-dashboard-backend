@@ -6,7 +6,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.decorators import action
 from django.utils import timezone
-from datetime import timedelta
+from datetime import date, timedelta
 from django.db.models import Count, Q
 from rest_framework import serializers
 from accounts.permissions import IsHRAdmin, IsParticipant
@@ -48,10 +48,13 @@ class AgendaViewSet(viewsets.ModelViewSet):
         start_date = self.request.query_params.get('start_date')
         end_date = self.request.query_params.get('end_date')
         
-        if start_date:
-            queryset = queryset.filter(start_time__date__gte=start_date)
-        if end_date:
-            queryset = queryset.filter(end_time__date__lte=end_date)
+        try:
+            if start_date:
+                queryset = queryset.filter(start_time__date__gte=date.fromisoformat(start_date))
+            if end_date:
+                queryset = queryset.filter(end_time__date__lte=date.fromisoformat(end_date))
+        except ValueError:
+            raise serializers.ValidationError({'detail': 'Dates must use the YYYY-MM-DD format.'})
 
         # Filter active/cancelled
         show_cancelled = self.request.query_params.get('show_cancelled', 'false').lower()

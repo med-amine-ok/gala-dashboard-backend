@@ -1,125 +1,111 @@
-from django.contrib.auth.tokens import default_token_generator
-from django.utils.http import urlsafe_base64_encode
-from django.utils.encoding import force_bytes
-from django.conf import settings
-from django.core.mail import send_mail
-from django.template.loader import render_to_string
-from participants.models import Participant
-from accounts.models import CustomUser
-from notifications.models import EmailLog, EmailTemplate
-from .models import Ticket
+"""
+Recording a payment made outside the online checkout (cash, transfer...) from
+the HR dashboard. The online Chargily flow lives in the landing site
+(gala-landing/src/lib/payments/fulfill.ts) and follows the same rules:
+
+- only APPROVED participants can be marked as paid,
+- the payment never changes the review status,
+- one ticket per participant; a free pre-generated ticket is reused first,
+  picked with a row lock so two payments can never get the same ticket.
+"""
 import logging
+
+from django.db import transaction
+from django.utils import timezone
+
+from participants.models import Participant
+from .models import Ticket
 
 logger = logging.getLogger(__name__)
 
-def handle_payment_success(participant_id, payment_reference=None):
-    """
-    Handle successful payment for a participant:
-    1. Update participant payment status
-    2. Create a ticket if needed
-    3. Ensure user account is active
-    4. Send set password email if needed
-    """
-    try:
-        participant = Participant.objects.get(id=participant_id)
-        
-        # Update payment status
-        participant.payment_status = "paid"
-        participant.save()
-        
-        # Create ticket if it doesn't exist
-        if not hasattr(participant, 'ticket'):
-            ticket = Ticket.objects.create(participant=participant)
-            logger.info(f"Created ticket {ticket.serial_number} for participant {participant_id}")
-        
-        # Ensure user account exists and is active
-        if participant.user:
-            # Activate user if not already active
-            if not participant.user.is_active:
-                participant.user.is_active = True
-                participant.user.save()
-                
-            # Send set password email
-            send_set_password_email(participant.user)
-            
-            return {
-                "success": True,
-                "message": "Payment processed successfully. Set password email sent.",
-                "participant_id": participant_id,
-                "ticket_number": participant.ticket.serial_number if hasattr(participant, 'ticket') else None
-            }
-        else:
-            logger.error(f"Participant {participant_id} has no associated user account")
-            return {
-                "success": False,
-                "message": "Participant has no associated user account",
-                "participant_id": participant_id
-            }
-            
-    except Participant.DoesNotExist:
-        logger.error(f"Participant with ID {participant_id} not found")
-        return {
-            "success": False,
-            "message": f"Participant with ID {participant_id} not found"
-        }
-    except Exception as e:
-        logger.error(f"Error processing payment success: {str(e)}")
-        return {
-            "success": False,
-            "message": f"Error processing payment: {str(e)}"
-        }
 
-def send_set_password_email(user):
-    """
-    Send a set password email to the user
-    """
-    try:
-        # Generate token
-        token = default_token_generator.make_token(user)
-        uid = urlsafe_base64_encode(force_bytes(user.pk))
-        
-        # Generate reset URL 
-        reset_url = f"{settings.FRONTEND_URL}/set-password/{uid}/{token}/"
-        
-        # Try to get email template
-        try:
-            template = EmailTemplate.objects.get(template_type='payment_confirmation')
-            subject = template.subject
-            html_message = template.body_html.replace('{{reset_url}}', reset_url)
-            plain_message = template.body_text.replace('{{reset_url}}', reset_url)
-        except EmailTemplate.DoesNotExist:
-            # Fallback to basic email
-            subject = "Set Your Password - GALA Event"
-            context = {
-                'user': user,
-                'reset_url': reset_url,
-                'site_name': 'GALA Event'
-            }
-            html_message = render_to_string('emails/set_password.html', context)
-            plain_message = render_to_string('emails/set_password.txt', context)
-        
-        # Send email
-        send_mail(
-            subject,
-            plain_message,
-            settings.DEFAULT_FROM_EMAIL,
-            [user.email],
-            html_message=html_message,
-            fail_silently=False
-        )
-        
-        # Log the email
-        EmailLog.objects.create(
-            recipient_email=user.email,
-            recipient_name=f"{user.first_name} {user.last_name}",
-            subject=subject,
-            body_html=html_message,
-            body_text=plain_message,
-            status='sent',
-            participant=user.participant_profile if hasattr(user, 'participant_profile') else None
-        )
-        
-        return True
-    except Exception as e:
-        logger.error(f"Error sending set password email: {str(e)}")
-        return False
+class PaymentError(Exception):
+    def __init__(self, message, status_code=400):
+        super().__init__(message)
+        self.status_code = status_code
+
+
+def _lock_participant(participant_id):
+    participant = (
+        Participant.objects.select_for_update(of=('self',))
+        .select_related('user')
+        .filter(id=participant_id)
+        .first()
+    )
+    if participant is None:
+        raise PaymentError(f"Participant with ID {participant_id} not found", 404)
+    if participant.status != Participant.Status.APPROVED:
+        raise PaymentError("Only approved participants can be marked as paid.")
+    return participant
+
+
+def _mark_paid(participant):
+    participant.payment_status = 'paid'
+    participant.save(update_fields=['payment_status', 'updated_at'])
+    if participant.user and not participant.user.is_active:
+        participant.user.is_active = True
+        participant.user.save(update_fields=['is_active'])
+
+
+def _assign(ticket, participant):
+    ticket.participant = participant
+    ticket.status = 'assigned'
+    ticket.assigned_at = timezone.now()
+    ticket.save(update_fields=['participant', 'status', 'assigned_at', 'updated_at'])
+    return ticket
+
+
+def _notify(participant_id, serial):
+    from notifications.emails import send_payment_confirmation_email
+
+    participant = Participant.objects.select_related('user').get(id=participant_id)
+    send_payment_confirmation_email(participant, ticket_serial=serial)
+
+
+def handle_payment_success(participant_id, payment_reference=None):
+    """Mark an approved participant as paid and make sure they hold a ticket."""
+    with transaction.atomic():
+        participant = _lock_participant(participant_id)
+        _mark_paid(participant)
+        ticket = Ticket.objects.select_for_update().filter(participant=participant).first()
+        if ticket is None:
+            free = (
+                Ticket.objects.select_for_update(skip_locked=True)
+                .filter(participant__isnull=True)
+                .exclude(status='cancelled')
+                .order_by('created_at')
+                .first()
+            )
+            ticket = _assign(free, participant) if free else Ticket.objects.create(
+                participant=participant, status='assigned', assigned_at=timezone.now(),
+            )
+        serial = ticket.serial_number
+        transaction.on_commit(lambda: _notify(participant.id, serial))
+
+    logger.info("Payment recorded for participant %s (ref: %s), ticket %s", participant_id, payment_reference, serial)
+    return {
+        "success": True,
+        "message": "Payment recorded. Confirmation email sent.",
+        "participant_id": participant_id,
+        "ticket_number": serial,
+    }
+
+
+def assign_ticket_with_payment(participant_id, ticket_serial):
+    """Give a specific pre-generated ticket to an approved participant and mark them paid."""
+    with transaction.atomic():
+        participant = _lock_participant(participant_id)
+        existing = Ticket.objects.filter(participant=participant).first()
+        if existing:
+            raise PaymentError(f"Participant already has ticket {existing.serial_number}")
+        ticket = Ticket.objects.select_for_update().filter(serial_number=ticket_serial).first()
+        if ticket is None:
+            raise PaymentError(f"Ticket with serial number {ticket_serial} not found", 404)
+        if ticket.participant_id is not None:
+            raise PaymentError(f"Ticket {ticket_serial} is already assigned")
+        if ticket.status == 'cancelled':
+            raise PaymentError(f"Ticket {ticket_serial} is cancelled")
+        _assign(ticket, participant)
+        _mark_paid(participant)
+        transaction.on_commit(lambda: _notify(participant.id, ticket.serial_number))
+    return participant, ticket

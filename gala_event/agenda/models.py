@@ -46,7 +46,10 @@ class Agenda(models.Model):
 
 class AgendaRegistration(models.Model):
     agenda_item = models.ForeignKey(Agenda, on_delete=models.CASCADE, related_name='registrations')
-    participant = models.ForeignKey('participants.Participant', on_delete=models.CASCADE, related_name='agenda_registrations')
+    participant = models.ForeignKey(
+        'participants.Participant', on_delete=models.CASCADE, related_name='agenda_registrations',
+        null=True, blank=True,
+    )
     registered_at = models.DateTimeField(auto_now_add=True)
     attended = models.BooleanField(default=False)
     attendance_marked_at = models.DateTimeField(null=True, blank=True)

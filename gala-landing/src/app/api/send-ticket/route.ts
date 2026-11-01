@@ -1,106 +1,66 @@
 import { NextResponse } from "next/server";
-import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
-import QRCode from "qrcode";
-import fs from "fs";
-import inngest from "@/lib/inngest/inngest-client";
+import { eq } from "drizzle-orm";
+import { db } from "@/db/client";
+import { participantsParticipant, ticketsTicket } from "@/db/schema";
+import { generateAndSendTicket } from "@/lib/tickets/tickets";
+import { isInternalRequest } from "@/lib/security/internal-auth";
 
-type TicketData = {
-  firstName: string;
-  lastName: string;
-  email: string;
-  serialNumber: string | number;
-};
-
+/**
+ * INTERNAL: (re)send the official PDF ticket for existing tickets.
+ * Requires `Authorization: Bearer <INTERNAL_API_TOKEN>`.
+ * Body: { "serialNumbers": ["GT2026…", …] }. Names, email and serial all come
+ * from the database, never from the request, so no forged ticket can be sent.
+ */
 export async function POST(req: Request) {
+  if (!isInternalRequest(req)) {
+    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+  }
   try {
-    const { tickets }: { tickets: TicketData[] } = await req.json();
+    const { serialNumbers } = await req.json();
 
-    if (!Array.isArray(tickets) || tickets.length === 0) {
+    if (!Array.isArray(serialNumbers) || serialNumbers.length === 0 || serialNumbers.length > 200) {
       return NextResponse.json(
-        { ok: false, error: "tickets must be a non-empty array" },
+        { ok: false, error: "serialNumbers must be a non-empty array (max 200)" },
         { status: 400 }
       );
     }
 
-    // Load your existing PDF ticket template once
-    const existingPdfBytes = fs.readFileSync("public/tickets.pdf");
-
-    for (const ticket of tickets) {
-      const { firstName, lastName, email, serialNumber } = ticket;
-
-      if (!email || !firstName || !lastName || !serialNumber) {
-        console.warn(`Invalid ticket data for ${email}`);
+    const results: { serialNumber: string; status: string }[] = [];
+    for (const raw of serialNumbers) {
+      const serialNumber = String(raw).trim().toUpperCase();
+      const ticket = await db.query.ticketsTicket.findFirst({
+        where: eq(ticketsTicket.serialNumber, serialNumber),
+      });
+      if (!ticket?.participantId || ticket.status === "cancelled") {
+        results.push({ serialNumber, status: "not found, unassigned or cancelled" });
         continue;
       }
-
-      // Load PDF for this participant
-      const pdfDoc = await PDFDocument.load(existingPdfBytes);
-      const page = pdfDoc.getPage(0);
-      const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-
-      // 1️⃣ Add participant name to PDF
-      page.drawText(`${firstName} ${lastName}`, {
-        x: 50,
-        y: 500,
-        size: 18,
-        color: rgb(0, 0, 0),
-        font,
+      const participant = await db.query.participantsParticipant.findFirst({
+        where: eq(participantsParticipant.id, ticket.participantId),
       });
-
-      // 2️⃣ Generate QR code
-      const qrData = JSON.stringify({
-        firstName,
-        lastName,
-        serialNumber,
-        email,
+      if (!participant?.email) {
+        results.push({ serialNumber, status: "participant has no email" });
+        continue;
+      }
+      const sent = await generateAndSendTicket({
+        firstName: participant.firstName || "",
+        lastName: participant.lastName || "",
+        email: participant.email,
+        ticketId: ticket.serialNumber,
       });
-
-      const qrDataUrl = await QRCode.toDataURL(qrData);
-      const qrImageBytes = Buffer.from(
-        qrDataUrl.replace(/^data:image\/png;base64,/, ""),
-        "base64"
-      );
-      const qrImage = await pdfDoc.embedPng(qrImageBytes);
-
-      // 3️⃣ Draw QR code on PDF
-      page.drawImage(qrImage, {
-        x: 400, // adjust as needed
-        y: 100,
-        width: 150,
-        height: 150,
-      });
-
-      // 4️⃣ Save PDF
-      const pdfBytes = await pdfDoc.save();
-
-      // 5️⃣ Send email via Inngest
-      await inngest.send({
-        name: "test/email.sent",
-        data: {
-          to: [email],
-          subject: "Your Engineers Gala 2026 Ticket",
-          text: `Hello ${firstName},
-
-Your ticket is attached. Please present this ticket at the event.
-
-See you soon!`,
-          attachments: [
-            {
-              filename: `ticket-${serialNumber}.pdf`,
-              content: Buffer.from(pdfBytes).toString("base64"),
-              encoding: "base64",
-            },
-          ],
-        },
-      });
+      if (sent?.ok) {
+        const now = new Date().toISOString();
+        await db
+          .update(ticketsTicket)
+          .set({ emailSent: true, emailSentAt: now, updatedAt: now })
+          .where(eq(ticketsTicket.id, ticket.id));
+      }
+      results.push({ serialNumber, status: sent?.ok ? "sent" : "failed" });
     }
 
-    return NextResponse.json({ ok: true, status: "All tickets processed" });
-  } catch (error: any) {
-    console.error("Error generating or sending tickets:", error);
-    return NextResponse.json(
-      { ok: false, error: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ ok: true, results });
+  } catch (error) {
+    console.error("Error re-sending tickets:", error);
+    return NextResponse.json({ ok: false, error: "Failed to send tickets" }, { status: 500 });
   }
 }
