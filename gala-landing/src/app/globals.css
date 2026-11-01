@@ -3,11 +3,11 @@
 
 :root {
   /* Brand Luxury Palette Tokens */
-  --color-primary: #8B1E2D;
+  --color-primary: #8E1B60;
   /* Burgundy / Wine Red (Primary) */
-  --color-maroon: #5B0F1A;
+  --color-maroon: #5D0D3D;
   /* Deep Maroon (Alternating Sections & Hover) */
-  --color-dark: #2D070D;
+  --color-dark: #2E061E;
   /* Near-Black Maroon (Darkest Base, Shadows & Overlays) */
   --color-silver: #C0C0C0;
   /* Silver (Metallic Accent & Highlights) */
@@ -23,11 +23,11 @@
   /* Crisp Card Surface */
   --color-cream-muted: #EADDC8;
   /* Warm Sand Neutral */
-  --color-text-dark: #2D070D;
+  --color-text-dark: #2E061E;
   /* Deep Burgundy Text Anchor */
-  --color-text-body: #4A1B22;
+  --color-text-body: #4B1A38;
   /* Comfortable Reading Text */
-  --color-text-muted: #73343C;
+  --color-text-muted: #75325A;
   /* Subdued Editorial Text */
 
   /* Metallic Accents & Lines */
@@ -35,13 +35,13 @@
   --silver-border: rgba(192, 192, 192, 0.35);
   --silver-border-subtle: rgba(192, 192, 192, 0.18);
   --silver-glow: rgba(192, 192, 192, 0.2);
-  --dark-shadow: rgba(45, 7, 13, 0.55);
+  --dark-shadow: rgba(46, 6, 30, 0.55);
 }
 
 @theme {
-  --color-primary: #8B1E2D;
-  --color-maroon: #5B0F1A;
-  --color-dark: #2D070D;
+  --color-primary: #8E1B60;
+  --color-maroon: #5D0D3D;
+  --color-dark: #2E061E;
   --color-silver: #C0C0C0;
   --color-silver-light: #E5E5E5;
   --color-silver-dark: #A8A8A8;
@@ -49,9 +49,9 @@
   --color-cream-soft: #FAF7F2;
   --color-cream-card: #FFFFFF;
   --color-cream-muted: #EADDC8;
-  --color-text-dark: #2D070D;
-  --color-text-body: #4A1B22;
-  --color-text-muted: #73343C;
+  --color-text-dark: #2E061E;
+  --color-text-body: #4B1A38;
+  --color-text-muted: #75325A;
 
   --font-cinzel: 'Cinzel', serif;
   --font-serif: 'Cinzel', 'Cormorant Garamond', Georgia, serif;
@@ -124,7 +124,7 @@ body {
 .luxury-black-card {
   background: var(--color-dark);
   border: 1px solid rgba(192, 192, 192, 0.2);
-  box-shadow: 0 25px 50px -15px rgba(45, 7, 13, 0.7), 0 0 0 1px rgba(192, 192, 192, 0.15) inset;
+  box-shadow: 0 25px 50px -15px rgba(46, 6, 30, 0.7), 0 0 0 1px rgba(192, 192, 192, 0.15) inset;
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -323,7 +323,7 @@ body {
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent;
-  filter: drop-shadow(0 1px 0 rgba(10, 2, 4, 0.55)) drop-shadow(0 10px 22px rgba(10, 1, 3, 0.55));
+  filter: drop-shadow(0 1px 0 rgba(10, 2, 7, 0.55)) drop-shadow(0 10px 22px rgba(10, 1, 7, 0.55));
 }
 /* Brushed silver: frames, rails, plaques */
 .gala-brushed {
@@ -353,4 +353,33 @@ html[data-gala-dust="on"] .gala-hero-mark {
 @keyframes mote {
   0%, 100% { transform: translate3d(0, 0, 0); opacity: 0.15; }
   50% { transform: translate3d(6px, -18px, 0); opacity: 0.55; }
+}
+
+/* ── The velvet: the post template's tufted, rose-embossed plum velvet ─────── */
+.gala-velvet {
+  background: #1d0314 url("/images/velvet-sm.webp") center / cover no-repeat;
+}
+@media (min-width: 768px) {
+  .gala-velvet {
+    background-image: url("/images/velvet.webp");
+  }
+}
+/* Its pools of light, drifting slowly across the tufting */
+.gala-velvet-light {
+  background:
+    radial-gradient(38% 32% at 30% 28%, rgba(211, 55, 145, 0.32), transparent 70%),
+    radial-gradient(34% 30% at 74% 68%, rgba(211, 55, 145, 0.24), transparent 70%);
+  mix-blend-mode: screen;
+  animation: velvet-light 26s ease-in-out infinite alternate;
+}
+@keyframes velvet-light {
+  0% { transform: translate3d(-5%, -4%, 0) scale(1); }
+  100% { transform: translate3d(6%, 5%, 0) scale(1.1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gala-velvet-light { animation: none; }
+}
+/* Deepens the velvet so copy always reads first */
+.gala-velvet-veil {
+  background: radial-gradient(ellipse 85% 75% at 50% 45%, rgba(24, 2, 14, 0.38) 0%, rgba(24, 2, 14, 0.7) 70%, rgba(14, 1, 8, 0.9) 100%);
 }

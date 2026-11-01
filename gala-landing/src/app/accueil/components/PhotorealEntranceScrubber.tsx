@@ -173,7 +173,7 @@ export default function PhotorealEntranceScrubber({
       };
 
       // Clear with dark burgundy base
-      ctx.fillStyle = "#180306";
+      ctx.fillStyle = "#190210";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Draw base frame
@@ -196,7 +196,7 @@ export default function PhotorealEntranceScrubber({
   }, []);
 
   return (
-    <div className="absolute inset-0 w-full h-full pointer-events-none select-none z-0 overflow-hidden bg-[#180306]">
+    <div className="absolute inset-0 w-full h-full pointer-events-none select-none z-0 overflow-hidden bg-[#190210]">
       {/* High-Performance 2D Canvas Scrubber */}
       <canvas
         ref={canvasRef}
@@ -207,8 +207,8 @@ export default function PhotorealEntranceScrubber({
       />
 
       {/* Subtle dusk atmospheric gradient overlay to tie seamlessly into the site header and footer */}
-      <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-[#140206] via-transparent to-[rgba(20,2,6,0.5)] opacity-60" />
-      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,transparent_45%,rgba(20,2,6,0.75)_100%)]" />
+      <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-[#14020e] via-transparent to-[rgba(20,2,14,0.5)] opacity-60" />
+      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,transparent_45%,rgba(20,2,14,0.75)_100%)]" />
     </div>
   );
 }

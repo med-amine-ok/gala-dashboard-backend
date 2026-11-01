@@ -141,7 +141,7 @@ function ClubCrest() {
 
   return (
     <div ref={ref} className="flex w-[min(78vw,400px)] flex-col items-center">
-      <div className="relative aspect-[900/365] w-full [filter:drop-shadow(0_1px_0_rgba(255,255,255,0.18))_drop-shadow(0_18px_30px_rgba(5,1,2,0.7))]">
+      <div className="relative aspect-[900/365] w-full [filter:drop-shadow(0_1px_0_rgba(255,255,255,0.18))_drop-shadow(0_18px_30px_rgba(5,1,4,0.7))]">
         <div role="img" aria-label="Vision & Innovation Club" className={`absolute inset-0 gala-brushed ${MASK}`} />
         {/* Light passing over the foil */}
         <motion.div

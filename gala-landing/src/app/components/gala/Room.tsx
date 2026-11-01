@@ -63,12 +63,12 @@ export function RoomOrnament({
         aria-hidden="true"
       >
         {/* Rail with finials */}
-        <span className="relative block h-[3px] w-[78px] rounded-full gala-brushed shadow-[0_2px_4px_rgba(5,1,2,0.6)]">
+        <span className="relative block h-[3px] w-[78px] rounded-full gala-brushed shadow-[0_2px_4px_rgba(5,1,4,0.6)]">
           <span className="absolute -left-1 -top-[2px] h-[7px] w-[7px] rounded-full gala-brushed" />
           <span className="absolute -right-1 -top-[2px] h-[7px] w-[7px] rounded-full gala-brushed" />
         </span>
         {/* Satin pennant */}
-        <span className="block [filter:drop-shadow(0_10px_14px_rgba(6,1,2,0.6))]">
+        <span className="block [filter:drop-shadow(0_10px_14px_rgba(6,1,4,0.6))]">
           <span className="relative mt-[2px] flex h-[84px] w-[60px] flex-col items-center gala-satin [clip-path:polygon(0_0,100%_0,100%_76%,50%_100%,0_76%)]">
             <svg viewBox="0 0 60 84" className="absolute inset-0 h-full w-full" fill="none">
               <polygon
@@ -103,8 +103,8 @@ export function RoomOrnament({
 export function GalaFrame({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
     <div className={`relative ${className}`}>
-      <div className="relative gala-brushed p-[5px] shadow-[0_40px_70px_-34px_rgba(5,1,2,0.95),0_0_0_1px_rgba(8,1,3,0.7)] sm:p-[7px]">
-        <div className="bg-[#2a070e] p-[10px] shadow-[inset_0_2px_8px_rgba(0,0,0,0.65),inset_0_0_0_1px_rgba(0,0,0,0.5)] sm:p-[18px]">
+      <div className="relative gala-brushed p-[5px] shadow-[0_40px_70px_-34px_rgba(5,1,4,0.95),0_0_0_1px_rgba(8,1,6,0.7)] sm:p-[7px]">
+        <div className="bg-[#2b061e] p-[10px] shadow-[inset_0_2px_8px_rgba(0,0,0,0.65),inset_0_0_0_1px_rgba(0,0,0,0.5)] sm:p-[18px]">
           <div className="relative overflow-hidden shadow-[0_0_0_1px_rgba(192,192,192,0.25)]">{children}</div>
         </div>
       </div>
@@ -162,7 +162,7 @@ export function GalaButton({
   return (
     <Link
       href={href}
-      className={`group relative inline-flex items-center gap-3 sm:gap-4 pl-5 sm:pl-7 pr-2 py-2 min-h-[52px] rounded-[2px] bg-[#30070E]/85 border border-[var(--color-cream)]/40 hover:border-[var(--color-cream)]/85 text-[var(--color-cream)] text-[10.5px] sm:text-[12px] font-medium uppercase tracking-[0.14em] sm:tracking-[0.22em] transition-[border-color,background-color,transform] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-[#400A14]/95 active:scale-[0.985] luxury-focus-ring ${className}`}
+      className={`group relative inline-flex items-center gap-3 sm:gap-4 pl-5 sm:pl-7 pr-2 py-2 min-h-[52px] rounded-[2px] bg-[#310621]/85 border border-[var(--color-cream)]/40 hover:border-[var(--color-cream)]/85 text-[var(--color-cream)] text-[10.5px] sm:text-[12px] font-medium uppercase tracking-[0.14em] sm:tracking-[0.22em] transition-[border-color,background-color,transform] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-[#41092C]/95 active:scale-[0.985] luxury-focus-ring ${className}`}
     >
       <span className="relative pb-0.5">
         {children}

@@ -149,7 +149,7 @@ function createNormalMapFromHeights(
    1. BURGUNDY ARCHITECTURAL STONE TEXTURE SET
    - Refined luxury architectural stone with delicate mineral grain & micro-porosity
    - Satin finish: visible subtle roughness variation without noisy pebbled bump
-   - Palette: Deep rich gala burgundy stone (#440D17 to #541220)
+   - Palette: Deep rich gala burgundy stone (#450C30 to #56103d)
    ───────────────────────────────────────────────────────────────────────────── */
 export function createBurgundyStoneTextures(anisotropy = 4): BurgundyStoneTextureSet {
   const size = 1024;
@@ -190,10 +190,10 @@ export function createBurgundyStoneTextures(anisotropy = 4): BurgundyStoneTextur
       // Subtle mineral tone shift (honed porphyry/limestone grain)
       const toneShift = (grain - 0.48) * 12;
 
-      // PBR Albedo for Deep Gala Burgundy Stone: Base ~ [72, 14, 24] (Hex #480E18)
+      // PBR Albedo for Deep Gala Burgundy Stone: Base ~ [72, 14, 24] (Hex #490D32)
       const baseR = Math.max(54, Math.min(92, 72 + toneShift));
       const baseG = Math.max(8, Math.min(24, 14 + toneShift * 0.18));
-      const baseB = Math.max(16, Math.min(36, 24 + toneShift * 0.26));
+      const baseB = Math.max(34, Math.min(64, 48 + toneShift * 0.6));
 
       const idx = (yOffset + x) * 4;
       dImg.data[idx] = Math.round(baseR);
@@ -248,7 +248,7 @@ export function createBurgundyStoneTextures(anisotropy = 4): BurgundyStoneTextur
 
 /* ─────────────────────────────────────────────────────────────────────────────
    2. POLISHED BURGUNDY STONE FLOOR TEXTURE SET
-   - Dark obsidian wine stone (#20060C to #2E0A12)
+   - Dark obsidian wine stone (#210517 to #2F0922)
    - Large-format subtle architectural slab joints (2.4m x 1.2m)
    - Satin reflection with soft micro-imperfections
    ───────────────────────────────────────────────────────────────────────────── */
@@ -290,10 +290,10 @@ export function createBurgundyFloorTextures(anisotropy = 4): FloorTextureSet {
       const n = fbm(u * 4.0, v * 4.0, 3) * 0.25;
       const micro = pseudoNoise(x * 1.5, y * 1.5) * 0.06;
 
-      // Dark obsidian wine floor: #26080E
+      // Dark obsidian wine floor: #27071B
       const baseR = Math.max(18, Math.min(54, (38 + n * 20 + micro * 14) * jointDarken));
       const baseG = Math.max(4, Math.min(18, (8 + n * 4 + micro * 3) * jointDarken));
-      const baseB = Math.max(6, Math.min(26, (14 + n * 8 + micro * 5) * jointDarken));
+      const baseB = Math.max(12, Math.min(38, (26 + n * 12 + micro * 8) * jointDarken));
 
       const idx = (yOffset + x) * 4;
       dImg.data[idx] = Math.round(baseR);
@@ -337,8 +337,8 @@ export function createBurgundyFloorTextures(anisotropy = 4): FloorTextureSet {
 
 /* ─────────────────────────────────────────────────────────────────────────────
    3. LUXURY WOVEN RED CARPET TEXTURE SET
-   - Rich royal gala crimson velvet (#8E1424 to #A2182B)
-   - Darker refined selvage edge borders (#4C0A12)
+   - Rich royal gala crimson velvet (#91115D to #A5156B)
+   - Darker refined selvage edge borders (#4E0831)
    - Fine microscopic woven yarn pattern & cloth pile relief
    ───────────────────────────────────────────────────────────────────────────── */
 export function createRedCarpetTextures(anisotropy = 4): CarpetTextureSet {
@@ -375,20 +375,20 @@ export function createRedCarpetTextures(anisotropy = 4): CarpetTextureSet {
 
       let r: number, g: number, b: number;
       if (isBorder) {
-        // Refined darker velvet selvage border (#4C0A12)
+        // Refined darker velvet selvage border (#4E0831)
         r = 74 + fiberNoise * 0.25;
         g = 10 + fiberNoise * 0.08;
-        b = 18 + fiberNoise * 0.12;
+        b = 48 + fiberNoise * 0.2;
       } else if (isInnerPiping) {
-        // Deep contrast accent thread line (#3A080E)
+        // Deep contrast accent thread line (#3B0726)
         r = 54 + fiberNoise * 0.2;
         g = 8 + fiberNoise * 0.06;
-        b = 14 + fiberNoise * 0.1;
+        b = 36 + fiberNoise * 0.15;
       } else {
-        // Sumptuous Gala Crimson velvet pile (#9A1626 to #AC1A2C)
-        r = 152 + fiberNoise + (weave - 0.5) * 10;
-        g = 20 + fiberNoise * 0.15 + (weave - 0.5) * 2;
-        b = 36 + fiberNoise * 0.25 + (weave - 0.5) * 2;
+        // Sumptuous Gala Crimson velvet pile (#9D1364 to #B01671)
+        r = 150 + fiberNoise + (weave - 0.5) * 10;
+        g = 24 + fiberNoise * 0.15 + (weave - 0.5) * 2;
+        b = 96 + fiberNoise * 0.6 + (weave - 0.5) * 6;
       }
 
       const idx = (yOffset + x) * 4;
@@ -504,7 +504,7 @@ export function createBrushedSilverTextures(anisotropy = 4): SilverTextureSet {
 
 /* ─────────────────────────────────────────────────────────────────────────────
    5. COATED TEXTILE BANNER FABRIC TEXTURE SET
-   - Matte architectural banner cloth (#440C16)
+   - Matte architectural banner cloth (#450B2F)
    - Subtle fabric weave normal map
    ───────────────────────────────────────────────────────────────────────────── */
 export function createBannerFabricTextures(anisotropy = 4): BannerFabricTextureSet {
@@ -532,10 +532,10 @@ export function createBannerFabricTextures(anisotropy = 4): BannerFabricTextureS
       const weave = weaveX * weaveY;
       const noise = (pseudoNoise(x * 2.0, y * 2.0) - 0.5) * 6;
 
-      // Deep luxury wine textile: #440C16
+      // Deep luxury wine textile: #450B2F
       const r = 68 + noise * 0.4 + (weave - 0.5) * 6;
       const g = 12 + noise * 0.1 + (weave - 0.5) * 1.5;
-      const b = 22 + noise * 0.15 + (weave - 0.5) * 2;
+      const b = 46 + noise * 0.3 + (weave - 0.5) * 4;
 
       const idx = (yOffset + x) * 4;
       dImg.data[idx] = Math.max(0, Math.min(255, Math.round(r)));
@@ -614,11 +614,11 @@ export function createSoftRadialShadowTexture(): THREE.CanvasTexture {
     size / 2,
     size * 0.5
   );
-  gradient.addColorStop(0, "rgba(5, 1, 2, 0.96)");
-  gradient.addColorStop(0.3, "rgba(5, 1, 2, 0.72)");
-  gradient.addColorStop(0.65, "rgba(5, 1, 2, 0.24)");
-  gradient.addColorStop(0.88, "rgba(5, 1, 2, 0.06)");
-  gradient.addColorStop(1, "rgba(5, 1, 2, 0)");
+  gradient.addColorStop(0, "rgba(5, 1, 4, 0.96)");
+  gradient.addColorStop(0.3, "rgba(5, 1, 4, 0.72)");
+  gradient.addColorStop(0.65, "rgba(5, 1, 4, 0.24)");
+  gradient.addColorStop(0.88, "rgba(5, 1, 4, 0.06)");
+  gradient.addColorStop(1, "rgba(5, 1, 4, 0)");
 
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, size, size);
@@ -629,7 +629,7 @@ export function createSoftRadialShadowTexture(): THREE.CanvasTexture {
 
 /* ─────────────────────────────────────────────────────────────────────────────
    8. GALA STUDIO DUSK PBR ENVIRONMENT CUBE MAP
-   - Balanced deep burgundy (#480C18) ambient dome
+   - Balanced deep burgundy (#4A0B33) ambient dome
    - Crisp overhead warm champagne softbox (#FFF2E4)
    - Brushed silver side rim strips (#D2DAE6)
    - Distant warm portal glow (#FFDEB8)
@@ -638,7 +638,7 @@ export function createGalaStudioEnvironmentMap(
   renderer: THREE.WebGLRenderer
 ): THREE.WebGLCubeRenderTarget {
   const envScene = new THREE.Scene();
-  envScene.background = new THREE.Color(0x480c18);
+  envScene.background = new THREE.Color(0x4a0b33);
 
   const addPanel = (
     w: number,
@@ -661,14 +661,14 @@ export function createGalaStudioEnvironmentMap(
 
   const panels = [
     // Overhead subtle architectural warm wine-champagne diffuse softbox (removes glaring white hotspot)
-    addPanel(14, 14, 0x6e1b28, [0, 18, 0], 0, Math.PI / 2),
-    addPanel(6, 6, 0x963c4a, [0, 18, 0], 0, Math.PI / 2),
+    addPanel(14, 14, 0x70194e, [0, 18, 0], 0, Math.PI / 2),
+    addPanel(6, 6, 0x983a73, [0, 18, 0], 0, Math.PI / 2),
     // Cool silver left rim softbox
     addPanel(8, 22, 0xd0d8e4, [-16, 7, 0], Math.PI / 2),
     // Cool silver right rim softbox
     addPanel(8, 22, 0xd0d8e4, [16, 7, 0], -Math.PI / 2),
     // Warm deep burgundy backdrop fill
-    addPanel(20, 14, 0x821528, [0, 6, -18]),
+    addPanel(20, 14, 0x851259, [0, 6, -18]),
     // Distant warm sanctuary doorway glow
     addPanel(6, 12, 0xffe2c2, [0, 3, -12]),
   ];

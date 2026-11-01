@@ -140,7 +140,7 @@ function StickyEditions({ editions }: { editions: Edition[] }) {
                         sizes="680px"
                         className="object-cover [filter:brightness(0.88)_contrast(1.06)_saturate(0.85)]"
                       />
-                      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(45,7,13,0.05)_0%,rgba(45,7,13,0.45)_100%)] mix-blend-multiply" />
+                      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(46,6,30,0.05)_0%,rgba(46,6,30,0.45)_100%)] mix-blend-multiply" />
                     </motion.div>
                   </AnimatePresence>
                 </div>

@@ -169,14 +169,14 @@ export default function LayeredPortalHero() {
       if (!ctx) return;
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       // Same burgundy atmosphere as the About section's own photo treatment
-      ctx.fillStyle = "rgba(30, 5, 9, 0.72)";
+      ctx.fillStyle = "rgba(31, 4, 20, 0.72)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       // Darker towards the edges so the light gathers around the section
       const cx = canvas.width / 2;
       const cy = canvas.height / 2;
       const vignette = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.hypot(cx, cy));
-      vignette.addColorStop(0, "rgba(26, 4, 8, 0)");
-      vignette.addColorStop(1, "rgba(26, 4, 8, 0.75)");
+      vignette.addColorStop(0, "rgba(27, 3, 18, 0)");
+      vignette.addColorStop(1, "rgba(27, 3, 18, 0.75)");
       ctx.fillStyle = vignette;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     };
@@ -320,17 +320,17 @@ export default function LayeredPortalHero() {
       className={`relative w-full ${reducedMotion ? "" : "h-[220svh] md:h-[250svh]"}`}
       id="home"
     >
-      {/* Sticky Stage Element: EXACT website background token var(--color-dark) (#2D070D) */}
+      {/* Sticky Stage Element: EXACT website background token var(--color-dark) (#2E061E) */}
       <div
         ref={stageRef}
-        className={`${reducedMotion ? "relative" : "sticky top-0"} w-full h-[100svh] min-h-[100svh] overflow-hidden text-[var(--color-cream)] bg-[#2D070D] bg-[radial-gradient(ellipse_at_50%_35%,#3D0812_0%,#2D070D_65%,#1E0409_100%)]`}
+        className={`${reducedMotion ? "relative" : "sticky top-0"} w-full h-[100svh] min-h-[100svh] overflow-hidden text-[var(--color-cream)] bg-[#2E061E] bg-[radial-gradient(ellipse_at_50%_35%,#3E072A_0%,#2E061E_65%,#1F0315_100%)]`}
       >
         {/* About the Event, BEHIND the 3D canvas: it is seen through the doorway,
             where the scene clears the canvas to transparent. Transform written
             per frame by handleFrame from the doorway's projection. */}
         {/* The hall beyond the doors (only ever seen through the doorway) */}
         {!reducedMotion && (
-          <div aria-hidden="true" className="absolute inset-0 z-0 bg-[#1a0408] pointer-events-none overflow-hidden">
+          <div aria-hidden="true" className="absolute inset-0 z-0 bg-[#1b0312] pointer-events-none overflow-hidden">
             <canvas
               ref={hallPhotoRef}
               width={64}
@@ -345,7 +345,7 @@ export default function LayeredPortalHero() {
             />
             <div
               ref={hallGlowRef}
-              className="absolute -inset-[60%] will-change-transform bg-[radial-gradient(ellipse_32%_34%_at_50%_50%,rgba(122,26,42,0.75)_0%,rgba(70,12,22,0.55)_45%,rgba(26,4,8,0)_100%)]"
+              className="absolute -inset-[60%] will-change-transform bg-[radial-gradient(ellipse_32%_34%_at_50%_50%,rgba(124,24,86,0.75)_0%,rgba(71,11,48,0.55)_45%,rgba(27,3,18,0)_100%)]"
               style={{ opacity: 0, transformOrigin: "50% 50%" }}
             />
           </div>
@@ -362,7 +362,7 @@ export default function LayeredPortalHero() {
             <div
               ref={aboutBloomRef}
               aria-hidden="true"
-              className="absolute inset-0 pointer-events-none mix-blend-screen bg-[radial-gradient(ellipse_at_center,rgba(242,232,216,0.55)_0%,rgba(190,70,90,0.22)_38%,transparent_72%)]"
+              className="absolute inset-0 pointer-events-none mix-blend-screen bg-[radial-gradient(ellipse_at_center,rgba(242,232,216,0.55)_0%,rgba(193,67,145,0.22)_38%,transparent_72%)]"
               style={{ opacity: 0 }}
             />
           </div>
@@ -394,7 +394,7 @@ export default function LayeredPortalHero() {
               {/* Soft subtle architectural contrast vignette behind typography */}
               <div
                 ref={heroBackdropVignetteRef}
-                className="absolute -inset-10 sm:-inset-16 bg-[radial-gradient(ellipse_at_center,rgba(25,3,7,0.50)_0%,rgba(35,5,10,0.25)_45%,transparent_75%)] pointer-events-none -z-1 will-change-transform"
+                className="absolute -inset-10 sm:-inset-16 bg-[radial-gradient(ellipse_at_center,rgba(26,2,17,0.50)_0%,rgba(36,4,24,0.25)_45%,transparent_75%)] pointer-events-none -z-1 will-change-transform"
               />
 
               {/* Monumental Brand Logo (Original High-Res Silver Artwork) */}
@@ -432,7 +432,7 @@ export default function LayeredPortalHero() {
                 <Link href="/register" className="group inline-flex items-center">
                   <button
                     type="button"
-                    className="relative inline-flex items-center justify-center gap-2.5 px-6 sm:px-8 py-3 min-h-[44px] rounded-[2px] bg-[#30070E]/85 hover:bg-[#400A14]/95 border border-[var(--color-cream)]/40 hover:border-[var(--color-cream)]/85 text-[var(--color-cream)] hover:text-white text-[11px] xs:text-[11.5px] sm:text-[12px] md:text-[12.5px] font-medium uppercase tracking-[0.20em] sm:tracking-[0.22em] transition-all duration-300 cursor-pointer backdrop-blur-[2px] luxury-focus-ring motion-reduce:transition-none"
+                    className="relative inline-flex items-center justify-center gap-2.5 px-6 sm:px-8 py-3 min-h-[44px] rounded-[2px] bg-[#310621]/85 hover:bg-[#41092C]/95 border border-[var(--color-cream)]/40 hover:border-[var(--color-cream)]/85 text-[var(--color-cream)] hover:text-white text-[11px] xs:text-[11.5px] sm:text-[12px] md:text-[12.5px] font-medium uppercase tracking-[0.20em] sm:tracking-[0.22em] transition-all duration-300 cursor-pointer backdrop-blur-[2px] luxury-focus-ring motion-reduce:transition-none"
                   >
                     <span className="relative pb-0.5">
                       {texts.hero?.requestCTA || "REQUEST YOUR INVITATION"}

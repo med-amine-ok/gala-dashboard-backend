@@ -107,7 +107,7 @@ function SuccessContent() {
   return (
     <main className="min-h-screen bg-[var(--color-primary)] text-[var(--color-cream)] flex items-center justify-center py-12 px-4 sm:px-6 relative overflow-hidden font-sans">
       {/* Ambient Luxury Event Glows */}
-      <div className="absolute top-[-15%] left-[-10%] w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle,rgba(91,15,26,0.5)_0%,transparent_70%)] opacity-35 blur-3xl pointer-events-none" />
+      <div className="absolute top-[-15%] left-[-10%] w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle,rgba(93,13,61,0.5)_0%,transparent_70%)] opacity-35 blur-3xl pointer-events-none" />
       <div className="absolute bottom-[-15%] right-[-10%] w-[650px] h-[650px] rounded-full bg-[radial-gradient(circle,rgba(192,192,192,0.12)_0%,transparent_70%)] opacity-30 blur-3xl pointer-events-none" />
 
       <div className="w-full max-w-2xl relative z-10 space-y-8">

@@ -70,7 +70,7 @@ export default function LuxuryHotelEntrance3D({
 
     // 1. Scene & Atmosphere Fog (Imperial Burgundy / Dusk Black Cherry)
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x180306, 0.020);
+    scene.fog = new THREE.FogExp2(0x190210, 0.020);
 
     // 2. Camera Setup (Architectural perspective framing the grand entrance)
     const aspect = width / height;
@@ -118,7 +118,7 @@ export default function LuxuryHotelEntrance3D({
     // A) Imperial Burgundy Polished Stone Cladding with Clearcoat Sheen
     const stoneFacadeMat = trackMat(
       new THREE.MeshPhysicalMaterial({
-        color: 0x360812,
+        color: 0x370726,
         roughness: 0.22,
         metalness: 0.18,
         clearcoat: 0.55,
@@ -129,7 +129,7 @@ export default function LuxuryHotelEntrance3D({
     // B) Recessed Shadow Stone & Slab Joints
     const stoneShadowMat = trackMat(
       new THREE.MeshStandardMaterial({
-        color: 0x1d0308,
+        color: 0x1e0214,
         roughness: 0.40,
         metalness: 0.12,
       })
@@ -160,7 +160,7 @@ export default function LuxuryHotelEntrance3D({
     // E) Dark Obsidian Burgundy Marble Ground Floor
     const marbleFloorMat = trackMat(
       new THREE.MeshPhysicalMaterial({
-        color: 0x140206,
+        color: 0x14020e,
         roughness: 0.10,
         metalness: 0.38,
         clearcoat: 0.70,
@@ -171,7 +171,7 @@ export default function LuxuryHotelEntrance3D({
     // F) Royal Burgundy Velvet Runner Carpet
     const carpetMat = trackMat(
       new THREE.MeshStandardMaterial({
-        color: 0x440811,
+        color: 0x46072d,
         roughness: 0.85,
         metalness: 0.04,
       })
@@ -218,7 +218,7 @@ export default function LuxuryHotelEntrance3D({
     // =========================================================================
 
     // Ambient light (Deep Imperial Wine)
-    const ambientLight = new THREE.AmbientLight(0x380913, 0.75);
+    const ambientLight = new THREE.AmbientLight(0x390828, 0.75);
     scene.add(ambientLight);
 
     // Grazing Champagne Key Light
@@ -233,12 +233,12 @@ export default function LuxuryHotelEntrance3D({
     scene.add(keyLight);
 
     // Front Silver Specular Fill Light (Highlights 3D stars & champagne capitals)
-    const frontStarLight = new THREE.DirectionalLight(0xfff8fa, 1.6);
+    const frontStarLight = new THREE.DirectionalLight(0xfff8fd, 1.6);
     frontStarLight.position.set(0, 8.0, 14.0);
     scene.add(frontStarLight);
 
     // Cool Burgundy Architectural Rim Light
-    const rimLight = new THREE.DirectionalLight(0xa51f33, 2.2);
+    const rimLight = new THREE.DirectionalLight(0xa81c71, 2.2);
     rimLight.position.set(-10.5, 9.0, 6.0);
     scene.add(rimLight);
 

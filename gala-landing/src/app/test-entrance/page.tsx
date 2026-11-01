@@ -85,7 +85,7 @@ function createDuskEnvironmentMap(
   renderer: THREE.WebGLRenderer,
 ): THREE.WebGLRenderTarget {
   const envScene = new THREE.Scene();
-  envScene.background = new THREE.Color(0x2d070d);
+  envScene.background = new THREE.Color(0x2e061e);
 
   const topLight = new THREE.Mesh(
     new THREE.PlaneGeometry(32, 32),
@@ -154,7 +154,7 @@ export default function TestEntrancePage() {
     let height = mount.clientHeight || window.innerHeight;
 
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x140206, 0.005);
+    scene.fog = new THREE.FogExp2(0x14020e, 0.005);
 
     const aspect = width / height;
     const camera = new THREE.PerspectiveCamera(38, aspect, 0.1, 140);
@@ -206,7 +206,7 @@ export default function TestEntrancePage() {
 
     const matBurgundyStone = trackMat(
       new THREE.MeshPhysicalMaterial({
-        color: new THREE.Color("#52111f"),
+        color: new THREE.Color("#540f3b"),
         roughness: 0.24,
         metalness: 0.04,
         clearcoat: 0.72,
@@ -227,7 +227,7 @@ export default function TestEntrancePage() {
 
     const matFloor = trackMat(
       new THREE.MeshPhysicalMaterial({
-        color: new THREE.Color("#18040b"),
+        color: new THREE.Color("#180413"),
         roughness: 0.08,
         metalness: 0.16,
         clearcoat: 0.95,
@@ -242,7 +242,7 @@ export default function TestEntrancePage() {
       }),
     );
 
-    const ambientLight = new THREE.AmbientLight(0x4a101d, 1.25);
+    const ambientLight = new THREE.AmbientLight(0x4b0f36, 1.25);
     scene.add(ambientLight);
 
     const keyLight = new THREE.DirectionalLight(0xf4f7fc, 2.8);
@@ -502,9 +502,9 @@ export default function TestEntrancePage() {
   }, []);
 
   return (
-    <div className="relative w-screen h-screen bg-[#140206] text-white overflow-hidden">
+    <div className="relative w-screen h-screen bg-[#14020e] text-white overflow-hidden">
       <div ref={mountRef} className="absolute inset-0 w-full h-full" />
-      <div className="absolute top-4 left-4 z-50 bg-[#140206]/80 border border-[#c0c0c0]/30 backdrop-blur-md rounded-lg p-4 max-w-md shadow-2xl">
+      <div className="absolute top-4 left-4 z-50 bg-[#14020e]/80 border border-[#c0c0c0]/30 backdrop-blur-md rounded-lg p-4 max-w-md shadow-2xl">
         <h1 className="text-sm font-semibold tracking-wider text-[#d5d7db] uppercase mb-1">
           Architectural Entrance 3D Inspector
         </h1>
@@ -512,7 +512,7 @@ export default function TestEntrancePage() {
           Model: <span className="text-[#fff5ea] font-mono">{modelType}</span>
         </p>
         <p className="text-xs text-[#c0c0c0]/60 leading-relaxed font-sans">
-          Rich Burgundy #52111F & Sterling Silver #E0E3E8 under architectural
+          Rich Burgundy #540F3B & Sterling Silver #E0E3E8 under architectural
           studio lighting.
         </p>
       </div>

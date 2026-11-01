@@ -34,7 +34,7 @@ export default function Home() {
         {/* III — THE GALLERY (ARCHIVES) */}
         <section id="historique" className="relative">
           {/* Hand-off: the entrance's dark hall dissolves into the enfilade */}
-          <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[45vh] bg-gradient-to-b from-[#2D070D]/70 via-[#2D070D]/30 to-transparent" />
+          <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[45vh] bg-gradient-to-b from-[#2E061E]/70 via-[#2E061E]/30 to-transparent" />
           <Historique />
         </section>
 

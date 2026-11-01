@@ -115,7 +115,7 @@ export default function Real3DPortalCanvas({
 
     // 1. Scene & Atmosphere Fog
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x180306, 0.024);
+    scene.fog = new THREE.FogExp2(0x190210, 0.024);
 
     // 2. Camera Setup (dynamic FOV for flawless framing on desktop and mobile)
     const aspect = width / height;
@@ -146,14 +146,14 @@ export default function Real3DPortalCanvas({
     // 4. Luxury PBR Materials
     // A) Imperial Burgundy Polished Stone Facade
     const burgundyStoneMaterial = new THREE.MeshStandardMaterial({
-      color: 0x32070f,
+      color: 0x330622,
       roughness: 0.28,
       metalness: 0.18,
     });
 
     // B) Recessed Shadow Stone
     const recessedStoneMaterial = new THREE.MeshStandardMaterial({
-      color: 0x20040a,
+      color: 0x210316,
       roughness: 0.38,
       metalness: 0.22,
     });
@@ -167,7 +167,7 @@ export default function Real3DPortalCanvas({
 
     // D) Dark Obsidian Wine Marble Floor
     const floorMaterial = new THREE.MeshStandardMaterial({
-      color: 0x140206,
+      color: 0x14020e,
       roughness: 0.14,
       metalness: 0.38,
     });
@@ -180,7 +180,7 @@ export default function Real3DPortalCanvas({
     });
 
     // 5. Lighting Setup
-    const ambientLight = new THREE.AmbientLight(0x350812, 0.65);
+    const ambientLight = new THREE.AmbientLight(0x360726, 0.65);
     scene.add(ambientLight);
 
     // Champagne Key Light

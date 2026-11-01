@@ -22,7 +22,7 @@ export default function ManifestoSection() {
           sizes="100vw"
           className="object-cover object-center scale-100 opacity-35 filter brightness-[0.72] contrast-[1.12] saturate-[0.85]"
         />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(45,7,13,0.35)_0%,rgba(20,3,6,0.92)_85%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(46,6,30,0.35)_0%,rgba(20,3,14,0.92)_85%)]" />
         <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-dark)] via-transparent to-[var(--color-dark)]" />
       </div>
 

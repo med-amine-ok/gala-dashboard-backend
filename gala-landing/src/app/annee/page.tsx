@@ -96,7 +96,7 @@ export default function ThisYearSection() {
       className="relative min-h-screen w-full bg-[var(--color-dark)] text-[var(--color-cream)] flex flex-col justify-center py-24 sm:py-36 px-6 sm:px-12 overflow-hidden border-t border-[var(--color-silver)]/20"
     >
       {/* Ambient Maroon & Silver Glows */}
-      <div className="absolute top-[10%] right-[-10%] w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle,rgba(139,30,45,0.45)_0%,transparent_70%)] opacity-35 blur-3xl pointer-events-none" />
+      <div className="absolute top-[10%] right-[-10%] w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle,rgba(142,27,96,0.45)_0%,transparent_70%)] opacity-35 blur-3xl pointer-events-none" />
       <div className="absolute bottom-[10%] left-[-10%] w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle,rgba(192,192,192,0.12)_0%,transparent_70%)] opacity-30 blur-3xl pointer-events-none" />
 
       <div className="max-w-7xl w-full mx-auto">
@@ -193,7 +193,7 @@ export default function ThisYearSection() {
           <div className="lg:col-span-6 relative [perspective:1000px]">
             <motion.div
               style={{ x: parallaxX, y: parallaxY }}
-              className="relative h-[320px] sm:h-[420px] rounded-2xl bg-[var(--color-dark)] border border-[var(--color-silver)]/30 p-6 shadow-[0_25px_50px_-15px_rgba(45,7,13,0.7)] overflow-hidden flex items-center justify-center"
+              className="relative h-[320px] sm:h-[420px] rounded-2xl bg-[var(--color-dark)] border border-[var(--color-silver)]/30 p-6 shadow-[0_25px_50px_-15px_rgba(46,6,30,0.7)] overflow-hidden flex items-center justify-center"
             >
               {/* Inner Decorative Silver Frame */}
               <div className="absolute inset-4 border border-[var(--color-silver)]/25 rounded-xl pointer-events-none" />

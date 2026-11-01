@@ -13,7 +13,7 @@ import * as THREE from "three";
  * the rooms, a few grains at first and more in each room; at the farewell
  * every grain flies home and becomes the event's mark (sampled from
  * /GALA-silver.png, in its own colours) exactly where the footer logo sits.
- * The burgundy void behind the rooms is plain CSS beneath the content.
+ * The plum velvet behind the rooms is plain CSS beneath the content.
  */
 
 const ROOM_IDS = ["historique", "piliers", "tarification", "apropos", "footer"] as const;
@@ -736,11 +736,15 @@ export default function GalaWorld() {
 
   return (
     <>
-      {/* The burgundy void behind the rooms (the hero covers it) */}
-      <div aria-hidden className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(ellipse_70%_60%_at_50%_45%,#3c0a15_0%,#22050b_55%,#100205_100%)]">
+      {/* The velvet behind the rooms (the hero covers it): the post template's
+          tufted plum velvet, its pools of light drifting, deepened for the copy */}
+      <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        <div className="gala-velvet absolute inset-0" />
+        <div className="gala-velvet-light absolute -inset-[10%]" />
+        <div className="gala-velvet-veil absolute inset-0" />
         <div
           ref={warm}
-          className="absolute inset-0 opacity-0 bg-[radial-gradient(ellipse_45%_40%_at_50%_42%,rgba(150,40,62,0.45)_0%,transparent_75%)]"
+          className="absolute inset-0 opacity-0 bg-[radial-gradient(ellipse_45%_40%_at_50%_42%,rgba(211,55,145,0.32)_0%,transparent_75%)] mix-blend-screen"
         />
       </div>
       {/* The dust: over the hero while it is the hero, behind the rooms' content after */}

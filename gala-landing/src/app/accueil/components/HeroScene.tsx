@@ -257,7 +257,7 @@ export default function HeroScene({ scrollProgress, onLoaded }: HeroSceneProps) 
   if (!webGLSupported) {
     return (
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-dark)] via-[#360810]/40 to-[var(--color-dark)]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-dark)] via-[#370725]/40 to-[var(--color-dark)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(192,192,192,0.18)_0%,transparent_75%)]" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[850px] rounded-full border border-[var(--color-silver)]/20 opacity-40 blur-sm" />
       </div>

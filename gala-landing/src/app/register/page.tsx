@@ -343,7 +343,7 @@ function RegistrationContent() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#1c040a] text-[var(--color-cream)] font-sans">
+    <div className="relative min-h-screen overflow-hidden bg-[#1d0314] text-[var(--color-cream)] font-sans">
       <Salon />
 
       <header className="relative z-20 mx-auto flex max-w-6xl items-center justify-between px-6 pt-6 sm:px-10 sm:pt-8">
@@ -393,9 +393,9 @@ function RegistrationContent() {
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
-                  className="mx-auto mt-6 flex max-w-[920px] items-start gap-3 rounded-xl border border-[#e0707f]/40 bg-[#4a0b16]/70 p-4 text-[13px] text-[var(--color-cream)]"
+                  className="mx-auto mt-6 flex max-w-[920px] items-start gap-3 rounded-xl border border-[#e36db3]/40 bg-[#4c0933]/70 p-4 text-[13px] text-[var(--color-cream)]"
                 >
-                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-[#f0a0ab]" aria-hidden />
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-[#f29ed0]" aria-hidden />
                   <span>{submitError}</span>
                 </motion.div>
               )}
@@ -403,7 +403,7 @@ function RegistrationContent() {
 
             {/* Turning controls: under the card on large screens, pinned on phones */}
             {!done && step < 4 && (
-              <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[var(--color-silver)]/15 bg-[#1c040a]/92 px-5 py-4 backdrop-blur-md sm:static sm:mx-auto sm:mt-8 sm:max-w-[920px] sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none">
+              <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[var(--color-silver)]/15 bg-[#1d0314]/92 px-5 py-4 backdrop-blur-md sm:static sm:mx-auto sm:mt-8 sm:max-w-[920px] sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none">
                 <div className="flex items-center justify-between gap-4">
                   {step > 1 ? (
                     <button
@@ -455,7 +455,7 @@ export default function RegistrationPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-[#1c040a]">
+        <div className="flex min-h-screen items-center justify-center bg-[#1d0314]">
           <GalaStar className="w-12 animate-pulse text-[var(--color-silver)]" />
         </div>
       }
@@ -467,7 +467,7 @@ export default function RegistrationPage() {
 
 /* ───────────────────────────── The setting ───────────────────────────── */
 
-/** Burgundy salon: deep vignette, a warm pool of light and slow silver motes */
+/** Velvet salon: the template's plum velvet, drifting light and slow silver motes */
 function Salon() {
   const motes = useMemo(
     () =>
@@ -482,8 +482,10 @@ function Salon() {
   );
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 z-0">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_50%_45%,#4a0d1a_0%,#2a060e_45%,#140207_100%)]" />
-      <div className="absolute left-1/2 top-[30%] h-[80vh] w-[80vh] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(170,60,82,0.16),transparent_65%)] blur-2xl" />
+      {/* The post template's plum velvet, its light drifting across the tufting */}
+      <div className="gala-velvet absolute inset-0" />
+      <div className="gala-velvet-light absolute -inset-[10%]" />
+      <div className="gala-velvet-veil absolute inset-0 opacity-90" />
       {motes.map((m, i) => (
         <span
           key={i}
@@ -626,7 +628,7 @@ function Face({ children, back, active, sweep }: { children: React.ReactNode; ba
       // The face turned away can't be reached by keyboard or screen reader
       inert={!active}
       aria-hidden={!active}
-      className="relative overflow-hidden rounded-[26px] bg-[radial-gradient(130%_100%_at_15%_0%,#6e1226_0%,#3c0813_48%,#1d0309_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_50px_90px_-40px_rgba(0,0,0,0.95)] [backface-visibility:hidden] [grid-area:1/1]"
+      className="relative overflow-hidden rounded-[26px] bg-[radial-gradient(130%_100%_at_15%_0%,#70104e_0%,#3d072a_48%,#1e0214_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_50px_90px_-40px_rgba(0,0,0,0.95)] [backface-visibility:hidden] [grid-area:1/1]"
       // Each face sits just proud of the silver core on its own side
       style={{ transform: back ? "rotateY(180deg) translateZ(2.6px)" : "translateZ(2.6px)" }}
     >
@@ -637,7 +639,7 @@ function Face({ children, back, active, sweep }: { children: React.ReactNode; ba
             key={i}
             d={`M -10 ${30 + i * 9} C 90 ${0 + i * 9}, 170 ${70 + i * 9}, 250 ${30 + i * 9} S 390 ${0 + i * 9}, 420 ${40 + i * 9}`}
             fill="none"
-            stroke="#f3d6dc"
+            stroke="#f4d5e9"
             strokeWidth="0.45"
           />
         ))}
@@ -669,7 +671,7 @@ function Face({ children, back, active, sweep }: { children: React.ReactNode; ba
           initial={{ x: "-130%", opacity: 0 }}
           animate={{ x: "130%", opacity: [0, 1, 1, 0] }}
           transition={{ duration: 1.05, delay: 0.1, ease: [0.3, 0.1, 0.2, 1] }}
-          className="pointer-events-none absolute inset-y-0 left-0 w-full bg-[linear-gradient(100deg,transparent_30%,rgba(255,240,244,0.16)_46%,rgba(255,255,255,0.32)_50%,rgba(255,240,244,0.16)_54%,transparent_70%)] mix-blend-screen"
+          className="pointer-events-none absolute inset-y-0 left-0 w-full bg-[linear-gradient(100deg,transparent_30%,rgba(255,240,250,0.16)_46%,rgba(255,255,255,0.32)_50%,rgba(255,240,250,0.16)_54%,transparent_70%)] mix-blend-screen"
         />
       )}
     </div>
@@ -718,7 +720,7 @@ function FaceHead({ numeral, title, right }: { numeral: string; title: string; r
       {/* The face's numeral, engraved large into the stock */}
       <span
         aria-hidden
-        className="pointer-events-none absolute -bottom-6 right-4 select-none font-cinzel text-[150px] font-semibold leading-none text-[#f3d6dc]/[0.045] sm:right-10 sm:text-[230px]"
+        className="pointer-events-none absolute -bottom-6 right-4 select-none font-cinzel text-[150px] font-semibold leading-none text-[#f4d5e9]/[0.045] sm:right-10 sm:text-[230px]"
       >
         {numeral}
       </span>
@@ -754,7 +756,7 @@ function Caption({ htmlFor, children, required }: { htmlFor: string; children: R
     <label htmlFor={htmlFor} className="mt-2 flex items-center gap-1.5 text-[9.5px] font-semibold uppercase tracking-[0.24em] text-[#d6dbe2]/60">
       {children}
       {required ? (
-        <span className="text-[#e7a1ab]" aria-hidden>
+        <span className="text-[#e99fcc]" aria-hidden>
           ✦
         </span>
       ) : (
@@ -773,7 +775,7 @@ function LineError({ id, error }: { id: string; error?: string }) {
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
           exit={{ opacity: 0, height: 0 }}
-          className="mt-1.5 flex items-center gap-1.5 text-[12px] text-[#f0a0ab]"
+          className="mt-1.5 flex items-center gap-1.5 text-[12px] text-[#f29ed0]"
         >
           <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden />
           {error}
@@ -816,7 +818,7 @@ function Blank({
         aria-invalid={!!error}
         aria-describedby={error ? errId : undefined}
         {...register(name)}
-        className={`${writtenText} border-b ${error ? "border-[#e0707f]/80" : "border-dashed border-[#d6dbe2]/35 focus:border-solid focus:border-[#e8ecf2]"} px-1 pb-1.5 transition-colors duration-300 ${
+        className={`${writtenText} border-b ${error ? "border-[#e36db3]/80" : "border-dashed border-[#d6dbe2]/35 focus:border-solid focus:border-[#e8ecf2]"} px-1 pb-1.5 transition-colors duration-300 ${
           size === "lg" ? "h-[58px] text-[30px] sm:h-[66px] sm:text-[40px]" : "h-[46px] text-[21px] sm:text-[23px]"
         }`}
       />
@@ -850,7 +852,7 @@ function ChoiceBlank({
           aria-invalid={!!error}
           aria-describedby={error ? errId : undefined}
           {...register(name)}
-          className={`${writtenText} h-[46px] cursor-pointer appearance-none truncate border-b border-dashed border-[#d6dbe2]/35 px-1 pb-1.5 pr-8 text-[21px] transition-colors focus:border-solid focus:border-[#e8ecf2] sm:text-[23px] [&>option]:bg-[#2a060e] [&>option]:font-sans [&>option]:not-italic [&>option]:text-[15px]`}
+          className={`${writtenText} h-[46px] cursor-pointer appearance-none truncate border-b border-dashed border-[#d6dbe2]/35 px-1 pb-1.5 pr-8 text-[21px] transition-colors focus:border-solid focus:border-[#e8ecf2] sm:text-[23px] [&>option]:bg-[#2b051e] [&>option]:font-sans [&>option]:not-italic [&>option]:text-[15px]`}
         >
           {options.map((o) => (
             <option key={o.value} value={o.value}>
@@ -889,7 +891,7 @@ function Lines({
       <label htmlFor={id} className="block font-cinzel text-[13px] font-semibold leading-snug tracking-[0.06em] text-[#e3e6ea] sm:text-[15px]">
         {prompt}
         {required ? (
-          <span className="ml-1.5 text-[#e7a1ab]" aria-hidden>
+          <span className="ml-1.5 text-[#e99fcc]" aria-hidden>
             ✦
           </span>
         ) : (
@@ -903,7 +905,7 @@ function Lines({
         aria-invalid={!!error}
         aria-describedby={error ? errId : undefined}
         {...register(name)}
-        className={`${writtenText} mt-3 resize-none bg-[repeating-linear-gradient(transparent,transparent_37px,rgba(214,219,226,0.22)_37px,rgba(214,219,226,0.22)_38px)] bg-local px-1 text-[21px] leading-[38px] sm:text-[22px] ${error ? "rounded-sm shadow-[0_0_0_1px_rgba(224,112,127,0.6)]" : ""}`}
+        className={`${writtenText} mt-3 resize-none bg-[repeating-linear-gradient(transparent,transparent_37px,rgba(214,219,226,0.22)_37px,rgba(214,219,226,0.22)_38px)] bg-local px-1 text-[21px] leading-[38px] sm:text-[22px] ${error ? "rounded-sm shadow-[0_0_0_1px_rgba(227,109,179,0.6)]" : ""}`}
       />
       <LineError id={errId} error={error} />
     </div>
@@ -1037,7 +1039,7 @@ function FaceVision({ texts }: { texts: Texts }) {
                   <label
                     key={String(o.v)}
                     className={`relative flex min-h-[48px] min-w-[96px] cursor-pointer items-center justify-center rounded-full border px-6 font-cormorant text-[20px] italic transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-1 has-[:focus-visible]:outline-[#e8ecf2] ${
-                      on ? "border-[#e8ecf2]/80 bg-[#7a1428]/70 text-[var(--color-cream)]" : "border-[#d6dbe2]/25 text-[var(--color-cream)]/55 hover:border-[#d6dbe2]/50"
+                      on ? "border-[#e8ecf2]/80 bg-[#7d1155]/70 text-[var(--color-cream)]" : "border-[#d6dbe2]/25 text-[var(--color-cream)]/55 hover:border-[#d6dbe2]/50"
                     }`}
                   >
                     <input
@@ -1189,7 +1191,7 @@ function SealButton({ loading, onPress }: { loading: boolean; onPress: () => voi
       transition={loading ? { duration: 1.2, repeat: Infinity } : { type: "spring", stiffness: 300, damping: 18 }}
       className="relative h-[104px] w-[104px] cursor-pointer rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#e8ecf2] disabled:cursor-wait sm:h-[118px] sm:w-[118px]"
     >
-      <span className="absolute inset-0 rounded-[47%_53%_50%_50%/52%_48%_52%_48%] bg-[radial-gradient(circle_at_34%_28%,#ffffff_0%,#e4e7ec_16%,#b3b9c3_42%,#7d848f_72%,#555b65_100%)] shadow-[0_14px_28px_rgba(5,1,2,0.7),inset_0_2px_3px_rgba(255,255,255,0.75),inset_0_-4px_8px_rgba(40,44,52,0.55)]" />
+      <span className="absolute inset-0 rounded-[47%_53%_50%_50%/52%_48%_52%_48%] bg-[radial-gradient(circle_at_34%_28%,#ffffff_0%,#e4e7ec_16%,#b3b9c3_42%,#7d848f_72%,#555b65_100%)] shadow-[0_14px_28px_rgba(5,1,4,0.7),inset_0_2px_3px_rgba(255,255,255,0.75),inset_0_-4px_8px_rgba(40,44,52,0.55)]" />
       <span className="absolute inset-[11%] rounded-full bg-[radial-gradient(circle_at_40%_32%,#f4f5f7_0%,#c9ced6_45%,#9aa1ab_100%)] shadow-[inset_0_3px_6px_rgba(40,44,52,0.55),inset_0_-1px_1px_rgba(255,255,255,0.8)]" />
       <svg viewBox="0 0 100 100" className="absolute inset-[11%] h-[78%] w-[78%]" aria-hidden>
         <defs>
@@ -1246,7 +1248,7 @@ function FaceReceived({ data, texts }: { data: RegistrationData; texts: Texts })
           <li key={j} className="flex flex-col items-center gap-2">
             <span
               className={`flex h-7 w-7 items-center justify-center rounded-full border text-[11px] ${
-                i === 0 ? "border-[#e8ecf2] bg-[#7a1428] text-[var(--color-cream)]" : "border-[#d6dbe2]/30 text-[#d6dbe2]/60"
+                i === 0 ? "border-[#e8ecf2] bg-[#7d1155] text-[var(--color-cream)]" : "border-[#d6dbe2]/30 text-[#d6dbe2]/60"
               }`}
             >
               {i === 0 ? <Check className="h-3.5 w-3.5" aria-hidden /> : i + 1}
@@ -1280,7 +1282,7 @@ function CardProgress({ step, titles, onJump }: { step: number; titles: string[]
               <span
                 className={`relative flex h-8 w-8 items-center justify-center rounded-full border font-cinzel text-[11px] font-semibold transition-colors duration-500 ${
                   state === "current"
-                    ? "border-[#e8ecf2] bg-[#7a1428] text-[var(--color-cream)]"
+                    ? "border-[#e8ecf2] bg-[#7d1155] text-[var(--color-cream)]"
                     : state === "done"
                       ? "border-[#d6dbe2]/60 text-[#e8ecf2] group-hover:border-[#e8ecf2]"
                       : "border-[#d6dbe2]/20 text-[#d6dbe2]/40"
@@ -1323,7 +1325,7 @@ function CardProgress({ step, titles, onJump }: { step: number; titles: string[]
 
 function TurnButton({ children, onClick, href }: { children: React.ReactNode; onClick?: () => void; href?: string }) {
   const cls =
-    "group relative inline-flex min-h-[52px] cursor-pointer items-center gap-3 overflow-hidden rounded-full border border-[#e8ecf2]/60 bg-[linear-gradient(180deg,#7a1428,#4a0a17)] px-7 text-[11.5px] font-semibold uppercase tracking-[0.2em] text-[var(--color-cream)] shadow-[0_14px_30px_-12px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.18)] transition-[transform,border-color] duration-300 hover:border-[#f4f5f7] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#d6dbe2] sm:px-9";
+    "group relative inline-flex min-h-[52px] cursor-pointer items-center gap-3 overflow-hidden rounded-full border border-[#e8ecf2]/60 bg-[linear-gradient(180deg,#7d1155,#4c0833)] px-7 text-[11.5px] font-semibold uppercase tracking-[0.2em] text-[var(--color-cream)] shadow-[0_14px_30px_-12px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.18)] transition-[transform,border-color] duration-300 hover:border-[#f4f5f7] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#d6dbe2] sm:px-9";
   const inner = (
     <>
       <span

@@ -623,7 +623,7 @@ export default function Real3DEntranceCanvas({
 
     // ── 2. SCENE & WARM LUMINOUS BURGUNDY FOG ─────────────────────────────────
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x420a16, 0.005);
+    scene.fog = new THREE.FogExp2(0x43092f, 0.005);
 
     // ── 3. CAMERA SETUP ──────────────────────────────────────────────────────
     const aspect = width / height;
@@ -684,6 +684,22 @@ export default function Real3DEntranceCanvas({
         envMapIntensity: 0.85,
       }),
     );
+    // The façade is dressed in the post template's tufted plum velvet. The
+    // extruded wall's UVs are in metres, so one image spans ~7m of wall.
+    new THREE.TextureLoader().load("/images/velvet-wall.jpg", (velvet) => {
+      velvet.colorSpace = THREE.SRGBColorSpace;
+      // Mirrored tiling: every edge meets its own reflection, so the wall has no seams
+      velvet.wrapS = velvet.wrapT = THREE.MirroredRepeatWrapping;
+      velvet.repeat.set(1 / 7, 1 / 7);
+      velvet.anisotropy = maxAnisotropy;
+      trackTex(velvet);
+      matFacadeWall.map = velvet;
+      matFacadeWall.roughnessMap = null;
+      matFacadeWall.bumpMap = null;
+      matFacadeWall.roughness = 0.82; // velvet drinks the light rather than mirroring it
+      matFacadeWall.color.set(0xe6dfe3);
+      matFacadeWall.needsUpdate = true;
+    });
 
     // 2. Grand portal surround & pilasters (Carved luxury stone with soft satin sheen)
     const matPortalStone = trackMat(
@@ -720,7 +736,7 @@ export default function Real3DEntranceCanvas({
     // Step Vertical Risers (In soft ambient shadow)
     const matStepRiser = trackMat(
       new THREE.MeshStandardMaterial({
-        color: new THREE.Color(0xbfa5ab),
+        color: new THREE.Color(0xbfa3b6),
         map: stoneTextures.diffuse,
         roughnessMap: stoneTextures.roughness,
         bumpMap: stoneTextures.bump,
@@ -748,7 +764,7 @@ export default function Real3DEntranceCanvas({
     // 4. Glass entrance doors & transoms (Smoked crystal glass with refined reflections)
     const matDoorGlass = trackMat(
       new THREE.MeshPhysicalMaterial({
-        color: new THREE.Color("#2a1217"),
+        color: new THREE.Color("#2b1122"),
         opacity: 0.40,
         transparent: true,
         roughness: 0.04,
@@ -764,7 +780,7 @@ export default function Real3DEntranceCanvas({
     matDoorGlass.envMap = envTarget.texture;
     matDoorGlass.envMapIntensity = 0.12;
 
-    // 5. Red carpet velvet (Deep royal gala crimson: #B81D35 with woven microtexture & cloth sheen)
+    // 5. Red carpet velvet (Deep royal gala crimson: #BC197C with woven microtexture & cloth sheen)
     const matRedCarpet = trackMat(
       new THREE.MeshPhysicalMaterial({
         color: new THREE.Color(0xffffff),
@@ -775,7 +791,7 @@ export default function Real3DEntranceCanvas({
         roughness: 0.92,
         metalness: 0.0,
         sheen: 1.0,
-        sheenColor: new THREE.Color("#A2152E"),
+        sheenColor: new THREE.Color("#A6116E"),
         sheenRoughness: 0.40,
         envMapIntensity: 0.10,
       }),
@@ -814,12 +830,12 @@ export default function Real3DEntranceCanvas({
     // 8. Stanchion velvet ropes (Royal burgundy velvet)
     const matRope = trackMat(
       new THREE.MeshPhysicalMaterial({
-        color: new THREE.Color("#7A0E22"),
+        color: new THREE.Color("#7D0B52"),
         normalMap: ropeNormal,
         roughness: 0.88,
         metalness: 0.0,
         sheen: 1.0,
-        sheenColor: new THREE.Color("#A2152E"),
+        sheenColor: new THREE.Color("#A6116E"),
         sheenRoughness: 0.35,
       }),
     );
@@ -871,7 +887,7 @@ export default function Real3DEntranceCanvas({
     // Dark red rose florets
     const matRoses = trackMat(
       new THREE.MeshStandardMaterial({
-        color: new THREE.Color("#660A1A"),
+        color: new THREE.Color("#680844"),
         roughness: 0.75,
         metalness: 0.05,
       }),
@@ -889,13 +905,13 @@ export default function Real3DEntranceCanvas({
 
     // ── 6. ARCHITECTURAL LIGHTING SETUP (PHYSICALLY CALIBRATED) ───────────────
     // Soft subtle wine ambient fill so shadowed areas retain their deep burgundy identity (Requirement 9 & 1)
-    scene.add(new THREE.AmbientLight(0x320a12, 0.85));
+    scene.add(new THREE.AmbientLight(0x330924, 0.85));
 
     // Atmospheric hemisphere light: rich warm architectural burgundy sky + deep mahogany ground bounce (no white washout)
-    scene.add(new THREE.HemisphereLight(0x7e2030, 0x140306, 0.60));
+    scene.add(new THREE.HemisphereLight(0x801e5b, 0x14030e, 0.60));
 
     // Soft wide frontal backdrop wash in warm wine-rose to naturally reveal the stone textures without white burnout
-    const backdropWash = new THREE.DirectionalLight(0xd2828e, isMobile ? 0.22 : 0.40);
+    const backdropWash = new THREE.DirectionalLight(0xd480b3, isMobile ? 0.22 : 0.40);
     backdropWash.position.set(0, 8.0, 16.0);
     scene.add(backdropWash);
 
@@ -1383,7 +1399,7 @@ export default function Real3DEntranceCanvas({
       return m;
     };
     const matFoyerStone = trackMat(interiorLightingOnly(matPortalStone.clone()));
-    matFoyerStone.color.set(0xb07a84);
+    matFoyerStone.color.set(0xb1799c);
     // The exterior studio environment would read as daylight indoors (and at the
     // foyer's grazing angles its Fresnel reflection washes the walls cream).
     // envMapIntensity only applies to a material's own envMap, not scene.environment.
@@ -1413,7 +1429,7 @@ export default function Real3DEntranceCanvas({
     const corridorEndG = trackGeom(new THREE.PlaneGeometry(CORRIDOR_W, CORRIDOR_H));
     const corridorEndM = trackMat(
       new THREE.MeshStandardMaterial({
-        color: new THREE.Color("#2a060d"),
+        color: new THREE.Color("#2b051d"),
         roughness: 0.60,
       }),
     );
@@ -1501,7 +1517,7 @@ export default function Real3DEntranceCanvas({
       const nosingShadowG = trackGeom(new THREE.PlaneGeometry(STEP_W, 0.04));
       const nosingShadowM = trackMat(
         new THREE.MeshBasicMaterial({
-          color: 0x050102,
+          color: 0x050104,
           transparent: true,
           opacity: 0.55,
           depthWrite: false,
@@ -1581,7 +1597,7 @@ export default function Real3DEntranceCanvas({
       const edgeShadowG = trackGeom(new THREE.PlaneGeometry(0.12, 14.5));
       const edgeShadowM = trackMat(
         new THREE.MeshBasicMaterial({
-          color: 0x050102,
+          color: 0x050104,
           transparent: true,
           opacity: 0.60,
           depthWrite: false,

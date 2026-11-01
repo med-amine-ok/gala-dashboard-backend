@@ -171,7 +171,7 @@ function EnvelopeStage({ hint }: { hint: string }) {
   const ticketRotate = useTransform(p, [0.66, 1], [0, -1.4]);
   const ticketShadow = useTransform(
     ticketLift,
-    (l) => `drop-shadow(0 ${6 + l * 18}px ${10 + l * 22}px rgba(8,1,3,${0.45 + l * 0.25}))`,
+    (l) => `drop-shadow(0 ${6 + l * 18}px ${10 + l * 22}px rgba(8,1,6,${0.45 + l * 0.25}))`,
   );
 
   const hintOpacity = useTransform(p, [0.92, 1], [0, 1]);
@@ -184,7 +184,7 @@ function EnvelopeStage({ hint }: { hint: string }) {
         <defs>
           {/* Silver damask lining: a lattice of small ✦ stars */}
           <pattern id="gala-liner" width="26" height="26" patternUnits="userSpaceOnUse">
-            <rect width="26" height="26" fill="#25060c" />
+            <rect width="26" height="26" fill="#26051a" />
             <path
               d="M13 6 L14.2 11.8 L20 13 L14.2 14.2 L13 20 L11.8 14.2 L6 13 L11.8 11.8 Z"
               fill="rgba(214,220,228,0.30)"
@@ -205,13 +205,13 @@ function EnvelopeStage({ hint }: { hint: string }) {
           {/* Envelope back: its lined inside is what shows above the lip */}
           <div
             aria-hidden="true"
-            className="absolute inset-x-0 bottom-0 overflow-hidden rounded-[4px] shadow-[0_50px_80px_-40px_rgba(8,1,3,0.95)]"
+            className="absolute inset-x-0 bottom-0 overflow-hidden rounded-[4px] shadow-[0_50px_80px_-40px_rgba(8,1,6,0.95)]"
             style={{ top: ENV_TOP }}
           >
             <svg className="h-full w-full">
               <rect width="100%" height="100%" fill="url(#gala-liner)" />
             </svg>
-            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,1,3,0.6)_0%,rgba(8,1,3,0.12)_45%)]" />
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,1,6,0.6)_0%,rgba(8,1,6,0.12)_45%)]" />
           </div>
 
           {/* Top flap, hinged on the envelope's top edge */}
@@ -226,13 +226,13 @@ function EnvelopeStage({ hint }: { hint: string }) {
             >
               {/* Outside, with the upper half of the wax seal on its point */}
               <div className="absolute inset-0 [backface-visibility:hidden]">
-                <div className="absolute inset-0 [clip-path:polygon(0_0,100%_0,50%_100%)] bg-[linear-gradient(180deg,#5e1424_0%,#4a0e1b_70%,#3f0b16_100%)]" />
+                <div className="absolute inset-0 [clip-path:polygon(0_0,100%_0,50%_100%)] bg-[linear-gradient(180deg,#601244_0%,#4c0c35_70%,#400a2d_100%)]" />
                 <motion.div
                   style={{ opacity: flapOutsideShade }}
-                  className="absolute inset-0 bg-[#080103] [clip-path:polygon(0_0,100%_0,50%_100%)]"
+                  className="absolute inset-0 bg-[#080106] [clip-path:polygon(0_0,100%_0,50%_100%)]"
                 />
                 <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                  <path d="M0 0 L50 100 L100 0" fill="none" stroke="rgba(255,214,222,0.30)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
+                  <path d="M0 0 L50 100 L100 0" fill="none" stroke="rgba(255,214,240,0.30)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
                 </svg>
                 <WaxSeal half="upper" className="left-1/2 top-full" />
               </div>
@@ -245,7 +245,7 @@ function EnvelopeStage({ hint }: { hint: string }) {
                   <svg className="h-full w-full">
                     <rect width="100%" height="100%" fill="url(#gala-liner)" />
                   </svg>
-                  <motion.div style={{ opacity: flapInsideShade }} className="absolute inset-0 bg-[#080103]" />
+                  <motion.div style={{ opacity: flapInsideShade }} className="absolute inset-0 bg-[#080106]" />
                 </div>
                 <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
                   <path d="M0 100 L50 0 L100 100" fill="none" stroke="rgba(214,220,228,0.45)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
@@ -271,16 +271,16 @@ function EnvelopeStage({ hint }: { hint: string }) {
             <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
               <defs>
                 <linearGradient id="gala-left" x1="0" y1="0" x2="1" y2="0.3">
-                  <stop offset="0" stopColor="#5a1222" />
-                  <stop offset="1" stopColor="#47101c" />
+                  <stop offset="0" stopColor="#5c1041" />
+                  <stop offset="1" stopColor="#480f34" />
                 </linearGradient>
                 <linearGradient id="gala-right" x1="1" y1="0" x2="0" y2="0.3">
-                  <stop offset="0" stopColor="#4a0f1c" />
-                  <stop offset="1" stopColor="#380912" />
+                  <stop offset="0" stopColor="#4b0e36" />
+                  <stop offset="1" stopColor="#390827" />
                 </linearGradient>
                 <linearGradient id="gala-bottom" x1="0" y1="1" x2="0" y2="0">
-                  <stop offset="0" stopColor="#350811" />
-                  <stop offset="1" stopColor="#4e101d" />
+                  <stop offset="0" stopColor="#360725" />
+                  <stop offset="1" stopColor="#500e38" />
                 </linearGradient>
               </defs>
               {/* Side flaps meet in the middle; their top edges form the lip */}
@@ -289,16 +289,16 @@ function EnvelopeStage({ hint }: { hint: string }) {
               {/* Bottom flap folded over them */}
               <path d="M0 100 L50 52 L100 100 Z" fill="url(#gala-bottom)" />
               {/* Seams: a soft shadow under each fold, a lit paper edge on the lip */}
-              <path d="M0 100 L50 52 L100 100" fill="none" stroke="rgba(8,1,3,0.45)" strokeWidth="2" vectorEffect="non-scaling-stroke" />
-              <path d="M0.5 99 L50 53.2 L99.5 99" fill="none" stroke="rgba(255,214,222,0.14)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
-              <path d="M0 0 L50 44.2 L100 0" fill="none" stroke="rgba(255,220,226,0.38)" strokeWidth="1.2" vectorEffect="non-scaling-stroke" />
+              <path d="M0 100 L50 52 L100 100" fill="none" stroke="rgba(8,1,6,0.45)" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+              <path d="M0.5 99 L50 53.2 L99.5 99" fill="none" stroke="rgba(255,214,240,0.14)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
+              <path d="M0 0 L50 44.2 L100 0" fill="none" stroke="rgba(255,220,242,0.38)" strokeWidth="1.2" vectorEffect="non-scaling-stroke" />
               {/* Paper grain over the whole front */}
               <rect width="100" height="100" filter="url(#gala-paper)" opacity="0.9" style={{ mixBlendMode: "overlay" }} />
             </svg>
             {/* Shadow the lifting flap casts on the envelope */}
             <motion.div
               style={{ opacity: flapCastShadow }}
-              className="absolute inset-x-0 top-0 h-[60%] bg-[#080103] [clip-path:polygon(0_0,100%_0,50%_100%)] blur-[10px]"
+              className="absolute inset-x-0 top-0 h-[60%] bg-[#080106] [clip-path:polygon(0_0,100%_0,50%_100%)] blur-[10px]"
             />
           </div>
 
@@ -341,7 +341,7 @@ function WaxSeal({ half, className = "" }: { half: "upper" | "lower"; className?
       }}
     >
       {/* Poured silver wax: soft, slightly uneven lip */}
-      <div className="absolute inset-0 rounded-[47%_53%_50%_50%/52%_48%_52%_48%] bg-[radial-gradient(circle_at_34%_28%,#ffffff_0%,#e4e7ec_16%,#b3b9c3_42%,#7d848f_72%,#555b65_100%)] shadow-[0_8px_18px_rgba(8,1,3,0.6),inset_0_2px_3px_rgba(255,255,255,0.75),inset_0_-4px_8px_rgba(40,44,52,0.55)]" />
+      <div className="absolute inset-0 rounded-[47%_53%_50%_50%/52%_48%_52%_48%] bg-[radial-gradient(circle_at_34%_28%,#ffffff_0%,#e4e7ec_16%,#b3b9c3_42%,#7d848f_72%,#555b65_100%)] shadow-[0_8px_18px_rgba(8,1,6,0.6),inset_0_2px_3px_rgba(255,255,255,0.75),inset_0_-4px_8px_rgba(40,44,52,0.55)]" />
       {/* The pressed face of the stamp */}
       <div className="absolute inset-[11%] rounded-full bg-[radial-gradient(circle_at_40%_32%,#f4f5f7_0%,#c9ced6_45%,#9aa1ab_100%)] shadow-[inset_0_3px_6px_rgba(40,44,52,0.55),inset_0_-1px_1px_rgba(255,255,255,0.8),0_1px_0_rgba(255,255,255,0.6)]" />
       {/* Club name engraved around the rim */}
@@ -413,7 +413,7 @@ function InteractiveTicket({ interactive }: { interactive: boolean }) {
         >
           <div
             style={{ backfaceVisibility: "hidden" }}
-            className="absolute inset-0 overflow-hidden rounded-[10px] shadow-[0_24px_50px_-20px_rgba(8,1,3,0.9)] ring-1 ring-black/20"
+            className="absolute inset-0 overflow-hidden rounded-[10px] shadow-[0_24px_50px_-20px_rgba(8,1,6,0.9)] ring-1 ring-black/20"
           >
             <Image
               src="/tickets-01.svg"
@@ -430,7 +430,7 @@ function InteractiveTicket({ interactive }: { interactive: boolean }) {
           </div>
           <div
             style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
-            className="absolute inset-0 overflow-hidden rounded-[10px] shadow-[0_24px_50px_-20px_rgba(8,1,3,0.9)] ring-1 ring-black/20"
+            className="absolute inset-0 overflow-hidden rounded-[10px] shadow-[0_24px_50px_-20px_rgba(8,1,6,0.9)] ring-1 ring-black/20"
           >
             <Image
               src="/back-ticket.jpg"

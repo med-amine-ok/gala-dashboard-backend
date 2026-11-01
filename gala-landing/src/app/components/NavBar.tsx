@@ -204,7 +204,7 @@ export default function NavBar() {
             className="fixed inset-0 z-50 bg-[var(--color-dark)] text-[var(--color-cream)] flex flex-col justify-between p-6 sm:p-12 overflow-y-auto"
           >
             {/* Ambient subtle glows */}
-            <div className="absolute top-0 right-0 w-[550px] h-[550px] rounded-full bg-[radial-gradient(circle,rgba(139,30,45,0.45)_0%,transparent_70%)] opacity-35 blur-3xl pointer-events-none" />
+            <div className="absolute top-0 right-0 w-[550px] h-[550px] rounded-full bg-[radial-gradient(circle,rgba(142,27,96,0.45)_0%,transparent_70%)] opacity-35 blur-3xl pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-[450px] h-[450px] rounded-full bg-[radial-gradient(circle,rgba(192,192,192,0.12)_0%,transparent_70%)] opacity-30 blur-3xl pointer-events-none" />
 
             {/* Top Bar of Overlay */}
