@@ -604,7 +604,8 @@ export default function Real3DEntranceCanvas({
     renderer.toneMappingExposure = isMobile ? 1.0 : 1.12;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.shadowMap.enabled = !isMobile;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    // PCFShadowMap is the soft-filtered type since r182 (PCFSoftShadowMap is deprecated)
+    renderer.shadowMap.type = THREE.PCFShadowMap;
     // Every shadow caster is static (the doors cast none), so the shadow map is
     // rendered once instead of every frame; refreshed on resize.
     renderer.shadowMap.autoUpdate = false;
@@ -897,6 +898,22 @@ export default function Real3DEntranceCanvas({
     const backdropWash = new THREE.DirectionalLight(0xd2828e, isMobile ? 0.22 : 0.40);
     backdropWash.position.set(0, 8.0, 16.0);
     scene.add(backdropWash);
+
+    // Portrait (phone) framing looks up the façade and down onto much more of the
+    // polished floor than the desktop shot. There the wash's mirror reflection
+    // reads as a pink spotlight at the top of the screen and the studio map turns
+    // the floor cream, so portrait gets a night look: no wash, a soft floor sheen.
+    const applyFramingLook = (frameAspect: number) => {
+      const portrait = frameAspect < 1;
+      backdropWash.intensity = portrait ? 0 : isMobile ? 0.22 : 0.4;
+      const floorEnv = portrait ? envTarget.texture : null;
+      if (matPlazaFloor.envMap !== floorEnv) {
+        matPlazaFloor.envMap = floorEnv; // null → back to the shared scene environment
+        matPlazaFloor.envMapIntensity = portrait ? 0.32 : 1.15;
+        matPlazaFloor.needsUpdate = true;
+      }
+    };
+    applyFramingLook(aspect);
 
     // Warm overhead key light grazing facade, steps and red carpet
     const keyLight = new THREE.DirectionalLight(0xfff4e6, isMobile ? 1.10 : 1.35);
@@ -2154,6 +2171,7 @@ export default function Real3DEntranceCanvas({
       camera.aspect = newAspect;
       camera.fov = rig.fov;
       camera.updateProjectionMatrix();
+      applyFramingLook(newAspect);
       renderer.shadowMap.needsUpdate = true;
       frameDirty = true;
 
@@ -2211,19 +2229,34 @@ export default function Real3DEntranceCanvas({
     window.addEventListener("resize", handleResize);
 
     // ── 9. VISIBILITY OPTIMIZATION ─────────────────────────────────────────────
-    let isVisible = true;
+    // The loop is detached entirely (setAnimationLoop(null)) while the stage is
+    // scrolled away or the tab is hidden; both conditions are tracked apart so
+    // returning to the tab never wakes a hero that is off screen.
+    let onScreen = true;
+    let tabVisible = !document.hidden;
+    let looping = false;
+    const syncLoop = () => {
+      const run = onScreen && tabVisible;
+      if (run === looping) return;
+      looping = run;
+      // Re-base the timer so the first resumed frame has a small delta
+      if (run) timer.update(performance.now());
+      renderer.setAnimationLoop(run ? animate : null);
+    };
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          isVisible = entry.isIntersecting;
+          onScreen = entry.isIntersecting;
         });
+        syncLoop();
       },
       { threshold: 0.05 },
     );
     observer.observe(mount);
 
     const onVisibilityChange = () => {
-      isVisible = !document.hidden;
+      tabVisible = !document.hidden;
+      syncLoop();
     };
     document.addEventListener("visibilitychange", onVisibilityChange);
 
@@ -2233,8 +2266,7 @@ export default function Real3DEntranceCanvas({
     // looking through the open doors at the About section beyond. Position and
     // orientation are pure functions of progress, so scrolling back retraces
     // exactly the same path.
-    let animId: number;
-    let lastTime = performance.now();
+    const timer = new THREE.Timer();
     let smoothP = -1; // < 0 snaps to the current scroll position on the first frame
     const prefersReducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
@@ -2307,14 +2339,9 @@ export default function Real3DEntranceCanvas({
       });
     };
 
-    let hasRenderedFirstFrame = false;
-    const animate = (currentTime: number) => {
-      animId = requestAnimationFrame(animate);
-      if (!isVisible && hasRenderedFirstFrame) return;
-
-      const delta = Math.min((currentTime - lastTime) / 1000, 0.1);
-      lastTime = currentTime;
-      hasRenderedFirstFrame = true;
+    function animate(currentTime: number) {
+      timer.update(currentTime);
+      const delta = Math.min(timer.getDelta(), 0.1);
 
       const parallaxK = 1 - Math.exp(-delta * 3.2);
       currentParallaxX += ((isMobile ? 0 : mouseX) - currentParallaxX) * parallaxK;
@@ -2433,9 +2460,13 @@ export default function Real3DEntranceCanvas({
       }
 
       renderer.render(scene, camera);
-    };
+    }
 
-    animId = requestAnimationFrame(animate);
+    // Compile every program in parallel (KHR_parallel_shader_compile) while the
+    // first frames draw, then hand frames to the renderer's own loop
+    renderer.compileAsync(scene, camera).catch(() => {});
+    timer.update(performance.now());
+    syncLoop();
 
     if (onLoaded) {
       onLoaded();
@@ -2443,7 +2474,8 @@ export default function Real3DEntranceCanvas({
 
     // ── 11. CLEANUP ───────────────────────────────────────────────────────────
     return () => {
-      cancelAnimationFrame(animId);
+      renderer.setAnimationLoop(null);
+      timer.dispose();
       observer.disconnect();
       document.removeEventListener("visibilitychange", onVisibilityChange);
       window.removeEventListener("resize", handleResize);

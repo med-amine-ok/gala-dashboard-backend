@@ -315,3 +315,36 @@ body {
     animation: none !important;
   }
 }
+/* ── The venue's materials, for the rooms after the entrance ─────────────── */
+/* Engraved silver type: the brushed metal of the portal trims */
+.gala-engraved {
+  background: linear-gradient(180deg, #fbfbfc 0%, #dfe2e7 34%, #a2a8b2 52%, #c9cdd4 66%, #f1f2f4 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  filter: drop-shadow(0 1px 0 rgba(10, 2, 4, 0.55)) drop-shadow(0 10px 22px rgba(10, 1, 3, 0.55));
+}
+/* Brushed silver: frames, rails, plaques */
+.gala-brushed {
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.08) 0 1px, transparent 1px 3px),
+    linear-gradient(135deg, #e9ecf0 0%, #b5bbc5 28%, #f4f5f7 47%, #9fa6b0 70%, #d8dce2 100%);
+}
+/* Silver satin: the hanging banners */
+.gala-satin {
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.38) 0 1px, rgba(20, 26, 34, 0.035) 1px 3px),
+    linear-gradient(180deg, #d6dce4 0%, #ccd3dc 50%, #bcc4ce 100%);
+}
+
+/* The footer mark is drawn by GalaWorld's dust once it is running */
+html[data-gala-dust="on"] .gala-footer-mark,
+html[data-gala-dust="on"] .gala-hero-mark {
+  visibility: hidden;
+}
+
+/* Editorial italic companion to Cinzel */
+.font-cormorant {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+}

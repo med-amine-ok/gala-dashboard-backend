@@ -385,6 +385,7 @@ export default function LayeredPortalHero() {
               ===================================================================== */}
           <div
             ref={layerL5ContentRef}
+            id="gala-hero-copy"
             className="relative z-50 flex flex-col justify-between h-full pt-20 sm:pt-24 pb-6 sm:pb-8 px-4 sm:px-10 max-w-7xl mx-auto w-full pointer-events-none will-change-transform"
             style={{ transformOrigin: "50% 50%" }}
           >
@@ -401,19 +402,22 @@ export default function LayeredPortalHero() {
                 ref={heroTitleRef}
                 className="flex justify-center mb-3 xs:mb-4 sm:mb-6 relative will-change-transform"
               >
+                {/* GalaWorld's dust draws this mark once it is running; the image is its twin */}
                 <Image
+                  id="gala-hero-logo"
                   src="/GALA-silver.png"
                   alt="ENGINEERS' GALA 2026"
                   width={540}
                   height={175}
                   priority
-                  className="w-[240px] xs:w-[290px] sm:w-[360px] md:w-[460px] lg:w-[520px] h-auto object-contain select-none drop-shadow-[0_12px_28px_rgba(0,0,0,0.95)] drop-shadow-[0_2px_8px_rgba(0,0,0,0.80)] brightness-110 contrast-105"
+                  className="gala-hero-mark w-[240px] xs:w-[290px] sm:w-[360px] md:w-[460px] lg:w-[520px] h-auto object-contain select-none drop-shadow-[0_12px_28px_rgba(0,0,0,0.95)] drop-shadow-[0_2px_8px_rgba(0,0,0,0.80)] brightness-110 contrast-105"
                 />
               </div>
 
               {/* Architectural Headline (All Caps matching reference) */}
               <h2
                 ref={heroSubtitleRef}
+                id="gala-hero-tagline"
                 className="font-cinzel text-[15px] xs:text-xl sm:text-2xl md:text-4xl lg:text-5xl font-medium sm:font-light text-[var(--color-cream)] leading-[1.35] sm:leading-[1.2] mb-4 sm:mb-6 max-w-[285px] xs:max-w-[360px] sm:max-w-2xl whitespace-pre-line uppercase tracking-[0.18em] sm:tracking-wide drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] drop-shadow-[0_1px_4px_rgba(0,0,0,0.90)] will-change-transform"
               >
                 {texts.hero?.headline || "Where ambition\nmeets opportunity."}
@@ -422,6 +426,7 @@ export default function LayeredPortalHero() {
               {/* Couture Editorial Hero Invitation CTA (Letterpress Plaque) */}
               <div
                 ref={heroCtaRef}
+                id="gala-hero-cta"
                 className="mt-2 xs:mt-3 sm:mt-5 md:mt-6 pointer-events-auto will-change-transform flex justify-center w-full"
               >
                 <Link href="/register" className="group inline-flex items-center">

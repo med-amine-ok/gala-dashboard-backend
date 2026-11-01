@@ -12,13 +12,7 @@ import {
   useTransform,
 } from "framer-motion";
 import { useLanguage } from "../../context/LanguageContext";
-import {
-  GALA_EASE,
-  GalaButton,
-  RevealHeading,
-  RoomOrnament,
-  RoomSpotlight,
-} from "../components/gala/Room";
+import { DrawnRule, GALA_EASE, GalaButton, GalaStar, RoomMasthead } from "../components/gala/Room";
 
 /*
  * Stage geometry (percent of the stage box, which keeps a 10:7.2 aspect).
@@ -42,104 +36,103 @@ const TICKET_INSIDE = "39%";
 export default function TicketPricing() {
   const { texts } = useLanguage();
   const t = texts.invitations || {};
-  const inclusions: string[] = t.inclusions || [];
 
   return (
-    <section className="relative w-full overflow-hidden bg-[var(--color-dark)] px-6 py-28 text-[var(--color-cream)] sm:px-12 sm:py-36 font-sans">
-      <RoomSpotlight x="68%" y="42%" />
-
+    <section className="relative w-full overflow-hidden bg-transparent px-6 py-24 text-[var(--color-cream)] sm:px-12 sm:py-36 font-sans">
       <div className="relative z-10 mx-auto max-w-6xl">
-        <div className="grid grid-cols-1 items-center gap-16 lg:grid-cols-12 lg:gap-14">
-          {/* The invitation text */}
-          <div className="lg:col-span-5">
-            <RoomOrnament numeral="V" label={t.roomLabel || "THE INVITATION"} align="start" />
-            <RevealHeading
-              text={t.headline || "Your entrance\nto the evening."}
-              className="mt-6 font-cinzel text-[34px] font-light leading-[1.08] sm:text-5xl"
-            />
+        <RoomMasthead
+          numeral="V"
+          label={t.roomLabel || "THE INVITATION"}
+          headline={t.headline || "Your entrance to the evening."}
+        />
+
+        <div className="mt-16 grid grid-cols-1 items-center gap-14 sm:mt-24 lg:grid-cols-12 lg:gap-x-14">
+          {/* The pass, in its envelope */}
+          <div className="lg:order-2 lg:col-span-7">
+            <EnvelopeStage hint={t.flipHint || "Tap the ticket to turn it over"} />
+          </div>
+
+          {/* The terms of the invitation */}
+          <div className="lg:order-1 lg:col-span-5">
+            <motion.span
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true, margin: "-60px" }}
+              transition={{ duration: 1, ease: GALA_EASE }}
+              className="block text-[10.5px] font-semibold uppercase tracking-[0.34em] text-[var(--color-silver)]"
+            >
+              {t.label || "OFFICIAL ADMISSION PASS"}
+            </motion.span>
+            <PriceTag price={t.price || "1,000 DA"} />
+            <DrawnRule className="mt-6" />
             {t.description && (
               <motion.p
                 initial={{ opacity: 0, y: 14 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 1, delay: 0.25, ease: GALA_EASE }}
+                transition={{ duration: 1, delay: 0.2, ease: GALA_EASE }}
                 className="mt-6 max-w-md text-[15px] font-light leading-relaxed text-[var(--color-cream)]/75 sm:text-base"
               >
                 {t.description}
               </motion.p>
             )}
-
+            <dl className="mt-8 border-t border-[var(--color-silver)]/12">
+              {[
+                { k: "Date", v: t.date },
+                { k: "Venue", v: t.venue },
+              ]
+                .filter((r) => r.v)
+                .map((r, i) => (
+                  <motion.div
+                    key={r.k}
+                    initial={{ opacity: 0, x: -12 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true, margin: "-40px" }}
+                    transition={{ duration: 0.9, delay: 0.25 + i * 0.1, ease: GALA_EASE }}
+                    className="flex items-center gap-4 border-b border-[var(--color-silver)]/12 py-4"
+                  >
+                    <GalaStar satellites={false} className="h-3.5 w-3.5 shrink-0 text-[var(--color-silver)]" />
+                    <dt className="sr-only">{r.k}</dt>
+                    <dd className="font-cormorant text-[20px] italic leading-snug text-[var(--color-cream)]/90">{r.v}</dd>
+                  </motion.div>
+                ))}
+            </dl>
             <motion.div
               initial={{ opacity: 0, y: 14 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-60px" }}
-              transition={{ duration: 1, delay: 0.4, ease: GALA_EASE }}
-              className="mt-10 flex items-end gap-6 border-t border-[var(--color-silver)]/15 pt-8"
-            >
-              <div>
-                <span className="block text-[10px] font-semibold uppercase tracking-[0.3em] text-[var(--color-silver)]">
-                  {t.label || "OFFICIAL ADMISSION PASS"}
-                </span>
-                <span className="mt-2 block font-cinzel text-4xl font-light text-[var(--color-cream)] sm:text-5xl">
-                  {t.price || "1,000 DA"}
-                </span>
-              </div>
-              <dl className="mb-1 space-y-1 text-[12.5px] font-light text-[var(--color-cream)]/70">
-                <div>
-                  <dt className="sr-only">Date</dt>
-                  <dd>{t.date}</dd>
-                </div>
-                <div>
-                  <dt className="sr-only">Venue</dt>
-                  <dd>{t.venue}</dd>
-                </div>
-              </dl>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 14 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-60px" }}
-              transition={{ duration: 1, delay: 0.5, ease: GALA_EASE }}
-              className="mt-9"
+              transition={{ duration: 1, delay: 0.45, ease: GALA_EASE }}
+              className="mt-10"
             >
               <GalaButton href="/register">{t.selectCTA || "REQUEST YOUR ADMISSION PASS"}</GalaButton>
             </motion.div>
           </div>
-
-          {/* The pass, in its envelope */}
-          <div className="lg:col-span-7">
-            <EnvelopeStage hint={t.flipHint || "Tap the ticket to turn it over"} />
-          </div>
         </div>
-
-        {/* What the pass grants */}
-        {inclusions.length > 0 && (
-          <div className="mt-24 border-t border-[var(--color-silver)]/12 pt-14 sm:mt-28">
-            <span className="block text-[10.5px] font-semibold uppercase tracking-[0.3em] text-[var(--color-silver)]">
-              {t.inclusionsTitle || "FULL ADMISSION PRIVILEGES"}
-            </span>
-            <ul className="mt-8 grid grid-cols-1 gap-x-16 md:grid-cols-2">
-              {inclusions.map((item, i) => (
-                <motion.li
-                  key={i}
-                  initial={{ opacity: 0, y: 12 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-40px" }}
-                  transition={{ duration: 0.9, delay: (i % 2) * 0.08, ease: GALA_EASE }}
-                  className="flex items-baseline gap-5 border-b border-[var(--color-silver)]/10 py-4"
-                >
-                  <span className="font-cinzel text-[12px] tabular-nums text-[var(--color-silver)]/70">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <span className="text-[15px] font-light leading-relaxed text-[var(--color-cream)]/82">{item}</span>
-                </motion.li>
-              ))}
-            </ul>
-          </div>
-        )}
       </div>
     </section>
+  );
+}
+
+/** "1,000 DA": the figure engraved at display size, the currency set small beside it */
+function PriceTag({ price }: { price: string }) {
+  const m = price.match(/^([\d.,\s]+)\s*(.*)$/);
+  const figure = m ? m[1].trim() : price;
+  const unit = m ? m[2] : "";
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 1.2, delay: 0.1, ease: GALA_EASE }}
+      className="mt-3 flex items-start gap-3"
+    >
+      <span className="font-cinzel text-[clamp(64px,9vw,120px)] font-semibold leading-[0.9] gala-engraved">{figure}</span>
+      {unit && (
+        <span className="mt-[0.6em] font-cinzel text-[clamp(16px,1.8vw,24px)] font-semibold tracking-[0.2em] text-[var(--color-silver)]">
+          {unit}
+        </span>
+      )}
+    </motion.div>
   );
 }
 
@@ -330,11 +323,15 @@ function EnvelopeStage({ hint }: { hint: string }) {
   );
 }
 
-/** One half of the wax seal (the seal is split along its middle when the flap lifts) */
+/**
+ * One half of the seal: silver wax pressed with the Vision & Innovation Club
+ * mark, the club's name engraved around the rim. It is split along its middle
+ * when the flap lifts.
+ */
 function WaxSeal({ half, className = "" }: { half: "upper" | "lower"; className?: string }) {
   return (
     <div
-      className={`pointer-events-none absolute flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-[radial-gradient(circle_at_35%_30%,#b01b34_0%,#73101f_55%,#4a0712_100%)] shadow-[0_6px_16px_rgba(8,1,3,0.55),inset_0_1px_2px_rgba(255,220,220,0.3)] ring-1 ring-[var(--color-silver)]/45 sm:h-16 sm:w-16 ${className}`}
+      className={`pointer-events-none absolute h-[76px] w-[76px] -translate-x-1/2 -translate-y-1/2 sm:h-[92px] sm:w-[92px] ${className}`}
       style={{
         // A slightly ragged break line rather than a ruler-straight cut
         clipPath:
@@ -343,7 +340,31 @@ function WaxSeal({ half, className = "" }: { half: "upper" | "lower"; className?
             : "polygon(0 49%, 27% 54%, 44% 47%, 61% 53%, 78% 46%, 100% 50%, 100% 100%, 0 100%)",
       }}
     >
-      <span className="font-cinzel text-lg text-[var(--color-silver-light)] sm:text-xl">✦</span>
+      {/* Poured silver wax: soft, slightly uneven lip */}
+      <div className="absolute inset-0 rounded-[47%_53%_50%_50%/52%_48%_52%_48%] bg-[radial-gradient(circle_at_34%_28%,#ffffff_0%,#e4e7ec_16%,#b3b9c3_42%,#7d848f_72%,#555b65_100%)] shadow-[0_8px_18px_rgba(8,1,3,0.6),inset_0_2px_3px_rgba(255,255,255,0.75),inset_0_-4px_8px_rgba(40,44,52,0.55)]" />
+      {/* The pressed face of the stamp */}
+      <div className="absolute inset-[11%] rounded-full bg-[radial-gradient(circle_at_40%_32%,#f4f5f7_0%,#c9ced6_45%,#9aa1ab_100%)] shadow-[inset_0_3px_6px_rgba(40,44,52,0.55),inset_0_-1px_1px_rgba(255,255,255,0.8),0_1px_0_rgba(255,255,255,0.6)]" />
+      {/* Club name engraved around the rim */}
+      <svg viewBox="0 0 100 100" className="absolute inset-[11%] h-[78%] w-[78%]" aria-hidden="true">
+        <defs>
+          <path id={`seal-ring-${half}`} d="M50,50 m-37,0 a37,37 0 1,1 74,0 a37,37 0 1,1 -74,0" />
+        </defs>
+        <text
+          fill="rgba(52,57,66,0.85)"
+          style={{ fontSize: 8.2, fontFamily: "Cinzel, serif", fontWeight: 700 }}
+        >
+          <textPath href={`#seal-ring-${half}`} textLength="228" lengthAdjust="spacing">
+            ✦ VISION &amp; INNOVATION CLUB ✦ ENP
+          </textPath>
+        </text>
+      </svg>
+      {/* The club mark, debossed into the silver */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/images/vic-icon.png"
+        alt=""
+        className="absolute left-1/2 top-1/2 h-[38%] w-auto -translate-x-1/2 -translate-y-1/2 select-none [filter:grayscale(1)_brightness(0.42)_contrast(1.2)_drop-shadow(0_1px_0_rgba(255,255,255,0.85))_drop-shadow(0_-1px_0_rgba(30,33,40,0.4))]"
+      />
     </div>
   );
 }

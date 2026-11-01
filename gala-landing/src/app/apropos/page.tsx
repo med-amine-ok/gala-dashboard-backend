@@ -1,14 +1,14 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { useLanguage } from "../../context/LanguageContext";
+import { useRef } from "react";
 import {
-  CountUp,
-  GALA_EASE,
-  RevealHeading,
-  RoomOrnament,
-  RoomSpotlight,
-} from "../components/gala/Room";
+  motion,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+} from "framer-motion";
+import { useLanguage } from "../../context/LanguageContext";
+import { CountUp, DrawnRule, GALA_EASE, RoomMasthead } from "../components/gala/Room";
 
 /**
  * VI · THE HOSTS
@@ -22,47 +22,51 @@ export default function AboutUsSection() {
   const pillars: { title: string; desc: string }[] = s.pillars || [];
 
   return (
-    <section className="relative w-full overflow-hidden bg-[var(--color-dark)] px-6 py-28 text-[var(--color-cream)] sm:px-12 sm:py-36 font-sans">
-      <RoomSpotlight x="72%" y="38%" />
-
+    <section className="relative w-full overflow-hidden bg-transparent px-6 py-28 text-[var(--color-cream)] sm:px-12 sm:py-36 font-sans">
       <div className="relative z-10 mx-auto max-w-6xl">
-        <RoomOrnament numeral="VI" label={s.roomLabel || "THE HOSTS"} className="mb-16 sm:mb-24" />
+        <RoomMasthead numeral="VI" label={s.roomLabel || "THE HOSTS"} headline={s.headline || "The story behind the night."} />
 
-        <div className="grid grid-cols-1 items-center gap-16 lg:grid-cols-12 lg:gap-20">
-          {/* Story */}
+        {/* The belief, set large, beside the club's seal */}
+        <div className="mt-20 grid grid-cols-1 items-center gap-16 sm:mt-28 lg:grid-cols-12 lg:gap-12">
           <div className="lg:col-span-7">
-            <RevealHeading
-              text={s.headline || "The story\nbehind the night."}
-              className="font-cinzel text-[34px] font-light leading-[1.08] sm:text-6xl"
-            />
             {s.lead && (
               <motion.blockquote
-                initial={{ opacity: 0, y: 14 }}
+                initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 1, delay: 0.25, ease: GALA_EASE }}
-                className="mt-8 border-l border-[var(--color-silver)]/40 pl-6 font-cinzel text-lg leading-relaxed text-[var(--color-cream)]/90 sm:text-xl whitespace-pre-line"
+                transition={{ duration: 1.2, ease: GALA_EASE }}
+                className="relative"
               >
-                {s.lead}
+                <span
+                  aria-hidden="true"
+                  className="absolute -left-2 -top-14 font-cormorant text-[140px] leading-none gala-engraved opacity-60 sm:-left-8 sm:-top-20 sm:text-[200px]"
+                >
+                  “
+                </span>
+                <p className="relative whitespace-pre-line font-cormorant text-[clamp(28px,3.6vw,52px)] italic leading-[1.12] text-[var(--color-cream)]">
+                  {s.lead}
+                </p>
               </motion.blockquote>
             )}
-            {[s.paragraph1, s.paragraph2].filter(Boolean).map((p: string, i: number) => (
-              <motion.p
-                key={i}
-                initial={{ opacity: 0, y: 14 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 1, delay: 0.35 + i * 0.1, ease: GALA_EASE }}
-                className="mt-6 max-w-xl text-[15px] font-light leading-relaxed text-[var(--color-cream)]/75 sm:text-base"
-              >
-                {p}
-              </motion.p>
-            ))}
+            <DrawnRule className="mt-10 max-w-sm" />
+            <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8">
+              {[s.paragraph1, s.paragraph2].filter(Boolean).map((p: string, i: number) => (
+                <motion.p
+                  key={i}
+                  initial={{ opacity: 0, y: 14 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-60px" }}
+                  transition={{ duration: 1, delay: 0.15 + i * 0.12, ease: GALA_EASE }}
+                  className="text-[14.5px] font-light leading-relaxed text-[var(--color-cream)]/72"
+                >
+                  {p}
+                </motion.p>
+              ))}
+            </div>
           </div>
 
-          {/* Crest */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.96 }}
+            initial={{ opacity: 0, scale: 0.94 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true, margin: "-60px" }}
             transition={{ duration: 1.4, ease: GALA_EASE }}
@@ -72,42 +76,47 @@ export default function AboutUsSection() {
           </motion.div>
         </div>
 
-        {/* Figures */}
+        {/* The figures, at display size across the room */}
         {stats.length > 0 && (
-          <dl className="mt-20 grid grid-cols-1 divide-y divide-[var(--color-silver)]/12 border-y border-[var(--color-silver)]/12 sm:mt-28 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-            {stats.map((st) => (
-              <div key={st.label} className="flex flex-col items-center gap-2 py-8 text-center">
-                <dd className="font-cinzel text-4xl font-light text-[var(--color-silver-light)] sm:text-5xl">
+          <dl className="mt-24 grid grid-cols-3 border-y border-[var(--color-silver)]/15 sm:mt-32">
+            {stats.map((st, i) => (
+              <motion.div
+                key={st.label}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ duration: 1.1, delay: i * 0.1, ease: GALA_EASE }}
+                className={`flex flex-col items-center gap-3 px-1 py-8 text-center sm:py-12 ${i > 0 ? "border-l border-[var(--color-silver)]/12" : ""}`}
+              >
+                <dd className="font-cinzel text-[clamp(34px,8.5vw,128px)] font-semibold leading-none gala-engraved">
                   <CountUp value={st.value} />
                 </dd>
-                <dt className="text-[10.5px] font-semibold uppercase tracking-[0.28em] text-[var(--color-cream)]/65">
+                <dt className="text-[8.5px] font-semibold uppercase leading-snug tracking-[0.18em] text-[var(--color-cream)]/60 sm:text-[11px] sm:tracking-[0.3em]">
                   {st.label}
                 </dt>
-              </div>
+              </motion.div>
             ))}
           </dl>
         )}
 
-        {/* Principles */}
+        {/* The three principles */}
         {pillars.length > 0 && (
-          <ol className="mt-16 grid grid-cols-1 gap-12 sm:mt-20 md:grid-cols-3 md:gap-10">
+          <ol className="mt-20 grid grid-cols-1 gap-14 sm:mt-24 md:grid-cols-3 md:gap-10">
             {pillars.map((p, i) => (
               <motion.li
                 key={p.title}
                 initial={{ opacity: 0, y: 18 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 1, delay: i * 0.1, ease: GALA_EASE }}
+                transition={{ duration: 1, delay: i * 0.12, ease: GALA_EASE }}
+                className="relative"
               >
-                <span className="font-cinzel text-sm tracking-[0.3em] text-[var(--color-silver)]">
+                <span className="block font-cinzel text-[56px] font-semibold leading-none gala-engraved opacity-90">
                   {["I", "II", "III"][i]}
                 </span>
-                <h3 className="mt-3 font-cinzel text-xl font-light text-[var(--color-cream)] sm:text-2xl">
-                  {p.title}
-                </h3>
-                <p className="mt-3 text-[15px] font-light leading-relaxed text-[var(--color-cream)]/72">
-                  {p.desc}
-                </p>
+                <DrawnRule className="mt-5" />
+                <h3 className="mt-5 font-cormorant text-[28px] italic leading-tight text-[var(--color-cream)]">{p.title}</h3>
+                <p className="mt-3 text-[14.5px] font-light leading-relaxed text-[var(--color-cream)]/70">{p.desc}</p>
               </motion.li>
             ))}
           </ol>
@@ -117,33 +126,34 @@ export default function AboutUsSection() {
   );
 }
 
-/** The club's seal: logo inside a fine double ring, engraved text turning slowly around it */
+/**
+ * The club's mark, and nothing else: the Vision & Innovation Club lockup in
+ * brushed silver foil, one hairline and one engraved line beneath. A band of
+ * light passes across the foil as the visitor scrolls by.
+ */
 function ClubCrest() {
-  const ring = "VISION & INNOVATION CLUB · ÉCOLE NATIONALE POLYTECHNIQUE · SINCE 2014 · ";
+  const ref = useRef<HTMLDivElement>(null);
+  const reduceMotion = useReducedMotion();
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
+  const sheen = useTransform(scrollYProgress, [0.15, 0.85], ["130%", "-30%"]);
+  const MASK =
+    "[mask-image:url(/images/vic-lockup.png)] [mask-size:contain] [mask-repeat:no-repeat] [mask-position:center] [-webkit-mask-image:url(/images/vic-lockup.png)] [-webkit-mask-size:contain] [-webkit-mask-repeat:no-repeat] [-webkit-mask-position:center]";
+
   return (
-    <div className="relative aspect-square w-[min(78vw,340px)]">
-      <svg
-        viewBox="0 0 200 200"
-        className="absolute inset-0 h-full w-full animate-[crest-turn_90s_linear_infinite] motion-reduce:animate-none"
-        aria-hidden="true"
-      >
-        <defs>
-          <path id="crest-path" d="M100,100 m-84,0 a84,84 0 1,1 168,0 a84,84 0 1,1 -168,0" />
-        </defs>
-        <text className="fill-[var(--color-silver)]" style={{ fontSize: 8.4, letterSpacing: 2.6 }}>
-          <textPath href="#crest-path">{ring}</textPath>
-        </text>
-      </svg>
-      <div className="absolute inset-[13%] rounded-full p-1.5 ring-1 ring-[var(--color-silver)]/35">
-        <div className="flex h-full w-full items-center justify-center rounded-full bg-[radial-gradient(circle_at_50%_35%,#4a0c17_0%,#2a060c_75%)] ring-1 ring-[var(--color-silver)]/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.08),0_30px_60px_-30px_rgba(10,1,3,0.9)]">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/vic.png"
-            alt="Vision & Innovation Club"
-            className="w-[76%] select-none object-contain [filter:grayscale(1)_invert(1)_brightness(0.92)]"
-          />
-        </div>
+    <div ref={ref} className="flex w-[min(78vw,400px)] flex-col items-center">
+      <div className="relative aspect-[900/365] w-full [filter:drop-shadow(0_1px_0_rgba(255,255,255,0.18))_drop-shadow(0_18px_30px_rgba(5,1,2,0.7))]">
+        <div role="img" aria-label="Vision & Innovation Club" className={`absolute inset-0 gala-brushed ${MASK}`} />
+        {/* Light passing over the foil */}
+        <motion.div
+          aria-hidden="true"
+          style={reduceMotion ? undefined : { backgroundPositionX: sheen }}
+          className={`absolute inset-0 bg-[linear-gradient(100deg,transparent_40%,rgba(255,255,255,0.75)_50%,transparent_60%)] bg-[length:250%_100%] mix-blend-soft-light ${MASK}`}
+        />
       </div>
+      <span aria-hidden="true" className="mt-10 block h-px w-16 bg-gradient-to-r from-transparent via-[var(--color-silver)]/70 to-transparent" />
+      <span className="mt-5 whitespace-nowrap text-center font-cinzel text-[8.5px] font-semibold tracking-[0.3em] text-[var(--color-silver)] sm:text-[10px] sm:tracking-[0.34em]">
+        ÉCOLE NATIONALE POLYTECHNIQUE · 2014
+      </span>
     </div>
   );
 }

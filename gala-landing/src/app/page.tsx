@@ -7,6 +7,7 @@ import Historique from "./historique/page";
 import Pricing from "./ticket/page";
 import Apropos from "./apropos/page";
 import Footer from "./footer/page";
+import GalaWorld from "./components/gala/GalaWorld";
 import mixpanel from "mixpanel-browser";
 
 // Initialize Mixpanel if token is provided
@@ -23,12 +24,17 @@ export default function Home() {
     <div className="w-full min-h-screen bg-[var(--color-dark)] text-[var(--color-cream)]">
       <NavBar />
 
-      <main className="w-full overflow-x-clip">
+      {/* The hall every room after the entrance stands in (fixed WebGL, behind the content) */}
+      <GalaWorld />
+
+      <main className="relative z-[1] w-full overflow-x-clip">
         {/* I & II — THE ENTRANCE (HERO) & THE MANIFESTO */}
         <Accueil />
 
         {/* III — THE GALLERY (ARCHIVES) */}
-        <section id="historique">
+        <section id="historique" className="relative">
+          {/* Hand-off: the entrance's dark hall dissolves into the enfilade */}
+          <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[45vh] bg-gradient-to-b from-[#2D070D]/70 via-[#2D070D]/30 to-transparent" />
           <Historique />
         </section>
 
