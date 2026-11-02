@@ -1,19 +1,11 @@
 "use client";
 
-import { useMemo, useState, Suspense, useId, useEffect, useRef } from "react";
+import { useMemo, useState, Suspense, useId, useRef, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useForm, FormProvider, useFormContext } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  motion,
-  AnimatePresence,
-  useMotionValue,
-  useSpring,
-  useTransform,
-  useReducedMotion,
-  useAnimate,
-} from "framer-motion";
-import { Loader2, ArrowRight, ArrowLeft, Check, ChevronDown, AlertCircle, PenLine, RotateCw } from "lucide-react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { Loader2, ArrowRight, ArrowLeft, Check, ChevronDown, AlertCircle, PenLine, Send, Clock } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import * as z from "zod";
@@ -147,12 +139,12 @@ type Texts = any;
 
 /** Label text without the trailing " *" (required is shown as its own mark) */
 const plainLabel = (s: string | undefined, fallback: string) => (s || fallback).replace(/\s*\*\s*$/, "");
-/** Step titles arrive as "01 PERSONAL": keep the word */
-const stepWord = (s: string | undefined, fallback: string) => (s || fallback).replace(/^\d+\s*/, "");
 
 function RegistrationContent() {
   const searchParams = useSearchParams();
+  // Requested tier from the link (kept for the request flow; not shown)
   const requestedTier = searchParams.get("tier") || "signature";
+  void requestedTier;
 
   const [step, setStep] = useState<number>(1);
   const [done, setDone] = useState<boolean>(false);
@@ -292,19 +284,6 @@ function RegistrationContent() {
 
   const prevStep = () => setStep((s) => Math.max(1, s - 1));
 
-  const data = watch();
-  const [shake, setShake] = useState(0);
-  // Turn the card if the face is complete; otherwise a gentle shake and the
-  // first unwritten line takes focus
-  const turnCard = async () => {
-    await nextStep();
-    requestAnimationFrame(() => {
-      if (Object.keys(methods.formState.errors).length) {
-        setShake((n) => n + 1);
-        document.querySelector<HTMLElement>('[aria-invalid="true"]:not([inert] *)')?.focus({ preventScroll: false });
-      }
-    });
-  };
   const sendRequest = async () => {
     const valid = await trigger();
     if (valid) {
@@ -312,79 +291,108 @@ function RegistrationContent() {
     }
   };
 
-  // The card turns half a revolution per step; faces alternate front / back
-  const turns = done ? 4 : step - 1;
+  const data = watch();
+  const reduce = useReducedMotion();
+
+  // Which way the steps slide: forward from the right, back from the left
+  const prevStepRef = useRef(step);
+  const direction = step >= prevStepRef.current ? 1 : -1;
+  prevStepRef.current = step;
+
+  const copy = guideCopy(lang as "fr" | "en", texts);
   const stage = done ? 5 : step;
-  const frontStage = turns % 2 === 0 ? stage : stage + 1;
-  const backStage = turns % 2 === 1 ? stage : stage + 1;
 
-  const faceTitles = [
-    stepWord(texts.register?.steps?.step1?.title, "Personal"),
-    stepWord(texts.register?.steps?.step2?.title, "Profile"),
-    stepWord(texts.register?.steps?.step3?.title, "Vision"),
-    stepWord(texts.register?.steps?.step4?.title, "Review"),
-  ];
+  // A new step starts at its title: bring the panel's top back into view
+  const panelRef = useRef<HTMLElement>(null);
+  const firstRender = useRef(true);
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    const el = panelRef.current;
+    if (el && el.getBoundingClientRect().top < 80) {
+      window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 90, behavior: reduce ? "auto" : "smooth" });
+    }
+  }, [stage, reduce]);
 
-  const renderFace = (n: number) => {
+  // Continue: move on if the step is complete; otherwise bring the first
+  // field that needs attention into view
+  const goNext = async () => {
+    await nextStep();
+    requestAnimationFrame(() => {
+      if (Object.keys(methods.formState.errors).length) {
+        const el = document.querySelector<HTMLElement>('[aria-invalid="true"]');
+        el?.focus({ preventScroll: true });
+        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    });
+  };
+  const goTo = (n: number) => {
+    if (n < step) setStep(n);
+  };
+
+  const renderStep = (n: number) => {
     switch (n) {
       case 1:
-        return <FaceAdmission texts={texts} />;
+        return <StepAbout texts={texts} />;
       case 2:
-        return <FaceAmbitions texts={texts} />;
+        return <StepPath texts={texts} />;
       case 3:
-        return <FaceVision texts={texts} />;
+        return <StepVision texts={texts} />;
       case 4:
-        return <FaceSeal data={data} texts={texts} loading={loading} onSeal={sendRequest} onEdit={setStep} requestedTier={requestedTier} />;
-      case 5:
-        return <FaceReceived data={data} texts={texts} />;
+        return <StepReview data={data} texts={texts} copy={copy} onEdit={setStep} />;
       default:
-        return null;
+        return <Received data={data} texts={texts} copy={copy} />;
     }
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#1d0314] text-[var(--color-cream)] font-sans">
+    <div className="relative min-h-screen bg-[#1d0314] text-[var(--color-cream)] font-sans">
       <Salon />
 
-      <header className="relative z-20 mx-auto flex max-w-6xl items-center justify-between px-6 pt-6 sm:px-10 sm:pt-8">
+      <header className="relative z-20 mx-auto flex max-w-6xl items-center justify-between px-5 pt-5 sm:px-10 sm:pt-8">
         <Link href="/" aria-label="Return to the Gala">
-          <Image src="/GALA-silver.png" alt="Engineers' Gala" width={631} height={215} priority className="h-auto w-[100px] sm:w-[120px]" />
+          <Image src="/GALA-silver.png" alt="Engineers' Gala" width={631} height={215} priority className="h-auto w-[92px] sm:w-[116px]" />
         </Link>
         <Link
           href="/"
           className="group inline-flex min-h-[44px] items-center gap-2 text-[10.5px] font-semibold uppercase tracking-[0.26em] text-[var(--color-silver)] transition-colors hover:text-[var(--color-cream)]"
         >
           <ArrowLeft className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5" aria-hidden />
-          <span className="hidden sm:inline">Return to the evening</span>
-          <span className="sm:hidden">Back</span>
+          <span className="hidden sm:inline">{copy.back}</span>
+          <span className="sm:hidden">{copy.backShort}</span>
         </Link>
       </header>
 
-      <main className="relative z-10 mx-auto max-w-6xl px-4 pb-40 pt-8 sm:px-10 sm:pb-24 sm:pt-10">
-        <div className="mx-auto max-w-[920px] text-center">
-          <p className="text-[10.5px] font-semibold uppercase tracking-[0.34em] text-[var(--color-silver)]">
-            {texts.invitations?.label || "Official admission pass"}
-          </p>
-          <h1 className="mt-3 font-cormorant text-[clamp(32px,4.4vw,52px)] italic leading-[1.05] text-[var(--color-cream)]">
-            {(texts.register?.headline || "Your evening\nbegins here.").replace(/\n/g, " ")}
-          </h1>
-          <p className="mx-auto mt-3 max-w-lg text-[13.5px] font-light text-[var(--color-cream)]/60">
-            Fill in your card directly — write on the lines, then turn it over.
-          </p>
-        </div>
+      {/* Phones: where you are, always in sight */}
+      {!done && <MobileProgress step={step} copy={copy} />}
 
-        {/* Where you are on the card */}
-        {!done && <CardProgress step={step} titles={faceTitles} onJump={(n) => n < step && setStep(n)} />}
+      <main className="relative z-10 mx-auto grid max-w-6xl grid-cols-1 gap-8 px-4 pb-36 pt-4 sm:px-10 sm:pb-24 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)] lg:gap-14 lg:pt-12">
+        <Guide step={stage} copy={copy} texts={texts} onJump={goTo} done={done} />
 
         <FormProvider {...methods}>
-          <form onSubmit={handleSubmit(onSubmit)} noValidate className="mt-6 sm:mt-8">
-            <TheCard turns={turns} shake={shake}>
-              {{
-                front: renderFace(frontStage),
-                back: renderFace(backStage),
-                frontActive: turns % 2 === 0,
-              }}
-            </TheCard>
+          <form onSubmit={handleSubmit(onSubmit)} noValidate className="min-w-0">
+            <section
+              ref={panelRef}
+              aria-labelledby="step-title"
+              className="relative overflow-hidden rounded-[22px] border border-[var(--color-silver)]/14 bg-[linear-gradient(180deg,rgba(52,8,34,0.82),rgba(34,4,22,0.86))] shadow-[0_40px_90px_-40px_rgba(5,0,3,0.95),inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-md"
+            >
+              <AnimatePresence mode="wait" initial={false} custom={direction}>
+                <motion.div
+                  key={stage}
+                  custom={direction}
+                  initial={reduce ? { opacity: 0 } : { opacity: 0, x: 28 * direction }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={reduce ? { opacity: 0 } : { opacity: 0, x: -28 * direction }}
+                  transition={{ duration: 0.35, ease: GALA_EASE }}
+                  className="p-5 sm:p-10"
+                >
+                  {!done && <StepHeader step={step} copy={copy} />}
+                  {renderStep(stage)}
+                </motion.div>
+              </AnimatePresence>
+            </section>
 
             <AnimatePresence>
               {submitError && (
@@ -393,7 +401,7 @@ function RegistrationContent() {
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
-                  className="mx-auto mt-6 flex max-w-[920px] items-start gap-3 rounded-xl border border-[#e36db3]/40 bg-[#4c0933]/70 p-4 text-[13px] text-[var(--color-cream)]"
+                  className="mt-5 flex items-start gap-3 rounded-xl border border-[#e36db3]/40 bg-[#4c0933]/70 p-4 text-[14px] text-[var(--color-cream)]"
                 >
                   <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-[#f29ed0]" aria-hidden />
                   <span>{submitError}</span>
@@ -401,47 +409,56 @@ function RegistrationContent() {
               )}
             </AnimatePresence>
 
-            {/* Turning controls: under the card on large screens, pinned on phones */}
-            {!done && step < 4 && (
-              <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[var(--color-silver)]/15 bg-[#1d0314]/92 px-5 py-4 backdrop-blur-md sm:static sm:mx-auto sm:mt-8 sm:max-w-[920px] sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none">
-                <div className="flex items-center justify-between gap-4">
+            {/* Actions: under the form on larger screens, fixed at the foot on phones */}
+            {!done && (
+              <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[var(--color-silver)]/15 bg-[#1d0314]/94 px-4 py-3 backdrop-blur-md sm:static sm:mt-6 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
+                <div className="flex items-center justify-between gap-3">
                   {step > 1 ? (
                     <button
                       type="button"
                       onClick={prevStep}
-                      className="inline-flex min-h-[48px] cursor-pointer items-center gap-2 rounded-full px-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-cream)]/75 transition-colors hover:text-[var(--color-cream)] focus-visible:outline focus-visible:outline-1 focus-visible:outline-[var(--color-silver)]"
+                      disabled={loading}
+                      className="inline-flex min-h-[48px] cursor-pointer items-center gap-2 rounded-full px-4 text-[13px] font-medium text-[var(--color-cream)]/75 transition-colors hover:text-[var(--color-cream)] focus-visible:outline focus-visible:outline-1 focus-visible:outline-[var(--color-silver)] disabled:opacity-40"
                     >
-                      <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
-                      {texts.register?.buttons?.previous || "Previous"}
+                      <ArrowLeft className="h-4 w-4" aria-hidden />
+                      {texts.register?.buttons?.previous || copy.previous}
                     </button>
                   ) : (
-                    <span className="text-[10.5px] uppercase tracking-[0.24em] text-[var(--color-silver)]/60">I / IV</span>
+                    <span className="hidden text-[12.5px] text-[var(--color-cream)]/50 sm:block">
+                      <span className="text-[#f0a6d2]">*</span> {copy.requiredNote}
+                    </span>
                   )}
-                  <TurnButton onClick={turnCard}>
-                    {texts.register?.buttons?.next || "Continue"}
-                    <RotateCw className="h-4 w-4" aria-hidden />
-                  </TurnButton>
+                  {step < 4 ? (
+                    <PrimaryButton onClick={goNext}>
+                      <span className="sm:hidden">{copy.continueShort}</span>
+                      <span className="hidden sm:inline">
+                        {copy.continueTo} {copy.steps[step].name}
+                      </span>
+                      <ArrowRight className="h-4 w-4" aria-hidden />
+                    </PrimaryButton>
+                  ) : (
+                    <PrimaryButton onClick={sendRequest} disabled={loading}>
+                      {loading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                          {texts.register?.buttons?.submitting || copy.sending}
+                        </>
+                      ) : (
+                        <>
+                          {copy.send}
+                          <Send className="h-4 w-4" aria-hidden />
+                        </>
+                      )}
+                    </PrimaryButton>
+                  )}
                 </div>
               </div>
             )}
-            {!done && step === 4 && (
-              <div className="mx-auto mt-6 flex max-w-[920px] justify-start">
-                <button
-                  type="button"
-                  onClick={prevStep}
-                  disabled={loading}
-                  className="inline-flex min-h-[48px] cursor-pointer items-center gap-2 rounded-full px-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-cream)]/75 transition-colors hover:text-[var(--color-cream)] disabled:opacity-40"
-                >
-                  <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
-                  {texts.register?.buttons?.previous || "Previous"}
-                </button>
-              </div>
-            )}
             {done && (
-              <div className="mx-auto mt-10 flex max-w-[920px] justify-center">
-                <TurnButton href="/">
-                  Return to the Gala <ArrowRight className="h-4 w-4" aria-hidden />
-                </TurnButton>
+              <div className="mt-6 flex justify-center sm:justify-end">
+                <PrimaryButton href="/">
+                  {copy.returnHome} <ArrowRight className="h-4 w-4" aria-hidden />
+                </PrimaryButton>
               </div>
             )}
           </form>
@@ -464,6 +481,51 @@ export default function RegistrationPage() {
     </Suspense>
   );
 }
+
+/* ───────────────────────────── Words ───────────────────────────── */
+
+/** Plain, direct wording for the guide (English / French) */
+function guideCopy(lang: "fr" | "en", texts: Texts) {
+  const fr = lang === "fr";
+  const st = texts.register?.steps || {};
+  const step = (i: number, name: string, nameFr: string, what: string, whatFr: string) => ({
+    name: fr ? nameFr : name,
+    what: fr ? whatFr : what,
+    sub: st[`step${i}`]?.subtitle as string | undefined,
+  });
+  return {
+    eyebrow: texts.invitations?.label || (fr ? "Pass d'admission officiel" : "Official admission pass"),
+    title: fr ? "Demandez votre pass d'admission" : "Request your admission pass",
+    intro: fr
+      ? "Quatre étapes courtes. Notre comité étudie chaque demande et vous répond par e-mail."
+      : "Four short steps. Our committee reviews every request and replies by email.",
+    time: fr ? "Environ 3 minutes" : "About 3 minutes",
+    steps: [
+      step(1, "About you", "Vous", "Tell us who you are and how to reach you.", "Dites-nous qui vous êtes et comment vous joindre."),
+      step(2, "Your path", "Votre parcours", "Share where you are heading next.", "Partagez vos ambitions pour la suite."),
+      step(3, "Your vision", "Votre vision", "Tell us what you expect from the Gala.", "Dites-nous ce que vous attendez du Gala."),
+      step(4, "Review & send", "Vérifier & envoyer", "Check your answers, then send your request.", "Vérifiez vos réponses, puis envoyez votre demande."),
+    ],
+    stepOf: (n: number) => (fr ? `Étape ${n} sur 4` : `Step ${n} of 4`),
+    requiredNote: fr ? "Champ obligatoire" : "Required field",
+    optional: fr ? "facultatif" : "optional",
+    previous: fr ? "Retour" : "Back",
+    continueTo: fr ? "Continuer :" : "Continue to",
+    continueShort: fr ? "Continuer" : "Continue",
+    send: fr ? "Envoyer ma demande" : "Send my request",
+    sending: fr ? "Envoi…" : "Sending…",
+    edit: fr ? "Modifier" : "Edit",
+    back: fr ? "Retour à la soirée" : "Return to the evening",
+    backShort: fr ? "Retour" : "Back",
+    returnHome: fr ? "Retour au Gala" : "Return to the Gala",
+    pass: fr ? "Votre pass" : "Your pass",
+    afterTitle: fr ? "Et ensuite ?" : "What happens next",
+    after: fr
+      ? ["Demande envoyée", "Étude par le comité", "Réponse par e-mail", "Votre invitation"]
+      : ["Request sent", "Committee review", "Reply by email", "Your invitation"],
+  };
+}
+type Copy = ReturnType<typeof guideCopy>;
 
 /* ───────────────────────────── The setting ───────────────────────────── */
 
@@ -512,261 +574,155 @@ function labelFor(list: { value: string; label: string }[], value: string | unde
   return dict?.[value] || list.find((o) => o.value === value)?.label || value;
 }
 
-/* ───────────────────────────── The card ───────────────────────────── */
 
-/**
- * The card itself: two faces of heavy burgundy stock with a silver core,
- * stacked in one grid cell so it sizes to its content. Each step is a small
- * piece of theatre: the card lifts toward the guest, banks, turns half a
- * revolution while a band of light crosses it and silver dust lifts from its
- * edges, then settles back onto the table. The face turned away is inert.
- */
-function TheCard({
-  turns,
-  shake,
-  children,
-}: {
-  turns: number;
-  shake: number;
-  children: { front: React.ReactNode; back: React.ReactNode; frontActive: boolean };
-}) {
-  const reduce = useReducedMotion();
-  const mx = useMotionValue(0);
-  const my = useMotionValue(0);
-  const tiltX = useSpring(useTransform(my, [-0.5, 0.5], [3, -3]), { stiffness: 70, damping: 18 });
-  const tiltY = useSpring(useTransform(mx, [-0.5, 0.5], [-4, 4]), { stiffness: 70, damping: 18 });
-  const [typing, setTyping] = useState(false);
-  const [liftScope, animateLift] = useAnimate();
-  const [shadowScope, animateShadow] = useAnimate();
-  const prevTurns = useRef(turns);
-  const [burst, setBurst] = useState(0);
-  const [sweep, setSweep] = useState(0);
+/* ───────────────────────────── The guide ───────────────────────────── */
 
-  useEffect(() => {
-    if (prevTurns.current === turns) return;
-    const dir = turns > prevTurns.current ? 1 : -1;
-    prevTurns.current = turns;
-    if (reduce) return;
-    setBurst((b) => b + 1);
-    setSweep((w) => w + 1);
-    // Lift toward the guest and bank into the turn, then settle onto the table
-    animateLift(
-      liftScope.current,
-      { z: [0, 170, 0], y: [0, -24, 0], rotateX: [0, 8, 0], rotateZ: [0, -3 * dir, 0] },
-      { duration: 0.95, times: [0, 0.4, 1], ease: [0.3, 0.1, 0.2, 1] },
-    );
-    animateShadow(
-      shadowScope.current,
-      { scaleX: [1, 0.72, 1], opacity: [0.75, 0.3, 0.75], y: [0, 26, 0] },
-      { duration: 0.95, times: [0, 0.4, 1], ease: [0.3, 0.1, 0.2, 1] },
-    );
-  }, [turns, reduce, animateLift, animateShadow, liftScope, shadowScope]);
-
-  // A firm little shake when a line still needs writing
-  useEffect(() => {
-    if (!shake || reduce) return;
-    animateLift(liftScope.current, { x: [0, -14, 11, -7, 4, 0], rotateZ: [0, -1.2, 1, -0.5, 0, 0] }, { duration: 0.55, ease: "easeOut" });
-  }, [shake, reduce, animateLift, liftScope]);
-
+/** Left on desktop: what this is, the four steps as a checklist, the pass */
+function Guide({ step, copy, texts, onJump, done }: { step: number; copy: Copy; texts: Texts; onJump: (n: number) => void; done: boolean }) {
   return (
-    <div
-      className="relative mx-auto w-full max-w-[920px] [perspective:2200px]"
-      onPointerMove={(e) => {
-        if (e.pointerType !== "mouse" || typing) return;
-        const r = e.currentTarget.getBoundingClientRect();
-        mx.set((e.clientX - r.left) / r.width - 0.5);
-        my.set((e.clientY - r.top) / r.height - 0.5);
-      }}
-      onPointerLeave={() => {
-        mx.set(0);
-        my.set(0);
-      }}
-      onFocusCapture={() => {
-        // Hold still while the guest writes
-        setTyping(true);
-        mx.set(0);
-        my.set(0);
-      }}
-      onBlurCapture={() => setTyping(false)}
-    >
-      <div ref={shadowScope} aria-hidden className="absolute inset-x-[6%] -bottom-8 h-12 rounded-[50%] bg-black/70 opacity-75 blur-2xl" />
-      <motion.div style={reduce ? undefined : { rotateX: tiltX, rotateY: tiltY }} className="[transform-style:preserve-3d]">
-        <div ref={liftScope} className="[transform-style:preserve-3d]">
-          <motion.div
-            initial={false}
-            animate={{ rotateY: turns * 180 }}
-            transition={reduce ? { duration: 0 } : { duration: 0.95, ease: [0.3, 0.1, 0.15, 1] }}
-            className="grid [transform-style:preserve-3d]"
-          >
-            {/* The card's silver core, sandwiched between its two faces */}
-            {[-1.6, 0, 1.6].map((z) => (
-              <div
-                key={z}
-                aria-hidden
-                className="rounded-[26px] bg-[linear-gradient(135deg,#d9dde3,#7d848f_50%,#c9ced6)] [grid-area:1/1]"
-                style={{ transform: `translateZ(${z}px)` }}
-              />
-            ))}
-            <Face active={children.frontActive} sweep={sweep}>
-              {children.front}
-            </Face>
-            <Face active={!children.frontActive} sweep={sweep} back>
-              {children.back}
-            </Face>
-          </motion.div>
+    <aside className="lg:sticky lg:top-10 lg:self-start">
+      <p className="text-[10.5px] font-semibold uppercase tracking-[0.34em] text-[var(--color-silver)]">{copy.eyebrow}</p>
+      <h1 className="mt-3 font-cormorant text-[clamp(30px,3.6vw,44px)] font-medium leading-[1.05] text-[var(--color-cream)]">{copy.title}</h1>
+      <p className="mt-3 max-w-sm text-[14.5px] leading-relaxed text-[var(--color-cream)]/70">{copy.intro}</p>
+      <p className="mt-3 hidden items-center gap-2 text-[13px] text-[var(--color-silver-light)]/80 lg:inline-flex">
+        <Clock className="h-4 w-4" aria-hidden /> {copy.time}
+      </p>
+
+      {/* The steps, as a checklist (desktop) */}
+      <nav aria-label="Registration steps" className="mt-8 hidden lg:block">
+        <ol className="relative space-y-1">
+          <span aria-hidden className="absolute bottom-6 left-[17px] top-6 w-px bg-[var(--color-silver)]/15" />
+          {copy.steps.map((s, i) => {
+            const n = i + 1;
+            const state = done || n < step ? "done" : n === step ? "current" : "todo";
+            return (
+              <li key={s.name}>
+                <button
+                  type="button"
+                  onClick={() => onJump(n)}
+                  disabled={done || n >= step}
+                  aria-current={state === "current" ? "step" : undefined}
+                  className={`group relative flex w-full items-start gap-4 rounded-xl px-0 py-3 text-left transition-colors ${
+                    state === "done" && !done ? "cursor-pointer" : "cursor-default"
+                  }`}
+                >
+                  <span
+                    className={`relative z-10 flex h-[35px] w-[35px] shrink-0 items-center justify-center rounded-full border text-[13px] font-semibold transition-colors duration-500 ${
+                      state === "current"
+                        ? "border-[#f0f2f6] bg-[#8a1460] text-[var(--color-cream)] shadow-[0_0_0_5px_rgba(211,55,145,0.18)]"
+                        : state === "done"
+                          ? "border-[#d6dbe2]/70 bg-[#2a0619] text-[#eef0f4] group-hover:border-[#f0f2f6]"
+                          : "border-[#d6dbe2]/25 bg-[#1d0314] text-[#d6dbe2]/45"
+                    }`}
+                  >
+                    {state === "done" ? <Check className="h-4 w-4" aria-hidden /> : n}
+                  </span>
+                  <span className="min-w-0 pt-1">
+                    <span
+                      className={`block text-[15px] font-semibold ${
+                        state === "current" ? "text-[var(--color-cream)]" : state === "done" ? "text-[var(--color-cream)]/80" : "text-[var(--color-cream)]/45"
+                      }`}
+                    >
+                      {s.name}
+                      {state === "done" && !done && (
+                        <span className="ml-2 text-[11px] font-normal text-[var(--color-silver)]/70 opacity-0 transition-opacity group-hover:opacity-100">
+                          {copy.edit}
+                        </span>
+                      )}
+                    </span>
+                    <span className={`mt-0.5 block text-[13px] leading-snug ${state === "current" ? "text-[var(--color-cream)]/65" : "text-[var(--color-cream)]/35"}`}>
+                      {s.what}
+                    </span>
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ol>
+      </nav>
+
+      {/* The pass being requested */}
+      <div className="mt-8 hidden rounded-2xl border border-[var(--color-silver)]/14 bg-[#2a0619]/60 p-5 lg:block">
+        <div className="flex items-baseline justify-between">
+          <span className="text-[10.5px] font-semibold uppercase tracking-[0.28em] text-[var(--color-silver)]">{copy.pass}</span>
+          <span className="font-cinzel text-[22px] font-semibold gala-engraved">{texts.invitations?.price || "1,000 DA"}</span>
         </div>
-      </motion.div>
-      {burst > 0 && <DustBurst key={burst} />}
-    </div>
-  );
-}
-
-function Face({ children, back, active, sweep }: { children: React.ReactNode; back?: boolean; active: boolean; sweep: number }) {
-  const reduce = useReducedMotion();
-  return (
-    <div
-      // The face turned away can't be reached by keyboard or screen reader
-      inert={!active}
-      aria-hidden={!active}
-      className="relative overflow-hidden rounded-[26px] bg-[radial-gradient(130%_100%_at_15%_0%,#70104e_0%,#3d072a_48%,#1e0214_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_50px_90px_-40px_rgba(0,0,0,0.95)] [backface-visibility:hidden] [grid-area:1/1]"
-      // Each face sits just proud of the silver core on its own side
-      style={{ transform: back ? "rotateY(180deg) translateZ(2.6px)" : "translateZ(2.6px)" }}
-    >
-      {/* Engraved guilloché and a fine silver border inset like a debossed rule */}
-      <svg aria-hidden viewBox="0 0 400 260" preserveAspectRatio="none" className="pointer-events-none absolute inset-0 h-full w-full opacity-[0.1]">
-        {Array.from({ length: 26 }).map((_, i) => (
-          <path
-            key={i}
-            d={`M -10 ${30 + i * 9} C 90 ${0 + i * 9}, 170 ${70 + i * 9}, 250 ${30 + i * 9} S 390 ${0 + i * 9}, 420 ${40 + i * 9}`}
-            fill="none"
-            stroke="#f4d5e9"
-            strokeWidth="0.45"
-          />
-        ))}
-      </svg>
-      <div aria-hidden className="pointer-events-none absolute inset-[12px] rounded-[16px] border border-[#d6dbe2]/30 sm:inset-[16px]" />
-      <div aria-hidden className="pointer-events-none absolute inset-[16px] rounded-[13px] border border-[#d6dbe2]/10 sm:inset-[21px]" />
-
-      {/* The writing settles onto the face as it comes round, and lifts off as it turns away */}
-      <motion.div
-        initial={false}
-        animate={active ? { opacity: 1, y: 0, filter: "blur(0px)" } : { opacity: 0, y: 10, filter: "blur(4px)" }}
-        transition={
-          reduce
-            ? { duration: 0 }
-            : active
-              ? { duration: 0.55, delay: 0.38, ease: GALA_EASE }
-              : { duration: 0.18, delay: 0, ease: "easeOut" }
-        }
-        className="relative px-6 pb-8 pt-7 sm:px-14 sm:pb-12 sm:pt-11"
-      >
-        {children}
-      </motion.div>
-
-      {/* A band of light crossing the stock as the card turns */}
-      {sweep > 0 && !reduce && (
-        <motion.div
-          key={sweep}
-          aria-hidden
-          initial={{ x: "-130%", opacity: 0 }}
-          animate={{ x: "130%", opacity: [0, 1, 1, 0] }}
-          transition={{ duration: 1.05, delay: 0.1, ease: [0.3, 0.1, 0.2, 1] }}
-          className="pointer-events-none absolute inset-y-0 left-0 w-full bg-[linear-gradient(100deg,transparent_30%,rgba(255,240,250,0.16)_46%,rgba(255,255,255,0.32)_50%,rgba(255,240,250,0.16)_54%,transparent_70%)] mix-blend-screen"
-        />
-      )}
-    </div>
-  );
-}
-
-/** Silver dust lifting from the card's edges as it turns */
-function DustBurst() {
-  const specks = useMemo(
-    () =>
-      Array.from({ length: 44 }, (_, i) => {
-        const a = (i / 44) * Math.PI * 2 + Math.random() * 0.3;
-        const r = 0.47 + Math.random() * 0.04;
-        return {
-          left: 50 + Math.cos(a) * r * 100,
-          top: 50 + Math.sin(a) * r * 100,
-          dx: Math.cos(a) * (40 + Math.random() * 120),
-          dy: Math.sin(a) * (40 + Math.random() * 120) - 30 - Math.random() * 50,
-          size: 1.5 + Math.random() * 2.5,
-          delay: 0.05 + Math.random() * 0.3,
-          dur: 1.1 + Math.random() * 0.9,
-        };
-      }),
-    [],
-  );
-  return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 z-20">
-      {specks.map((p, i) => (
-        <motion.span
-          key={i}
-          initial={{ opacity: 0, x: 0, y: 0, scale: 0.6 }}
-          animate={{ opacity: [0, 1, 0], x: p.dx, y: p.dy, scale: [0.6, 1, 0.4] }}
-          transition={{ duration: p.dur, delay: p.delay, ease: [0.2, 0.7, 0.3, 1] }}
-          className="absolute rounded-full bg-[#f1f3f6] shadow-[0_0_8px_2px_rgba(232,236,242,0.55)]"
-          style={{ left: `${p.left}%`, top: `${p.top}%`, width: p.size, height: p.size }}
-        />
-      ))}
-    </div>
-  );
-}
-
-/** The card's top line: foil mark, the face's name and its numeral */
-function FaceHead({ numeral, title, right }: { numeral: string; title: string; right?: React.ReactNode }) {
-  return (
-    <div className="mb-8 flex items-start justify-between gap-4 sm:mb-10">
-      {/* The face's numeral, engraved large into the stock */}
-      <span
-        aria-hidden
-        className="pointer-events-none absolute -bottom-6 right-4 select-none font-cinzel text-[150px] font-semibold leading-none text-[#f4d5e9]/[0.045] sm:right-10 sm:text-[230px]"
-      >
-        {numeral}
-      </span>
-      <div className="flex items-center gap-4">
-        <Image src="/GALA-silver.png" alt="" width={631} height={215} className="h-auto w-[86px] opacity-95 sm:w-[112px]" />
-        <span aria-hidden className="hidden h-8 w-px bg-[#d6dbe2]/25 sm:block" />
-        <div className="hidden sm:block">
-          <span className="block font-cinzel text-[11px] font-semibold tracking-[0.3em] gala-engraved">{numeral}</span>
-          <span className="block font-cormorant text-[17px] italic text-[var(--color-cream)]/85">{title}</span>
+        <div className="mt-3 space-y-1 text-[13px] text-[var(--color-cream)]/65">
+          {texts.invitations?.date && <p>{texts.invitations.date}</p>}
+          {texts.invitations?.venue && <p>{texts.invitations.venue}</p>}
         </div>
       </div>
-      {right}
+    </aside>
+  );
+}
+
+/** Phones: a slim bar under the header — the step, its name, a silver line */
+function MobileProgress({ step, copy }: { step: number; copy: Copy }) {
+  return (
+    <div className="sticky top-0 z-30 border-b border-[var(--color-silver)]/12 bg-[#1d0314]/92 px-5 py-3 backdrop-blur-md lg:hidden">
+      <div className="flex items-baseline justify-between gap-3 text-[13px]">
+        <span className="font-semibold text-[var(--color-cream)]">
+          {copy.stepOf(step)} <span className="font-normal text-[var(--color-cream)]/60">· {copy.steps[step - 1].name}</span>
+        </span>
+        <span className="text-[12px] text-[var(--color-cream)]/45">{copy.time}</span>
+      </div>
+      <div className="mt-2 h-[3px] overflow-hidden rounded-full bg-[var(--color-silver)]/15">
+        <motion.div
+          className="h-full rounded-full bg-[linear-gradient(90deg,#c9ced8,#f2f4f8)]"
+          initial={false}
+          animate={{ width: `${(step / 4) * 100}%` }}
+          transition={{ duration: 0.6, ease: GALA_EASE }}
+        />
+      </div>
     </div>
   );
 }
 
-/* ───────────────────────────── Writing on the card ───────────────────────────── */
-
-const writtenText =
-  "w-full bg-transparent font-cormorant italic text-[var(--color-cream)] placeholder:text-[var(--color-cream)]/22 outline-none caret-[#e8ecf2]";
-
-/** A caption engraved under a line, with the line's error beneath it */
-function useFieldState(name: keyof RegistrationData) {
-  const {
-    formState: { errors },
-  } = useFormContext<RegistrationData>();
-  const id = useId();
-  return { id, error: errors[name]?.message as string | undefined, errId: `${id}-err` };
+function StepHeader({ step, copy }: { step: number; copy: Copy }) {
+  const s = copy.steps[step - 1];
+  return (
+    <div className="mb-7 sm:mb-9">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--color-silver)]">{copy.stepOf(step)}</p>
+      <h2 id="step-title" className="mt-2 font-cormorant text-[clamp(28px,3vw,38px)] font-medium leading-tight text-[var(--color-cream)]">
+        {s.name}
+      </h2>
+      <p className="mt-1.5 text-[14.5px] text-[var(--color-cream)]/65">{s.what}</p>
+    </div>
+  );
 }
 
-function Caption({ htmlFor, children, required }: { htmlFor: string; children: React.ReactNode; required?: boolean }) {
+/* ───────────────────────────── Fields ───────────────────────────── */
+
+/** Soft filled field: a dark plum panel; its foot lights silver while you type */
+const fieldBox =
+  "w-full rounded-[12px] border border-transparent bg-[#3a0a28]/75 px-4 text-[16px] text-[var(--color-cream)] placeholder:text-[var(--color-cream)]/30 outline-none transition-[box-shadow,background-color] duration-300 hover:bg-[#430c2f]/80 focus:bg-[#46102f] focus:shadow-[inset_0_-2px_0_#e8ecf2]";
+const fieldBad = "shadow-[inset_0_0_0_1px_rgba(240,120,190,0.75)] focus:shadow-[inset_0_0_0_1px_rgba(240,120,190,0.75),inset_0_-2px_0_#f29ed0]";
+
+function useField(name: keyof RegistrationData) {
+  const { getFieldState, formState, watch } = useFormContext<RegistrationData>();
+  const id = useId();
+  const st = getFieldState(name, formState);
+  const value = watch(name);
+  const filled = typeof value === "string" ? value.trim().length > 0 : value != null;
+  return { id, errId: `${id}-err`, hintId: `${id}-hint`, error: st.error?.message as string | undefined, ok: st.isTouched && !st.invalid && filled };
+}
+
+function FieldLabel({ htmlFor, children, required, copyOptional }: { htmlFor: string; children: React.ReactNode; required?: boolean; copyOptional: string }) {
   return (
-    <label htmlFor={htmlFor} className="mt-2 flex items-center gap-1.5 text-[9.5px] font-semibold uppercase tracking-[0.24em] text-[#d6dbe2]/60">
+    <label htmlFor={htmlFor} className="mb-2 block text-[14px] font-medium text-[var(--color-cream)]/90">
       {children}
       {required ? (
-        <span className="text-[#e99fcc]" aria-hidden>
-          ✦
+        <span className="ml-1 text-[#f0a6d2]" aria-hidden>
+          *
         </span>
       ) : (
-        <span className="font-normal normal-case tracking-normal text-[var(--color-cream)]/30">optional</span>
+        <span className="ml-2 text-[12.5px] font-normal text-[var(--color-cream)]/40">({copyOptional})</span>
       )}
     </label>
   );
 }
 
-function LineError({ id, error }: { id: string; error?: string }) {
+function FieldError({ id, error }: { id: string; error?: string }) {
   return (
     <AnimatePresence initial={false}>
       {error && (
@@ -775,7 +731,7 @@ function LineError({ id, error }: { id: string; error?: string }) {
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
           exit={{ opacity: 0, height: 0 }}
-          className="mt-1.5 flex items-center gap-1.5 text-[12px] text-[#f29ed0]"
+          className="mt-2 flex items-center gap-1.5 text-[13px] text-[#f4a9d6]"
         >
           <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden />
           {error}
@@ -785,74 +741,89 @@ function LineError({ id, error }: { id: string; error?: string }) {
   );
 }
 
-/** A blank on the card: you write straight onto the dotted line */
-function Blank({
+const useOptionalWord = () => {
+  const { lang } = useLanguage();
+  return lang === "fr" ? "facultatif" : "optional";
+};
+
+function Field({
   name,
-  caption,
+  label,
   required,
-  size = "md",
   type = "text",
   autoComplete,
   inputMode,
   placeholder,
+  hint,
 }: {
   name: keyof RegistrationData;
-  caption: string;
+  label: string;
   required?: boolean;
-  size?: "lg" | "md";
   type?: string;
   autoComplete?: string;
   inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
   placeholder?: string;
+  hint?: string;
 }) {
   const { register } = useFormContext<RegistrationData>();
-  const { id, error, errId } = useFieldState(name);
+  const { id, errId, hintId, error, ok } = useField(name);
+  const optional = useOptionalWord();
   return (
     <div className="min-w-0">
-      <input
-        id={id}
-        type={type}
-        autoComplete={autoComplete}
-        inputMode={inputMode}
-        placeholder={placeholder}
-        aria-invalid={!!error}
-        aria-describedby={error ? errId : undefined}
-        {...register(name)}
-        className={`${writtenText} border-b ${error ? "border-[#e36db3]/80" : "border-dashed border-[#d6dbe2]/35 focus:border-solid focus:border-[#e8ecf2]"} px-1 pb-1.5 transition-colors duration-300 ${
-          size === "lg" ? "h-[58px] text-[30px] sm:h-[66px] sm:text-[40px]" : "h-[46px] text-[21px] sm:text-[23px]"
-        }`}
-      />
-      <Caption htmlFor={id} required={required}>
-        {caption}
-      </Caption>
-      <LineError id={errId} error={error} />
+      <FieldLabel htmlFor={id} required={required} copyOptional={optional}>
+        {label}
+      </FieldLabel>
+      <div className="relative">
+        <input
+          id={id}
+          type={type}
+          autoComplete={autoComplete}
+          inputMode={inputMode}
+          placeholder={placeholder}
+          aria-invalid={!!error}
+          aria-required={required}
+          aria-describedby={[error ? errId : "", hint ? hintId : ""].filter(Boolean).join(" ") || undefined}
+          {...register(name)}
+          className={`${fieldBox} h-[52px] pr-11 ${error ? fieldBad : ""}`}
+        />
+        {ok && <Check className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#cfe9d8]" aria-hidden />}
+      </div>
+      {hint && !error && (
+        <p id={hintId} className="mt-2 text-[12.5px] text-[var(--color-cream)]/45">
+          {hint}
+        </p>
+      )}
+      <FieldError id={errId} error={error} />
     </div>
   );
 }
 
-/** A choice on the card, written in the same hand, with a quiet chevron */
-function ChoiceBlank({
+function SelectField({
   name,
-  caption,
+  label,
   required,
   options,
 }: {
   name: keyof RegistrationData;
-  caption: string;
+  label: string;
   required?: boolean;
   options: { value: string; label: string }[];
 }) {
   const { register } = useFormContext<RegistrationData>();
-  const { id, error, errId } = useFieldState(name);
+  const { id, errId, error } = useField(name);
+  const optional = useOptionalWord();
   return (
     <div className="min-w-0">
+      <FieldLabel htmlFor={id} required={required} copyOptional={optional}>
+        {label}
+      </FieldLabel>
       <div className="relative">
         <select
           id={id}
           aria-invalid={!!error}
           aria-describedby={error ? errId : undefined}
           {...register(name)}
-          className={`${writtenText} h-[46px] cursor-pointer appearance-none truncate border-b border-dashed border-[#d6dbe2]/35 px-1 pb-1.5 pr-8 text-[21px] transition-colors focus:border-solid focus:border-[#e8ecf2] sm:text-[23px] [&>option]:bg-[#2b051e] [&>option]:font-sans [&>option]:not-italic [&>option]:text-[15px]`}
+          className={`${fieldBox} h-[52px] cursor-pointer appearance-none truncate pr-11 [&>option]:bg-[#2b051e] [&>option]:text-[15px] ${error ? fieldBad : ""}`}
         >
           {options.map((o) => (
             <option key={o.value} value={o.value}>
@@ -860,54 +831,52 @@ function ChoiceBlank({
             </option>
           ))}
         </select>
-        <ChevronDown className="pointer-events-none absolute right-1 top-1/2 h-4 w-4 -translate-y-1/2 text-[#d6dbe2]/70" aria-hidden />
+        <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#d6dbe2]/70" aria-hidden />
       </div>
-      <Caption htmlFor={id} required={required}>
-        {caption}
-      </Caption>
-      <LineError id={errId} error={error} />
+      <FieldError id={errId} error={error} />
     </div>
   );
 }
 
-/** Ruled writing lines for longer answers */
-function Lines({
+function TextField({
   name,
-  prompt,
+  label,
   required,
   placeholder,
   rows = 4,
+  hint,
 }: {
   name: keyof RegistrationData;
-  prompt: string;
+  label: string;
   required?: boolean;
   placeholder?: string;
   rows?: number;
+  hint?: string;
 }) {
   const { register } = useFormContext<RegistrationData>();
-  const { id, error, errId } = useFieldState(name);
+  const { id, errId, hintId, error } = useField(name);
+  const optional = useOptionalWord();
   return (
     <div>
-      <label htmlFor={id} className="block font-cinzel text-[13px] font-semibold leading-snug tracking-[0.06em] text-[#e3e6ea] sm:text-[15px]">
-        {prompt}
-        {required ? (
-          <span className="ml-1.5 text-[#e99fcc]" aria-hidden>
-            ✦
-          </span>
-        ) : (
-          <span className="ml-2 font-sans text-[11px] font-normal normal-case tracking-normal text-[var(--color-cream)]/35">optional</span>
-        )}
-      </label>
+      <FieldLabel htmlFor={id} required={required} copyOptional={optional}>
+        {label}
+      </FieldLabel>
       <textarea
         id={id}
         rows={rows}
         placeholder={placeholder}
         aria-invalid={!!error}
-        aria-describedby={error ? errId : undefined}
+        aria-required={required}
+        aria-describedby={[error ? errId : "", hint ? hintId : ""].filter(Boolean).join(" ") || undefined}
         {...register(name)}
-        className={`${writtenText} mt-3 resize-none bg-[repeating-linear-gradient(transparent,transparent_37px,rgba(214,219,226,0.22)_37px,rgba(214,219,226,0.22)_38px)] bg-local px-1 text-[21px] leading-[38px] sm:text-[22px] ${error ? "rounded-sm shadow-[0_0_0_1px_rgba(227,109,179,0.6)]" : ""}`}
+        className={`${fieldBox} resize-y py-3.5 leading-relaxed ${error ? fieldBad : ""}`}
       />
-      <LineError id={errId} error={error} />
+      {hint && !error && (
+        <p id={hintId} className="mt-2 text-[12.5px] text-[var(--color-cream)]/45">
+          {hint}
+        </p>
+      )}
+      <FieldError id={errId} error={error} />
     </div>
   );
 }
@@ -920,419 +889,256 @@ function Reveal({ show, children }: { show: boolean; children: React.ReactNode }
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
           exit={{ opacity: 0, height: 0 }}
-          transition={{ duration: 0.45, ease: GALA_EASE }}
+          transition={{ duration: 0.35, ease: GALA_EASE }}
           className="overflow-hidden"
         >
-          <div className="pt-3">{children}</div>
+          <div className="pt-4">{children}</div>
         </motion.div>
       )}
     </AnimatePresence>
   );
 }
 
-/* ───────────────────────────── The faces ───────────────────────────── */
+/* ───────────────────────────── The steps ───────────────────────────── */
 
-function FaceAdmission({ texts }: { texts: Texts }) {
+function StepAbout({ texts }: { texts: Texts }) {
   const { watch } = useFormContext<RegistrationData>();
   const f = texts.register?.fields || {};
   return (
-    <div>
-      <FaceHead
-        numeral="I"
-        title={texts.register?.steps?.step1?.subtitle || "Identity & Credentials"}
-        right={
-          <div className="text-right">
-            <span className="block text-[8.5px] font-semibold uppercase tracking-[0.3em] text-[#d6dbe2]/60">Admission</span>
-            <span className="block font-cinzel text-[18px] font-semibold gala-engraved sm:text-[22px]">{texts.invitations?.price || "1,000 DA"}</span>
-          </div>
-        }
+    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-x-6 sm:gap-y-6">
+      <Field name="first_name" label={plainLabel(f.firstName, "First name")} required autoComplete="given-name" />
+      <Field name="last_name" label={plainLabel(f.lastName, "Last name")} required autoComplete="family-name" />
+      <Field
+        name="email"
+        type="email"
+        label={plainLabel(f.email, "Email address")}
+        required
+        autoComplete="email"
+        inputMode="email"
+        placeholder="name@example.com"
+        hint="Your answer and your invitation will be sent here."
       />
-
-      <p className="text-center font-cinzel text-[10.5px] font-semibold tracking-[0.42em] text-[#d6dbe2]/70">THIS CARD ADMITS</p>
-      <div className="mt-3 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
-        <Blank name="first_name" caption={plainLabel(f.firstName, "First name")} required size="lg" autoComplete="given-name" placeholder="First name" />
-        <Blank name="last_name" caption={plainLabel(f.lastName, "Last name")} required size="lg" autoComplete="family-name" placeholder="Last name" />
+      <Field name="phone" type="tel" label={plainLabel(f.phone, "Phone number")} required autoComplete="tel" inputMode="tel" placeholder="+213 5XX XX XX XX" />
+      <div>
+        <SelectField
+          name="university"
+          label={plainLabel(f.university, "University / Grande École")}
+          required
+          options={universityOptions.map((o) => ({ ...o, label: f.universities?.[o.value] || o.label }))}
+        />
+        <Reveal show={watch("university") === "OTHER"}>
+          <Field name="university_other" label={plainLabel(f.universityOther, "Your institution")} placeholder="Name of your institution" />
+        </Reveal>
       </div>
-
-      <div className="mt-8 grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2">
-        <Blank name="email" type="email" caption={plainLabel(f.email, "Email address")} required autoComplete="email" inputMode="email" placeholder="name@example.com" />
-        <Blank name="phone" type="tel" caption={plainLabel(f.phone, "Phone number")} required autoComplete="tel" inputMode="tel" placeholder="+213 …" />
-        <div>
-          <ChoiceBlank
-            name="university"
-            caption={plainLabel(f.university, "University / Grande École")}
-            required
-            options={universityOptions.map((o) => ({ ...o, label: f.universities?.[o.value] || o.label }))}
-          />
-          <Reveal show={watch("university") === "OTHER"}>
-            <Blank name="university_other" caption={plainLabel(f.universityOther, "Your institution")} placeholder="Name of your institution" />
-          </Reveal>
-        </div>
-        <div>
-          <ChoiceBlank
-            name="field_of_study"
-            caption={plainLabel(f.fieldOfStudy, "Engineering specialization")}
-            required
-            options={fieldOfStudyOptions.map((o) => ({ ...o, label: f.fieldOfStudies?.[o.value] || o.label }))}
-          />
-          <Reveal show={watch("field_of_study") === "OTHER"}>
-            <Blank name="field_of_study_other" caption={plainLabel(f.fieldOfStudyOther, "Your field")} placeholder="Your discipline" />
-          </Reveal>
-        </div>
-      </div>
-
-      <div className="mt-10 flex items-center justify-between gap-4 border-t border-[#d6dbe2]/15 pt-5 text-[10px] uppercase tracking-[0.26em] text-[#d6dbe2]/55">
-        <span>{texts.invitations?.date || "Saturday, November 8, 2026"}</span>
-        <GalaStar className="hidden w-8 text-[#d6dbe2]/70 sm:block" />
-        <span className="text-right">{texts.invitations?.venue || "Mercure Hotel, Bab Ezzouar"}</span>
+      <div>
+        <SelectField
+          name="field_of_study"
+          label={plainLabel(f.fieldOfStudy, "Engineering specialization")}
+          required
+          options={fieldOfStudyOptions.map((o) => ({ ...o, label: f.fieldOfStudies?.[o.value] || o.label }))}
+        />
+        <Reveal show={watch("field_of_study") === "OTHER"}>
+          <Field name="field_of_study_other" label={plainLabel(f.fieldOfStudyOther, "Your field")} placeholder="Your discipline" />
+        </Reveal>
       </div>
     </div>
   );
 }
 
-function FaceAmbitions({ texts }: { texts: Texts }) {
+function StepPath({ texts }: { texts: Texts }) {
   const f = texts.register?.fields || {};
   return (
-    <div>
-      <FaceHead numeral="II" title={texts.register?.steps?.step2?.subtitle || "Ambitions & Trajectory"} />
-      <div className="space-y-8">
-        <Lines
-          name="plans_next_year"
-          prompt={plainLabel(f.plansNextYear, "What are your primary ambitions for the coming year?")}
-          required
-          placeholder="Seeking graduate engineering roles in energy transition or AI systems…"
-        />
-        <Lines
-          name="personal_description"
-          prompt={plainLabel(f.personalDescription, "Short personal statement or executive summary")}
-          placeholder="Key achievements, technical passions, or project leadership…"
-          rows={3}
-        />
-      </div>
+    <div className="space-y-6">
+      <TextField
+        name="plans_next_year"
+        label={plainLabel(f.plansNextYear, "What are your primary ambitions for the coming year?")}
+        required
+        placeholder="e.g. Seeking a graduate engineering role in the energy transition or AI systems…"
+        hint="A few sentences are enough."
+      />
+      <TextField
+        name="personal_description"
+        label={plainLabel(f.personalDescription, "Short personal statement or executive summary")}
+        placeholder="e.g. Key achievements, technical passions, projects you have led…"
+        rows={3}
+      />
     </div>
   );
 }
 
-function FaceVision({ texts }: { texts: Texts }) {
+function StepVision({ texts }: { texts: Texts }) {
   const { watch, setValue } = useFormContext<RegistrationData>();
   const f = texts.register?.fields || {};
   const attended = watch("attended_before");
   return (
-    <div>
-      <FaceHead numeral="III" title={texts.register?.steps?.step3?.subtitle || "GALA Perspective & Synergy"} />
-      <div className="space-y-8">
-        <Lines name="perspective_gala" prompt={plainLabel(f.perspectiveGala, "What is your vision of the GALA experience?")} required rows={3} />
-        <Lines name="benefit_from_event" prompt={plainLabel(f.benefitFromEvent, "How will participating in GALA accelerate your career?")} required rows={3} />
+    <div className="space-y-6">
+      <TextField name="perspective_gala" label={plainLabel(f.perspectiveGala, "What is your vision of the GALA experience?")} required rows={3} />
+      <TextField name="benefit_from_event" label={plainLabel(f.benefitFromEvent, "How will participating in GALA accelerate your career?")} required rows={3} />
 
-        <div className="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
-          <fieldset>
-            <legend className="mb-3 text-[9.5px] font-semibold uppercase tracking-[0.24em] text-[#d6dbe2]/60">
-              {plainLabel(f.attendedBefore, "Attended a previous edition?")}
-            </legend>
-            <div role="radiogroup" className="flex gap-3">
-              {[
-                { v: true, l: texts.register?.options?.yes || "Yes" },
-                { v: false, l: texts.register?.options?.no || "No" },
-              ].map((o) => {
-                const on = attended === o.v;
-                return (
-                  <label
-                    key={String(o.v)}
-                    className={`relative flex min-h-[48px] min-w-[96px] cursor-pointer items-center justify-center rounded-full border px-6 font-cormorant text-[20px] italic transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-1 has-[:focus-visible]:outline-[#e8ecf2] ${
-                      on ? "border-[#e8ecf2]/80 bg-[#7d1155]/70 text-[var(--color-cream)]" : "border-[#d6dbe2]/25 text-[var(--color-cream)]/55 hover:border-[#d6dbe2]/50"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="attended_before_choice"
-                      value={String(o.v)}
-                      checked={on}
-                      onChange={() => setValue("attended_before", o.v)}
-                      className="sr-only"
-                    />
-                    {on && <Check className="mr-2 h-4 w-4 not-italic" aria-hidden />}
-                    {o.l}
-                  </label>
-                );
-              })}
-            </div>
-          </fieldset>
-          <div>
-            <ChoiceBlank name="heard_about" caption={plainLabel(f.heardAbout, "How did you discover GALA?")} options={heardAboutOptions} />
-            <Reveal show={watch("heard_about") === "OTHER"}>
-              <Blank name="heard_about_other" caption={plainLabel(f.heardAboutOther, "Please specify")} />
-            </Reveal>
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+        <fieldset>
+          <legend className="mb-2 text-[14px] font-medium text-[var(--color-cream)]/90">{plainLabel(f.attendedBefore, "Attended a previous edition?")}</legend>
+          <div role="radiogroup" className="grid grid-cols-2 gap-2">
+            {[
+              { v: true, l: texts.register?.options?.yes || "Yes" },
+              { v: false, l: texts.register?.options?.no || "No" },
+            ].map((o) => {
+              const on = attended === o.v;
+              return (
+                <label
+                  key={String(o.v)}
+                  className={`flex h-[52px] cursor-pointer items-center justify-center gap-2 rounded-[12px] text-[15px] transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-1 has-[:focus-visible]:outline-[#e8ecf2] ${
+                    on
+                      ? "bg-[#7d1155] text-[var(--color-cream)] shadow-[inset_0_0_0_1px_rgba(232,236,242,0.6)]"
+                      : "bg-[#3a0a28]/75 text-[var(--color-cream)]/65 hover:bg-[#430c2f]/80"
+                  }`}
+                >
+                  <input type="radio" name="attended_before_choice" value={String(o.v)} checked={on} onChange={() => setValue("attended_before", o.v)} className="sr-only" />
+                  {on && <Check className="h-4 w-4" aria-hidden />}
+                  {o.l}
+                </label>
+              );
+            })}
           </div>
+        </fieldset>
+        <div>
+          <SelectField name="heard_about" label={plainLabel(f.heardAbout, "How did you discover GALA?")} options={heardAboutOptions} />
+          <Reveal show={watch("heard_about") === "OTHER"}>
+            <Field name="heard_about_other" label={plainLabel(f.heardAboutOther, "Please specify")} />
+          </Reveal>
         </div>
       </div>
     </div>
   );
 }
 
-/** The finished card, and the seal that sends it */
-function FaceSeal({
-  data,
-  texts,
-  loading,
-  onSeal,
-  onEdit,
-  requestedTier,
-}: {
-  data: RegistrationData;
-  texts: Texts;
-  loading: boolean;
-  onSeal: () => void;
-  onEdit: (step: number) => void;
-  requestedTier: string;
-}) {
-  void requestedTier;
+/** Everything at a glance, each part editable, before sending */
+function StepReview({ data, texts, copy, onEdit }: { data: RegistrationData; texts: Texts; copy: Copy; onEdit: (step: number) => void }) {
   const f = texts.register?.fields || {};
-  const name = [data.first_name, data.last_name].filter(Boolean).join(" ");
   const university =
     data.university === "OTHER" && data.university_other ? data.university_other : labelFor(universityOptions, data.university, f.universities);
   const field =
-    data.field_of_study === "OTHER" && data.field_of_study_other
-      ? data.field_of_study_other
-      : labelFor(fieldOfStudyOptions, data.field_of_study, f.fieldOfStudies);
+    data.field_of_study === "OTHER" && data.field_of_study_other ? data.field_of_study_other : labelFor(fieldOfStudyOptions, data.field_of_study, f.fieldOfStudies);
+  const heard = data.heard_about === "OTHER" && data.heard_about_other ? data.heard_about_other : labelFor(heardAboutOptions, data.heard_about);
 
-  const Edit = ({ step }: { step: number }) => (
-    <button
-      type="button"
-      onClick={() => onEdit(step)}
-      className="inline-flex min-h-[36px] cursor-pointer items-center gap-1 rounded-full px-2 text-[9.5px] font-semibold uppercase tracking-[0.2em] text-[#d6dbe2]/60 transition-colors hover:text-[var(--color-cream)] focus-visible:outline focus-visible:outline-1 focus-visible:outline-[#d6dbe2]"
-    >
-      <PenLine className="h-3 w-3" aria-hidden /> Edit
-    </button>
-  );
-  const Item = ({ k, v }: { k: string; v?: string }) => (
-    <div className="min-w-0">
-      <dt className="text-[9px] font-semibold uppercase tracking-[0.26em] text-[#d6dbe2]/55">{k}</dt>
-      <dd className="mt-1 line-clamp-2 font-cormorant text-[19px] italic leading-snug text-[var(--color-cream)]">{v || "—"}</dd>
-    </div>
-  );
+  const groups: { step: number; rows: [string, string | undefined][] }[] = [
+    {
+      step: 1,
+      rows: [
+        [plainLabel(f.firstName, "First name") + " / " + plainLabel(f.lastName, "Last name"), [data.first_name, data.last_name].filter(Boolean).join(" ")],
+        [plainLabel(f.email, "Email address"), data.email],
+        [plainLabel(f.phone, "Phone number"), data.phone],
+        [plainLabel(f.university, "University"), university],
+        [plainLabel(f.fieldOfStudy, "Specialization"), field],
+      ],
+    },
+    {
+      step: 2,
+      rows: [
+        [plainLabel(f.plansNextYear, "Ambitions"), data.plans_next_year],
+        [plainLabel(f.personalDescription, "Personal statement"), data.personal_description],
+      ],
+    },
+    {
+      step: 3,
+      rows: [
+        [plainLabel(f.perspectiveGala, "Your vision"), data.perspective_gala],
+        [plainLabel(f.benefitFromEvent, "Career benefit"), data.benefit_from_event],
+        [plainLabel(f.attendedBefore, "Attended before"), data.attended_before ? texts.register?.options?.yes || "Yes" : texts.register?.options?.no || "No"],
+        [plainLabel(f.heardAbout, "Discovered via"), heard],
+      ],
+    },
+  ];
 
   return (
-    <div>
-      <FaceHead numeral="IV" title={texts.register?.steps?.step4?.subtitle || "Review & Confirmation"} />
-
-      <div className="text-center">
-        <p className="font-cinzel text-[10.5px] font-semibold tracking-[0.42em] text-[#d6dbe2]/70">THIS CARD ADMITS</p>
-        <p className="mt-3 font-cinzel text-[clamp(28px,4.4vw,46px)] font-semibold leading-tight gala-engraved">{name || "—"}</p>
-        <p className="mt-2 font-cormorant text-[19px] italic text-[var(--color-cream)]/75">
-          {[university, field].filter(Boolean).join(" · ")}
-        </p>
-      </div>
-
-      <div className="mt-8 grid grid-cols-1 gap-6 border-y border-[#d6dbe2]/15 py-6 sm:grid-cols-3">
-        <div>
-          <div className="flex items-center justify-between">
-            <span className="font-cinzel text-[11px] font-semibold tracking-[0.3em] gala-engraved">I</span>
-            <Edit step={1} />
+    <div className="space-y-4">
+      {groups.map((g) => (
+        <div key={g.step} className="rounded-2xl bg-[#3a0a28]/55 p-4 sm:p-5">
+          <div className="mb-3 flex items-center justify-between">
+            <span className="text-[13px] font-semibold text-[var(--color-cream)]">
+              {g.step}. {copy.steps[g.step - 1].name}
+            </span>
+            <button
+              type="button"
+              onClick={() => onEdit(g.step)}
+              className="inline-flex min-h-[36px] cursor-pointer items-center gap-1.5 rounded-full px-3 text-[12.5px] text-[var(--color-silver-light)]/80 transition-colors hover:bg-white/5 hover:text-[var(--color-cream)] focus-visible:outline focus-visible:outline-1 focus-visible:outline-[#d6dbe2]"
+            >
+              <PenLine className="h-3.5 w-3.5" aria-hidden /> {copy.edit}
+            </button>
           </div>
-          <dl className="mt-2 space-y-3">
-            <Item k="Email" v={data.email} />
-            <Item k="Phone" v={data.phone} />
+          <dl className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
+            {g.rows.map(([k, v]) => (
+              <div key={k} className="min-w-0">
+                <dt className="text-[12px] text-[var(--color-cream)]/45">{k}</dt>
+                <dd className="mt-0.5 line-clamp-3 break-words text-[14.5px] text-[var(--color-cream)]/90">{v || "—"}</dd>
+              </div>
+            ))}
           </dl>
         </div>
-        <div>
-          <div className="flex items-center justify-between">
-            <span className="font-cinzel text-[11px] font-semibold tracking-[0.3em] gala-engraved">II</span>
-            <Edit step={2} />
-          </div>
-          <dl className="mt-2 space-y-3">
-            <Item k="Ambitions" v={data.plans_next_year} />
-          </dl>
-        </div>
-        <div>
-          <div className="flex items-center justify-between">
-            <span className="font-cinzel text-[11px] font-semibold tracking-[0.3em] gala-engraved">III</span>
-            <Edit step={3} />
-          </div>
-          <dl className="mt-2 space-y-3">
-            <Item k="Your vision" v={data.perspective_gala} />
-            <Item
-              k="Discovered via"
-              v={data.heard_about === "OTHER" && data.heard_about_other ? data.heard_about_other : labelFor(heardAboutOptions, data.heard_about)}
-            />
-          </dl>
-        </div>
-      </div>
-
-      {/* Press the seal to send */}
-      <div className="mt-8 flex flex-col items-center">
-        <SealButton loading={loading} onPress={onSeal} />
-        <p className="mt-4 text-[10.5px] font-semibold uppercase tracking-[0.3em] text-[#d6dbe2]/70">
-          {loading
-            ? texts.register?.buttons?.submitting || "Submitting request…"
-            : texts.register?.buttons?.submit || "Submit invitation request"}
-        </p>
-        {!loading && <p className="mt-1.5 font-cormorant text-[16px] italic text-[var(--color-cream)]/55">Press the seal to send your card</p>}
-      </div>
+      ))}
     </div>
   );
 }
 
-/** The silver VIC seal, pressed to send the card */
-function SealButton({ loading, onPress }: { loading: boolean; onPress: () => void }) {
-  const reduce = useReducedMotion();
-  const [pressed, setPressed] = useState(0);
-  return (
-    <motion.button
-      type="button"
-      onClick={() => {
-        setPressed((n) => n + 1);
-        onPress();
-      }}
-      disabled={loading}
-      aria-label="Seal and send your request"
-      whileHover={reduce ? undefined : { scale: 1.04, rotate: -3 }}
-      whileTap={reduce ? undefined : { scale: 0.9, rotate: 0 }}
-      animate={loading && !reduce ? { scale: [1, 0.92, 1] } : undefined}
-      transition={loading ? { duration: 1.2, repeat: Infinity } : { type: "spring", stiffness: 300, damping: 18 }}
-      className="relative h-[104px] w-[104px] cursor-pointer rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#e8ecf2] disabled:cursor-wait sm:h-[118px] sm:w-[118px]"
-    >
-      <span className="absolute inset-0 rounded-[47%_53%_50%_50%/52%_48%_52%_48%] bg-[radial-gradient(circle_at_34%_28%,#ffffff_0%,#e4e7ec_16%,#b3b9c3_42%,#7d848f_72%,#555b65_100%)] shadow-[0_14px_28px_rgba(5,1,4,0.7),inset_0_2px_3px_rgba(255,255,255,0.75),inset_0_-4px_8px_rgba(40,44,52,0.55)]" />
-      <span className="absolute inset-[11%] rounded-full bg-[radial-gradient(circle_at_40%_32%,#f4f5f7_0%,#c9ced6_45%,#9aa1ab_100%)] shadow-[inset_0_3px_6px_rgba(40,44,52,0.55),inset_0_-1px_1px_rgba(255,255,255,0.8)]" />
-      <svg viewBox="0 0 100 100" className="absolute inset-[11%] h-[78%] w-[78%]" aria-hidden>
-        <defs>
-          <path id="send-seal-ring" d="M50,50 m-37,0 a37,37 0 1,1 74,0 a37,37 0 1,1 -74,0" />
-        </defs>
-        <text fill="rgba(52,57,66,0.85)" style={{ fontSize: 8.2, fontFamily: "Cinzel, serif", fontWeight: 700 }}>
-          <textPath href="#send-seal-ring" textLength="228" lengthAdjust="spacing">
-            ✦ SEAL & SEND ✦ VISION &amp; INNOVATION CLUB
-          </textPath>
-        </text>
-      </svg>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/images/vic-icon.png"
-        alt=""
-        className="absolute left-1/2 top-1/2 h-[38%] w-auto -translate-x-1/2 -translate-y-1/2 select-none [filter:grayscale(1)_brightness(0.42)_contrast(1.2)_drop-shadow(0_1px_0_rgba(255,255,255,0.85))]"
-      />
-      {/* The impression spreading from the seal */}
-      {pressed > 0 && !reduce && (
-        <motion.span
-          key={pressed}
-          aria-hidden
-          initial={{ scale: 0.9, opacity: 0.7 }}
-          animate={{ scale: 2.4, opacity: 0 }}
-          transition={{ duration: 1.1, ease: "easeOut" }}
-          className="pointer-events-none absolute inset-0 rounded-full border-2 border-[#e8ecf2]/60"
-        />
-      )}
-      {loading && <Loader2 className="absolute -right-2 -top-2 h-5 w-5 animate-spin text-[#e8ecf2]" aria-hidden />}
-    </motion.button>
-  );
-}
-
-/** The back of the sent card */
-function FaceReceived({ data, texts }: { data: RegistrationData; texts: Texts }) {
+/** Sent: what happens now */
+function Received({ data, texts, copy }: { data: RegistrationData; texts: Texts; copy: Copy }) {
   const name = [data.first_name, data.last_name].filter(Boolean).join(" ");
-  const journey = ["Requested", "Review", "Approval", "Invitation"];
   return (
     <div className="flex flex-col items-center py-4 text-center sm:py-8">
-      <div className="relative">
-        <GalaStar className="w-16 text-[#dfe3e8]" />
-      </div>
-      <span className="mt-6 text-[10.5px] font-semibold uppercase tracking-[0.34em] text-[#d6dbe2]/70">Registration transmitted</span>
-      <h2 className="mt-4 font-cormorant text-[clamp(30px,4vw,46px)] italic leading-tight text-[var(--color-cream)]">
+      <span className="flex h-16 w-16 items-center justify-center rounded-full bg-[#7d1155] shadow-[0_0_0_8px_rgba(211,55,145,0.15)]">
+        <Check className="h-7 w-7 text-[var(--color-cream)]" aria-hidden />
+      </span>
+      <h2 id="step-title" className="mt-6 font-cormorant text-[clamp(30px,4vw,44px)] font-medium leading-tight text-[var(--color-cream)]">
         {texts.register?.success?.title || "Your request has been received."}
       </h2>
-      {name && <p className="mt-3 font-cinzel text-[18px] font-semibold tracking-[0.12em] gala-engraved">{name}</p>}
-      <p className="mx-auto mt-5 max-w-md text-[14px] font-light leading-relaxed text-[var(--color-cream)]/70">
+      {name && <p className="mt-2 font-cinzel text-[17px] font-semibold tracking-[0.12em] gala-engraved">{name}</p>}
+      <p className="mx-auto mt-4 max-w-md text-[14.5px] leading-relaxed text-[var(--color-cream)]/70">
         {texts.register?.success?.message ||
           "Our admissions committee will carefully review your credentials. You will receive an official invitation update via email."}
       </p>
-      <ol className="mt-9 grid w-full max-w-lg grid-cols-4 gap-2 border-t border-[#d6dbe2]/15 pt-6">
-        {journey.map((j, i) => (
-          <li key={j} className="flex flex-col items-center gap-2">
-            <span
-              className={`flex h-7 w-7 items-center justify-center rounded-full border text-[11px] ${
-                i === 0 ? "border-[#e8ecf2] bg-[#7d1155] text-[var(--color-cream)]" : "border-[#d6dbe2]/30 text-[#d6dbe2]/60"
-              }`}
-            >
-              {i === 0 ? <Check className="h-3.5 w-3.5" aria-hidden /> : i + 1}
-            </span>
-            <span className={`text-[9px] font-semibold uppercase tracking-[0.18em] ${i === 0 ? "text-[var(--color-cream)]" : "text-[#d6dbe2]/55"}`}>{j}</span>
-          </li>
-        ))}
-      </ol>
+      <div className="mt-8 w-full max-w-lg border-t border-[#d6dbe2]/15 pt-6">
+        <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--color-silver)]">{copy.afterTitle}</p>
+        <ol className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {copy.after.map((j, i) => (
+            <li key={j} className="flex flex-col items-center gap-2">
+              <span
+                className={`flex h-8 w-8 items-center justify-center rounded-full border text-[12px] ${
+                  i === 0 ? "border-[#e8ecf2] bg-[#7d1155] text-[var(--color-cream)]" : "border-[#d6dbe2]/30 text-[#d6dbe2]/60"
+                }`}
+              >
+                {i === 0 ? <Check className="h-4 w-4" aria-hidden /> : i + 1}
+              </span>
+              <span className={`text-[12.5px] ${i === 0 ? "text-[var(--color-cream)]" : "text-[var(--color-cream)]/50"}`}>{j}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
     </div>
   );
 }
 
-/* ───────────────────────────── Controls ───────────────────────────── */
+/* ───────────────────────────── Buttons ───────────────────────────── */
 
-function CardProgress({ step, titles, onJump }: { step: number; titles: string[]; onJump: (n: number) => void }) {
-  const numerals = ["I", "II", "III", "IV"];
-  return (
-    <nav aria-label="Registration progress" className="mx-auto mt-8 flex max-w-[920px] items-center justify-center gap-2 sm:gap-4">
-      {titles.map((t, i) => {
-        const n = i + 1;
-        const state = n < step ? "done" : n === step ? "current" : "todo";
-        return (
-          <div key={t} className="flex items-center gap-2 sm:gap-4">
-            <button
-              type="button"
-              onClick={() => onJump(n)}
-              disabled={n >= step}
-              aria-current={state === "current" ? "step" : undefined}
-              className="group flex min-h-[44px] cursor-pointer items-center gap-2 disabled:cursor-default"
-            >
-              <span
-                className={`relative flex h-8 w-8 items-center justify-center rounded-full border font-cinzel text-[11px] font-semibold transition-colors duration-500 ${
-                  state === "current"
-                    ? "border-[#e8ecf2] bg-[#7d1155] text-[var(--color-cream)]"
-                    : state === "done"
-                      ? "border-[#d6dbe2]/60 text-[#e8ecf2] group-hover:border-[#e8ecf2]"
-                      : "border-[#d6dbe2]/20 text-[#d6dbe2]/40"
-                }`}
-              >
-                {state === "done" ? <Check className="h-3.5 w-3.5" aria-hidden /> : numerals[i]}
-                {state === "current" && (
-                  <motion.span
-                    aria-hidden
-                    className="absolute inset-0 rounded-full border border-[#e8ecf2]/70"
-                    animate={{ scale: [1, 1.55], opacity: [0.6, 0] }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
-                  />
-                )}
-              </span>
-              <span
-                className={`hidden text-[10px] font-semibold uppercase tracking-[0.24em] md:inline ${
-                  state === "current" ? "text-[var(--color-cream)]" : state === "done" ? "text-[#d6dbe2]/75" : "text-[#d6dbe2]/35"
-                }`}
-              >
-                {t}
-              </span>
-            </button>
-            {i < titles.length - 1 && (
-              <span aria-hidden className="relative h-px w-6 overflow-hidden bg-[#d6dbe2]/15 sm:w-10">
-                <motion.span
-                  initial={false}
-                  animate={{ scaleX: n < step ? 1 : 0 }}
-                  transition={{ duration: 0.9, delay: n < step ? 0.6 : 0, ease: GALA_EASE }}
-                  className="absolute inset-0 origin-left bg-[#e8ecf2]/70"
-                />
-              </span>
-            )}
-          </div>
-        );
-      })}
-    </nav>
-  );
-}
-
-function TurnButton({ children, onClick, href }: { children: React.ReactNode; onClick?: () => void; href?: string }) {
+function PrimaryButton({
+  children,
+  onClick,
+  href,
+  disabled,
+}: {
+  children: React.ReactNode;
+  onClick?: () => void;
+  href?: string;
+  disabled?: boolean;
+}) {
   const cls =
-    "group relative inline-flex min-h-[52px] cursor-pointer items-center gap-3 overflow-hidden rounded-full border border-[#e8ecf2]/60 bg-[linear-gradient(180deg,#7d1155,#4c0833)] px-7 text-[11.5px] font-semibold uppercase tracking-[0.2em] text-[var(--color-cream)] shadow-[0_14px_30px_-12px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.18)] transition-[transform,border-color] duration-300 hover:border-[#f4f5f7] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#d6dbe2] sm:px-9";
+    "group relative inline-flex min-h-[52px] flex-1 cursor-pointer items-center justify-center gap-3 overflow-hidden rounded-full border border-[#e8ecf2]/55 bg-[linear-gradient(180deg,#8a1460,#550a39)] px-7 text-[14px] font-semibold text-[var(--color-cream)] shadow-[0_14px_30px_-12px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.2)] transition-[transform,border-color,filter] duration-300 hover:border-[#f4f5f7] hover:brightness-110 active:scale-[0.98] disabled:cursor-wait disabled:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#d6dbe2] sm:flex-none sm:px-9";
   const inner = (
     <>
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 -skew-x-12 bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.22),transparent)] transition-transform duration-700 group-hover:translate-x-[300%]"
+        className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 -skew-x-12 bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent)] transition-transform duration-700 group-hover:translate-x-[300%]"
       />
-      <span className="relative inline-flex items-center gap-3">{children}</span>
+      <span className="relative inline-flex items-center gap-2.5">{children}</span>
     </>
   );
   return href ? (
@@ -1340,7 +1146,7 @@ function TurnButton({ children, onClick, href }: { children: React.ReactNode; on
       {inner}
     </Link>
   ) : (
-    <button type="button" onClick={onClick} className={cls}>
+    <button type="button" onClick={onClick} disabled={disabled} className={cls}>
       {inner}
     </button>
   );
