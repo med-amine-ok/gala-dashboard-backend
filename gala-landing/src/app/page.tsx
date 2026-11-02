@@ -8,6 +8,7 @@ import Pricing from "./ticket/page";
 import Apropos from "./apropos/page";
 import Footer from "./footer/page";
 import GalaWorld from "./components/gala/GalaWorld";
+import GalaMedia from "./components/gala/GalaMedia";
 import mixpanel from "mixpanel-browser";
 
 // Initialize Mixpanel if token is provided
@@ -26,6 +27,8 @@ export default function Home() {
 
       {/* The hall every room after the entrance stands in (fixed WebGL, behind the content) */}
       <GalaWorld />
+      {/* The rooms' photographs, drawn in WebGL over their frames */}
+      <GalaMedia />
 
       <main className="relative z-[1] w-full overflow-x-clip">
         {/* I & II — THE ENTRANCE (HERO) & THE MANIFESTO */}

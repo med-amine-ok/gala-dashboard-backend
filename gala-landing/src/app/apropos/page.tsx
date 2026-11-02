@@ -1,19 +1,24 @@
 "use client";
 
-import { useRef } from "react";
+import { useCallback, useRef } from "react";
+import * as THREE from "three";
 import {
   motion,
+  useMotionValueEvent,
   useReducedMotion,
   useScroll,
   useTransform,
 } from "framer-motion";
 import { useLanguage } from "../../context/LanguageContext";
 import { CountUp, DrawnRule, GALA_EASE, RoomMasthead } from "../components/gala/Room";
+import Stage3D, { type StageContext } from "../components/gala/Stage3D";
 
 /**
  * VI · THE HOSTS
  * The Vision & Innovation Club, presented like a house crest: their story on one
- * side, the club's seal on the other, then the figures and the three principles.
+ * side, the club's seal on the other, then the figures — set inside a slow
+ * constellation of silver points that gathers as a ring, swells into a sphere
+ * and unwinds into a galaxy as you scroll past — and the three principles.
  */
 export default function AboutUsSection() {
   const { texts } = useLanguage();
@@ -78,7 +83,8 @@ export default function AboutUsSection() {
 
         {/* The figures, at display size across the room */}
         {stats.length > 0 && (
-          <dl className="mt-24 grid grid-cols-3 border-y border-[var(--color-silver)]/15 sm:mt-32">
+          <Constellation>
+          <dl className="relative z-10 grid grid-cols-3 border-y border-[var(--color-silver)]/15">
             {stats.map((st, i) => (
               <motion.div
                 key={st.label}
@@ -97,6 +103,7 @@ export default function AboutUsSection() {
               </motion.div>
             ))}
           </dl>
+          </Constellation>
         )}
 
         {/* The three principles */}
@@ -156,4 +163,109 @@ function ClubCrest() {
       </span>
     </div>
   );
+}
+
+/* ───────────────────────────── The constellation ───────────────────────────── */
+
+function Constellation({ children }: { children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const progress = useRef(0);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
+  useMotionValueEvent(scrollYProgress, "change", (v) => (progress.current = v));
+  const setup = useCallback((ctx: StageContext) => buildConstellation(ctx, progress), []);
+  return (
+    <div ref={ref} className="relative mt-16 py-20 sm:mt-20 sm:py-28">
+      <Stage3D setup={setup} className="absolute inset-x-[-10vw] inset-y-0 [mask-image:radial-gradient(ellipse_at_center,#000_45%,transparent_75%)]" />
+      {children}
+    </div>
+  );
+}
+
+/** Points that morph ring → sphere → galaxy with scroll, turning slowly */
+function buildConstellation(ctx: StageContext, progress: { current: number }) {
+  const { scene, camera, isMobile } = ctx;
+  const N = isMobile ? 1400 : 2600;
+  const ring = new Float32Array(N * 3);
+  const sphere = new Float32Array(N * 3);
+  const galaxy = new Float32Array(N * 3);
+  const colors = new Float32Array(N * 3);
+  const silver = new THREE.Color(0xe8ecf4);
+  const rose = new THREE.Color(0xd33791);
+  const c = new THREE.Color();
+  for (let i = 0; i < N; i++) {
+    const r = Math.random();
+    // A ring with a little thickness
+    const a = (i / N) * Math.PI * 2 * 3 + Math.random() * 0.2;
+    const rr = 3.2 + (Math.random() - 0.5) * 0.35;
+    ring.set([Math.cos(a) * rr, (Math.random() - 0.5) * 0.18, Math.sin(a) * rr], i * 3);
+    // A sphere (Fibonacci shell)
+    const y = 1 - (2 * (i + 0.5)) / N;
+    const sr = Math.sqrt(1 - y * y);
+    const phi = i * 2.39996;
+    const R = 2.5 + (Math.random() - 0.5) * 0.1;
+    sphere.set([Math.cos(phi) * sr * R, y * R, Math.sin(phi) * sr * R], i * 3);
+    // A three-armed spiral galaxy
+    const arm = (i % 3) * ((Math.PI * 2) / 3);
+    const d = Math.pow(r, 0.6) * 4.6;
+    const g = arm + d * 1.1;
+    const sc = (1 - r) * 0.5 + 0.12;
+    galaxy.set(
+      [Math.cos(g) * d + (Math.random() - 0.5) * sc, (Math.random() - 0.5) * sc * 0.6, Math.sin(g) * d + (Math.random() - 0.5) * sc],
+      i * 3,
+    );
+    c.copy(silver).lerp(rose, Math.random() < 0.22 ? 0.85 : Math.random() * 0.15);
+    colors.set([c.r, c.g, c.b], i * 3);
+  }
+  const pos = new Float32Array(ring);
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+  const sprite = (() => {
+    const cv = document.createElement("canvas");
+    cv.width = cv.height = 32;
+    const g2 = cv.getContext("2d")!;
+    const grad = g2.createRadialGradient(16, 16, 0, 16, 16, 16);
+    grad.addColorStop(0, "rgba(255,255,255,1)");
+    grad.addColorStop(0.3, "rgba(255,255,255,0.4)");
+    grad.addColorStop(1, "rgba(255,255,255,0)");
+    g2.fillStyle = grad;
+    g2.fillRect(0, 0, 32, 32);
+    return new THREE.CanvasTexture(cv);
+  })();
+  const mat = new THREE.PointsMaterial({
+    size: isMobile ? 0.1 : 0.09,
+    map: sprite,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.75,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+  });
+  const points = new THREE.Points(geo, mat);
+  points.frustumCulled = false;
+  scene.add(points);
+
+  camera.position.set(0, 2, 7.5);
+  camera.lookAt(0, 0, 0);
+
+  let p = 0;
+  return {
+    update(dt: number, t: number) {
+      p = THREE.MathUtils.damp(p, progress.current, 3, dt);
+      // 0 → 0.5: ring to sphere; 0.5 → 1: sphere to galaxy
+      const k1 = THREE.MathUtils.smoothstep(p, 0.15, 0.45);
+      const k2 = THREE.MathUtils.smoothstep(p, 0.55, 0.85);
+      for (let i = 0; i < N * 3; i++) {
+        const ab = ring[i] + (sphere[i] - ring[i]) * k1;
+        pos[i] = ab + (galaxy[i] - ab) * k2;
+      }
+      geo.attributes.position.needsUpdate = true;
+      points.rotation.y = t * 0.06 + ctx.pointer.x * 0.5;
+      points.rotation.x = 0.15 + ctx.pointer.y * 0.25 + k2 * 0.25;
+      mat.opacity = 0.9 + 0.1 * Math.sin(t * 0.8);
+    },
+    resize(w: number) {
+      camera.position.z = w < 700 ? 10 : 7.5;
+    },
+  };
 }

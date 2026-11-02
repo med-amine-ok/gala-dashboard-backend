@@ -9,7 +9,6 @@ import {
   useReducedMotion,
   useScroll,
   useSpring,
-  useTransform,
   useMotionValueEvent,
 } from "framer-motion";
 import { useLanguage } from "../../context/LanguageContext";
@@ -33,12 +32,39 @@ interface Chapter {
 }
 
 /**
- * IV · THE PROGRAMME
- * An editorial index of the evening's four movements. Titles are set at
- * display size; the movement at the centre of the screen lights up while the
- * others recede, and on desktop its photograph floats beside the cursor.
+ * IV · THE PROGRAMME — "The Four Doors"
+ * The evening's four movements stand side by side like tall doors, each a
+ * photograph. The open one fills the room with its numeral, title and story;
+ * the others narrow to slim darkened strips, a silver numeral and a vertical
+ * title. The room holds while you scroll, opening the acts one by one; once
+ * you have seen them all, hovering or clicking opens any of them.
+ * Phones: the same doors laid on their side, as stacked bands.
+ * Reduced motion: an editorial index of the four movements.
  */
 export default function ExperiencePillars() {
+  const { texts } = useLanguage();
+  const y = texts.thisYear || {};
+  const chapters: Chapter[] = y.chapters || [];
+  const reduceMotion = useReducedMotion();
+
+  if (reduceMotion) return <MovementIndex />;
+  return (
+    <section className="relative w-full bg-transparent pt-28 text-[var(--color-cream)] sm:pt-36 font-sans">
+      <div className="px-6 sm:px-12">
+        <RoomMasthead
+          numeral="IV"
+          label={y.roomLabel || "THE PROGRAMME"}
+          headline={y.headline || "This is GALA 2026."}
+          intro={y.intro}
+        />
+      </div>
+      <ActsPanels chapters={chapters} />
+    </section>
+  );
+}
+
+/** Reduced motion: the editorial index of the four movements */
+function MovementIndex() {
   const { texts } = useLanguage();
   const y = texts.thisYear || {};
   const chapters: Chapter[] = y.chapters || [];
@@ -59,15 +85,12 @@ export default function ExperiencePillars() {
     setActive(Math.min(chapters.length - 1, Math.max(0, Math.floor(v * chapters.length))));
   });
 
-  // Floating photograph that follows the cursor with a little lag and lean
+  // Floating photograph that follows the cursor with a little lag (the WebGL
+  // layer tilts it toward the cursor)
   const mx = useMotionValue(0);
   const my = useMotionValue(0);
   const fx = useSpring(mx, { stiffness: 140, damping: 22, mass: 0.6 });
   const fy = useSpring(my, { stiffness: 140, damping: 22, mass: 0.6 });
-  const lean = useTransform(fx, (v) => {
-    const w = listRef.current?.clientWidth || 1;
-    return ((v / w) - 0.5) * 10;
-  });
 
   const showFloat = finePointer && !reduceMotion;
 
@@ -111,7 +134,7 @@ export default function ExperiencePillars() {
           {showFloat && (
             <motion.div
               aria-hidden="true"
-              style={{ x: fx, y: fy, rotate: lean }}
+              style={{ x: fx, y: fy }}
               className="pointer-events-none absolute left-0 top-0 z-20 hidden w-[300px] lg:block xl:w-[340px]"
             >
               <div className="-translate-y-1/2 translate-x-12">
@@ -125,7 +148,7 @@ export default function ExperiencePillars() {
                     transition={{ duration: 0.6, ease: GALA_EASE }}
                   >
                     <GalaFrame>
-                      <div className="relative aspect-[4/5]">
+                      <div data-gala-media className="relative aspect-[4/5]">
                         <Image
                           src={CHAPTER_IMAGES[chapters[active]?.id] || CHAPTER_IMAGES.people}
                           alt=""
@@ -201,7 +224,7 @@ function Movement({
       {/* Touch screens: the photograph sits within the row */}
       {inline && (
         <GalaFrame className="ml-[16.666%] mt-6 md:ml-[8.333%] md:max-w-md">
-          <div className="relative aspect-[16/10]">
+          <div data-gala-media className="relative aspect-[16/10]">
             <Image
               src={src}
               alt={chapter.title}
@@ -213,5 +236,168 @@ function Movement({
         </GalaFrame>
       )}
     </motion.li>
+  );
+}
+
+/* ───────────────────────────── The four doors ───────────────────────────── */
+
+const DOOR_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
+
+function ActsPanels({ chapters }: { chapters: Chapter[] }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const n = Math.max(1, chapters.length);
+  const [scrollActive, setScrollActive] = useState(0);
+  const [free, setFree] = useState(false);
+  const [chosen, setChosen] = useState<number | null>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
+  useMotionValueEvent(scrollYProgress, "change", (v) => {
+    setScrollActive(Math.min(n - 1, Math.max(0, Math.floor(v * n * 0.999))));
+    // Once every act has been opened, the doors answer to the hand
+    const done = v > 0.97;
+    setFree(done);
+    if (!done) setChosen(null);
+  });
+  const active = free && chosen !== null ? chosen : scrollActive;
+
+  // Before the end, a click takes you to that act along the scroll
+  const goTo = (i: number) => {
+    if (free) return setChosen(i);
+    const el = ref.current;
+    if (!el) return;
+    const top = el.getBoundingClientRect().top + window.scrollY;
+    const travel = el.offsetHeight - window.innerHeight;
+    window.scrollTo({ top: top + (travel * (i + 0.5)) / n, behavior: "smooth" });
+  };
+
+  return (
+    <div ref={ref} className="relative mt-10" style={{ height: `${n * 85 + 15}vh` }}>
+      <div className="sticky top-0 flex h-[100dvh] flex-col px-4 pb-6 pt-20 sm:px-8 lg:px-12 lg:pb-10 lg:pt-24">
+        <div
+          className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col gap-2 lg:flex-row lg:gap-3"
+          onMouseLeave={() => free && setChosen(null)}
+        >
+          {chapters.map((c, i) => (
+            <Door
+              key={c.id || i}
+              chapter={c}
+              index={i}
+              open={i === active}
+              onOpen={() => goTo(i)}
+              onHover={() => free && setChosen(i)}
+            />
+          ))}
+        </div>
+
+        {/* Where you are */}
+        <div className="mx-auto mt-4 flex w-full max-w-7xl items-center gap-4 lg:mt-6">
+          <span className="font-cinzel text-[11px] tracking-[0.3em] text-[var(--color-silver)]">
+            {String(active + 1).padStart(2, "0")} / {String(n).padStart(2, "0")}
+          </span>
+          <span className="relative h-px flex-1 bg-[var(--color-silver)]/15">
+            <span
+              className="absolute inset-y-0 left-0 bg-[linear-gradient(90deg,var(--color-silver),var(--color-silver-light))]"
+              style={{ width: `${((active + 1) / n) * 100}%`, transition: `width 900ms ${DOOR_EASE}` }}
+            />
+          </span>
+          <span className="hidden text-[10px] uppercase tracking-[0.3em] text-[var(--color-cream)]/45 sm:block">
+            {free ? "Hover to open" : "Scroll"}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Door({
+  chapter,
+  index,
+  open,
+  onOpen,
+  onHover,
+}: {
+  chapter: Chapter;
+  index: number;
+  open: boolean;
+  onOpen: () => void;
+  onHover: () => void;
+}) {
+  const src = CHAPTER_IMAGES[chapter.id] || CHAPTER_IMAGES.people;
+  const numeral = NUMERALS[index] || chapter.number;
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      onMouseEnter={onHover}
+      aria-expanded={open}
+      aria-label={`${numeral}. ${chapter.title}`}
+      className={`group relative min-h-0 min-w-0 overflow-hidden rounded-[4px] text-left luxury-focus-ring ${
+        open ? "shadow-[0_40px_80px_-40px_rgba(6,0,4,1)]" : ""
+      }`}
+      style={{ flex: `${open ? 7 : 1} 1 0%`, transition: `flex-grow 1100ms ${DOOR_EASE}` }}
+    >
+      {/* The photograph, settling from a slight zoom as its door opens */}
+      <div
+        className="absolute inset-0"
+        style={{ transform: `scale(${open ? 1 : 1.12})`, transition: `transform 1600ms ${DOOR_EASE}` }}
+      >
+        <Image src={src} alt="" fill sizes="(max-width: 1024px) 100vw, 75vw" className="object-cover" />
+      </div>
+
+      {/* Closed: deep plum over the photograph. Open: only a shade at the foot for the words */}
+      <div
+        className="absolute inset-0 bg-[#1d0210]"
+        style={{ opacity: open ? 0 : 0.72, transition: `opacity 900ms ${DOOR_EASE}` }}
+      />
+      <div
+        className="absolute inset-0 bg-[linear-gradient(180deg,transparent_35%,rgba(24,2,14,0.55)_65%,rgba(20,2,12,0.92)_100%)]"
+        style={{ opacity: open ? 1 : 0, transition: `opacity 900ms ${DOOR_EASE}` }}
+      />
+      {/* Silver edge, brighter on the open door */}
+      <div
+        className={`pointer-events-none absolute inset-0 rounded-[4px] ring-1 ring-inset transition-colors duration-700 ${
+          open ? "ring-[var(--color-silver-light)]/45" : "ring-[var(--color-silver)]/20 group-hover:ring-[var(--color-silver)]/45"
+        }`}
+      />
+
+      {/* Closed strip: numeral and a vertical title (horizontal on phones) */}
+      <div
+        className="absolute inset-0 flex items-center justify-between px-5 lg:flex-col lg:items-center lg:justify-between lg:px-0 lg:py-7"
+        style={{ opacity: open ? 0 : 1, transition: `opacity ${open ? 300 : 700}ms ease ${open ? 0 : 400}ms` }}
+        aria-hidden={open}
+      >
+        <span className="font-cinzel text-[22px] font-semibold leading-none gala-engraved lg:text-[26px]">{numeral}</span>
+        <span className="truncate font-cinzel text-[12px] uppercase tracking-[0.32em] text-[var(--color-silver-light)]/85 lg:[writing-mode:vertical-rl] lg:rotate-180">
+          {chapter.title}
+        </span>
+      </div>
+
+      {/* Open door: the act */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            key="act"
+            initial={{ opacity: 0, y: 22 }}
+            animate={{ opacity: 1, y: 0, transition: { duration: 0.9, delay: 0.45, ease: GALA_EASE } }}
+            exit={{ opacity: 0, transition: { duration: 0.25 } }}
+            className="absolute inset-x-0 bottom-0 p-5 sm:p-8 lg:p-10"
+          >
+            <div className="flex items-end gap-5 lg:gap-7">
+              <span className="font-cinzel text-[clamp(48px,7vw,112px)] font-semibold leading-[0.8] gala-engraved">{numeral}</span>
+              <div className="min-w-0 pb-1">
+                <span className="block font-cormorant text-[clamp(16px,1.6vw,22px)] italic text-[var(--color-silver-light)]">
+                  {chapter.subtitle}
+                </span>
+                <h3 className="mt-1 font-cinzel text-[clamp(22px,2.8vw,44px)] font-normal leading-[1.05] text-[var(--color-cream)]">
+                  {chapter.title}
+                </h3>
+              </div>
+            </div>
+            <p className="mt-3 line-clamp-3 max-w-xl text-[13.5px] font-light leading-relaxed text-[var(--color-cream)]/80 sm:mt-4 sm:text-[14.5px] lg:line-clamp-none">
+              {chapter.description}
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </button>
   );
 }

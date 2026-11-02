@@ -4,6 +4,7 @@ import {
   Cinzel,
   Plus_Jakarta_Sans,
   Cormorant_Garamond,
+  Pinyon_Script,
 } from "next/font/google";
 
 const cinzel = Cinzel({
@@ -27,6 +28,14 @@ const cormorant = Cormorant_Garamond({
   display: "swap",
 });
 
+// Calligraphy for hand-addressed details (the invitation envelope)
+const script = Pinyon_Script({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-script",
+  display: "swap",
+});
+
 export const metadata = {
   title: "GALA | Where Ambition Meets Opportunity",
   description: "A prestigious, invitation-only corporate, networking, and engineering experience. Algiers 2026.",
@@ -44,7 +53,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${cinzel.variable} ${plusJakarta.variable} ${cormorant.variable}`}
+      className={`${cinzel.variable} ${plusJakarta.variable} ${cormorant.variable} ${script.variable}`}
       suppressHydrationWarning
     >
       <body
