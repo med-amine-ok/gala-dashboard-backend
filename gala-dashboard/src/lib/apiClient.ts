@@ -1,6 +1,8 @@
 import { toast } from 'sonner';
 
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000';
+// The landing site (gala-landing) owns payments: payment-link emails are sent by it
+export const LANDING_URL = (process.env.NEXT_PUBLIC_LANDING_URL || 'http://localhost:3001').replace(/\/$/, '');
 
 export interface User {
   id: number;
@@ -9,6 +11,8 @@ export interface User {
   first_name: string;
   last_name: string;
   role_display: string;
+  role?: string;
+  is_hr_admin?: boolean;
   is_active: boolean;
   date_joined: string;
   last_login: string;
@@ -55,6 +59,7 @@ export interface Participant {
   ticket_serial_number?: string | null;
   ticket_status?: string | null;
   ticket_issued_at?: string | null;
+  ticket_email_sent?: boolean | null;
 }
 
 export interface Company {
@@ -161,7 +166,17 @@ export interface SystemNotification {
   created_at: string;
 }
 
+// Endpoints used to obtain tokens: never send (possibly stale) tokens to them,
+// and never try a token refresh when they answer 401 (wrong password).
+const PUBLIC_AUTH_ENDPOINTS = ['/api/accounts/login/', '/api/token/', '/api/token/refresh/', '/api/accounts/set-password/'];
+
 class ApiClient {
+  // One refresh at a time: the dashboard fires several requests at once, and
+  // the backend rotates + blacklists refresh tokens, so parallel refreshes with
+  // the same token would make all but the first one fail and log the user out.
+  private refreshInFlight: Promise<string | null> | null = null;
+  private sessionEnded = false;
+
   private getAccessToken(): string | null {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('access_token');
@@ -183,6 +198,53 @@ class ApiClient {
     }
   }
 
+  /** Forget saved tokens (e.g. before a fresh login). */
+  clearSession() {
+    this.clearTokens();
+    this.sessionEnded = false;
+  }
+
+  /** The session can't be recovered: forget everything (tokens AND the
+   *  `gala_auth_active` cookie the route guard trusts) and go to the login page.
+   *  Without clearing the cookie the guard would send /login straight back to
+   *  an empty /dashboard. */
+  private endSession() {
+    this.clearTokens();
+    if (typeof window === 'undefined' || this.sessionEnded) return;
+    this.sessionEnded = true;
+    document.cookie = 'gala_auth_active=; path=/; max-age=0; SameSite=Lax';
+    if (window.location.pathname !== '/login') {
+      window.location.href = '/login?expired=true';
+    }
+  }
+
+  /** Get a new access token, sharing a single refresh call between concurrent requests. */
+  private refreshAccessToken(): Promise<string | null> {
+    if (!this.refreshInFlight) {
+      const refresh = this.getRefreshToken();
+      this.refreshInFlight = (async () => {
+        if (!refresh) return null;
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/token/refresh/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh })
+          });
+          if (!res.ok) return null;
+          const tokens = await res.json();
+          this.setTokens(tokens.access, tokens.refresh || refresh);
+          return tokens.access as string;
+        } catch (err) {
+          console.error('Failed to refresh token', err);
+          return null;
+        }
+      })().finally(() => {
+        this.refreshInFlight = null;
+      });
+    }
+    return this.refreshInFlight;
+  }
+
   private clearTokens() {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('access_token');
@@ -199,7 +261,9 @@ class ApiClient {
       headers.set('Content-Type', 'application/json');
     }
 
-    const token = this.getAccessToken();
+    const path = endpoint.split('?')[0];
+    const isAuthEndpoint = PUBLIC_AUTH_ENDPOINTS.some((p) => path === p || path === p.replace(/\/$/, ''));
+    const token = isAuthEndpoint ? null : this.getAccessToken();
     if (token) {
       headers.set('Authorization', `Bearer ${token}`);
     }
@@ -211,31 +275,18 @@ class ApiClient {
 
     let response = await fetch(url, config);
 
-    // Handle Token Expiration and Refresh
-    if (response.status === 401 && this.getRefreshToken()) {
-      try {
-        const refreshRes = await fetch(`${API_BASE_URL}/api/token/refresh/`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ refresh: this.getRefreshToken() })
-        });
-
-        if (refreshRes.ok) {
-          const tokens = await refreshRes.json();
-          this.setTokens(tokens.access, tokens.refresh || this.getRefreshToken());
-          
-          // Retry original request with new token
-          headers.set('Authorization', `Bearer ${tokens.access}`);
-          response = await fetch(url, { ...config, headers });
-        } else {
-          // Refresh token also invalid, force logout
-          this.clearTokens();
-          if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
-            window.location.href = '/login?expired=true';
-          }
-        }
-      } catch (err) {
-        console.error('Failed to refresh token', err);
+    // Expired / rejected access token: refresh once (shared), then retry
+    if (response.status === 401 && !isAuthEndpoint) {
+      // Another request may already have refreshed while this one was in flight
+      const current = this.getAccessToken();
+      const newAccess = current && current !== token ? current : await this.refreshAccessToken();
+      if (newAccess) {
+        headers.set('Authorization', `Bearer ${newAccess}`);
+        response = await fetch(url, { ...config, headers });
+      }
+      if (response.status === 401) {
+        // No valid token and no way to get one: back to the login page
+        this.endSession();
       }
     }
 
@@ -244,8 +295,22 @@ class ApiClient {
       try {
         errPayload = await response.json();
       } catch (_) {}
+
       
-      const errorMsg = errPayload?.detail || errPayload?.error || JSON.stringify(errPayload) || 'Request failed';
+      // Prefer the server's own message; a non-JSON answer (e.g. Django's HTML
+      // 404 page when the backend doesn't have this endpoint yet) must not
+      // turn into the text "null"
+      const fieldErrors = errPayload && typeof errPayload === 'object'
+        ? Object.entries(errPayload)
+            .filter(([, v]) => Array.isArray(v))
+            .map(([k, v]) => `${k}: ${(v as unknown[]).join(' ')}`)
+            .join(' · ')
+        : '';
+      const errorMsg =
+        errPayload?.detail || errPayload?.error || errPayload?.message || fieldErrors ||
+        (response.status === 404
+          ? `Server error 404: ${path} does not exist on the backend (is the latest backend deployed?)`
+          : `Server error ${response.status}${response.statusText ? ` (${response.statusText})` : ''}`);
       throw new Error(errorMsg);
     }
 
@@ -254,6 +319,43 @@ class ApiClient {
     }
 
     return response.json();
+  }
+
+  /** POST to the landing site (it owns payments and tickets). It checks our
+   *  HR token with the backend, so first make sure the token is fresh (the
+   *  backend call refreshes it if needed). */
+  async landingPost<T = any>(path: string, body: unknown, { acceptStatuses = [] as number[] } = {}): Promise<T> {
+    await this.get('/api/accounts/current_user/');
+    let response: Response;
+    try {
+      response = await fetch(`${LANDING_URL}${path}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${this.getAccessToken()}` },
+        body: JSON.stringify(body)
+      });
+    } catch {
+      throw new Error(`Could not reach the landing site at ${LANDING_URL} (is it running / is NEXT_PUBLIC_LANDING_URL right?)`);
+    }
+    let payload: any = null;
+    try {
+      payload = await response.json();
+    } catch (_) {}
+    if (!response.ok && !acceptStatuses.includes(response.status)) {
+      throw new Error(payload?.error || payload?.message ||
+        (response.status === 404
+          ? `The landing site at ${LANDING_URL} has no ${path} route (is the latest landing code running?)`
+          : `Landing site error ${response.status}`));
+    }
+    return payload as T;
+  }
+
+  /** Email payment links (landing: /api/payments/send-link). */
+  sendPaymentLinks(participantIds: number[]) {
+    return this.landingPost<{
+      message: string;
+      sent: { id: number; email: string; paymentUrl: string }[];
+      skipped: { id: number; reason: string; paymentUrl?: string }[];
+    }>('/api/payments/send-link', { participantIds }, { acceptStatuses: [422] });
   }
 
   // HTTP Helper Methods

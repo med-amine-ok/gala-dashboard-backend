@@ -39,6 +39,7 @@ interface VerifyResponse {
   downloadUrl?: string;
   participant?: ParticipantInfo;
   message?: string;
+  pending?: boolean;
 }
 
 function SuccessContent() {
@@ -65,38 +66,50 @@ function SuccessContent() {
     }
 
     let isMounted = true;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    // Right after the redirect Chargily often still reports the checkout as
+    // pending: keep asking (every 4 s, up to ~2 min) instead of giving up.
+    const RETRY_MS = 4000;
+    const MAX_ATTEMPTS = 30;
 
-    async function verify() {
+    async function verify(attempt: number) {
+      let retry = false;
+      let message = "";
       try {
-        const res = await fetch(
-          `/api/payments/verify?${query}`,
-        );
+        const res = await fetch(`/api/payments/verify?${query}`, { cache: "no-store" });
         const json: VerifyResponse = await res.json();
-
-        if (isMounted) {
-          if (json.success && json.ticketSerial) {
-            setData(json);
-          } else {
-            setError(
-              json.message ||
-                "Paiement en cours de vérification. Veuillez patienter.",
-            );
-          }
+        if (!isMounted) return;
+        if (json.success && json.ticketSerial) {
+          setData(json);
           setLoading(false);
+          return;
         }
-      } catch (err: any) {
-        if (isMounted) {
-          setError(
-            err.message || "Impossible de vérifier le statut du paiement.",
-          );
+        message = json.message || "Paiement en cours de vérification. Veuillez patienter.";
+        retry = Boolean(json.pending) || res.status >= 500;
+        if (!retry) {
+          setError(message);
           setLoading(false);
+          return;
         }
+      } catch {
+        message = "Impossible de vérifier le statut du paiement.";
+        retry = true;
+      }
+      if (!isMounted) return;
+      if (attempt < MAX_ATTEMPTS) {
+        timer = setTimeout(() => verify(attempt + 1), RETRY_MS);
+      } else {
+        setError(
+          `${message} Si vous avez été débité, votre billet vous sera envoyé par e-mail dès la confirmation du paiement.`,
+        );
+        setLoading(false);
       }
     }
 
-    verify();
+    verify(1);
     return () => {
       isMounted = false;
+      if (timer) clearTimeout(timer);
     };
   }, [query]);
 

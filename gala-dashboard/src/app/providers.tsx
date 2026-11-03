@@ -35,6 +35,15 @@ const queryClient = new QueryClient({
   },
 });
 
+const HR_ROLE_LABEL = 'HR Admin';
+// HR role or Django superuser. `is_hr_admin` comes from the backend; older
+// backends don't send it, so fall back to the role.
+const isHrAccount = (u?: { is_hr_admin?: boolean; role?: string; role_display?: string } | null) =>
+  u?.is_hr_admin ?? (u?.role === 'HR' || u?.role_display === HR_ROLE_LABEL);
+const notHrMessage = (role?: string) =>
+  `This account is a ${role || 'non-HR'} account, not an HR Admin, so it can't use the dashboard. ` +
+  'Ask an HR Admin to restore its role (manage.py set_hr_admin <email>) or log in with an HR account.';
+
 export function Providers({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -44,6 +53,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const checkAuth = async () => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
     if (!token) {
+      // No token: the "logged in" cookie is stale too. Clear it, otherwise the
+      // route guard sends /login back to an empty /dashboard.
+      if (typeof window !== 'undefined') {
+        document.cookie = "gala_auth_active=; path=/; max-age=0; SameSite=Lax";
+      }
       setUser(null);
       setIsLoading(false);
       return;
@@ -51,7 +65,16 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
     try {
       const data = await apiClient.get<{ isAuthenticated: boolean; user: User }>('/api/accounts/check_auth/');
-      if (data.isAuthenticated) {
+      if (data.isAuthenticated && !isHrAccount(data.user)) {
+        // A Company / Participant account: the dashboard's data is HR-only, so
+        // staying here would just show zeros everywhere
+        toast.error(notHrMessage(data.user?.role_display));
+        apiClient.clearSession();
+        if (typeof window !== 'undefined') {
+          document.cookie = "gala_auth_active=; path=/; max-age=0; SameSite=Lax";
+        }
+        setUser(null);
+      } else if (data.isAuthenticated) {
         setUser(data.user);
         if (typeof window !== 'undefined') {
           document.cookie = "gala_auth_active=true; path=/; max-age=2592000; SameSite=Lax";
@@ -94,6 +117,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
+    // Start from a clean session: an old token left in the browser must not
+    // interfere with the new login
+    apiClient.clearSession();
     try {
       const res = await apiClient.post<{ message: string; data: any }>('/api/accounts/login/', {
         email,
@@ -101,6 +127,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
       });
       
       const { access_token, refresh_token } = res.data;
+      if (!isHrAccount(res.data)) {
+        // Don't open an HR session for a Company / Participant account
+        throw new Error(notHrMessage(res.data?.role_display));
+      }
       if (typeof window !== 'undefined') {
         localStorage.setItem('access_token', access_token);
         localStorage.setItem('refresh_token', refresh_token);

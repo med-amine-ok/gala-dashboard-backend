@@ -282,6 +282,9 @@ LANDING_URL = env('LANDING_URL', default='https://gala.vic-enp.com').rstrip('/')
 # One-time activation codes used by the mobile app to create an account
 ACTIVATION_CODE_TTL_MINUTES = env.int('ACTIVATION_CODE_TTL_MINUTES', default=15)
 ACTIVATION_CODE_MAX_ATTEMPTS = env.int('ACTIVATION_CODE_MAX_ATTEMPTS', default=5)
+# Chargily (same keys as the landing site): lets HR re-check payments from the dashboard
+CHARGILY_API_KEY = env('CHARGILY_API_KEY', default='')
+CHARGILY_API_URL = env('CHARGILY_API_URL', default='')
 # Send the payment link inside the approval email
 PAYMENT_LINK_IN_APPROVAL_EMAIL = env.bool('PAYMENT_LINK_IN_APPROVAL_EMAIL', default=True)
 

@@ -21,7 +21,7 @@ class IsHRAdmin(permissions.BasePermission):
             return False
         
         # Check if user has HR Admin role
-        return request.user.role == CustomUser.Role.HR_ADMIN
+        return request.user.is_hr_admin
     
     def has_object_permission(self, request, view, obj):
         # HR Admins can access any object
@@ -59,11 +59,11 @@ class IsOwnerOrHRAdmin(permissions.BasePermission):
             return False
         
         # Both HR Admins and Participants can access (we'll check ownership at object level)
-        return request.user.role in [CustomUser.Role.HR_ADMIN, CustomUser.Role.PARTICIPANT]
+        return request.user.is_hr_admin or request.user.role == CustomUser.Role.PARTICIPANT
     
     def has_object_permission(self, request, view, obj):
         # HR Admins can access any object
-        if request.user.role == CustomUser.Role.HR_ADMIN:
+        if request.user.is_hr_admin:
             return True
         
         # Participants can only access objects that belong to them
@@ -122,7 +122,7 @@ class IsHRAdminOrReadOnly(permissions.BasePermission):
         
         # Write permissions only for HR Admins
         return (request.user.is_authenticated and 
-                request.user.role == CustomUser.Role.HR_ADMIN)
+                request.user.is_hr_admin)
 
 
 class CanManageParticipants(permissions.BasePermission):
@@ -140,7 +140,7 @@ class CanManageParticipants(permissions.BasePermission):
         if not request.user.is_authenticated:
             return False
         
-        return request.user.role == CustomUser.Role.HR_ADMIN
+        return request.user.is_hr_admin
     
     def has_object_permission(self, request, view, obj):
         return self.has_permission(request, view)
@@ -162,7 +162,7 @@ def can_access_participant_data(user, participant):
         return False
     
     # HR Admins can access any participant data
-    if user.role == CustomUser.Role.HR_ADMIN:
+    if user.is_hr_admin:
         return True
     
     # Participants can only access their own data
@@ -189,7 +189,7 @@ def get_accessible_participants(user):
         return Participant.objects.none()
     
     # HR Admins can access all participants
-    if user.role == CustomUser.Role.HR_ADMIN:
+    if user.is_hr_admin:
         return Participant.objects.all()
     
     # Participants can only access their own profile
@@ -212,7 +212,7 @@ class ParticipantProfilePermissions(permissions.BasePermission):
     
     def has_object_permission(self, request, view, obj):
         # HR Admins can only read participant profiles
-        if request.user.role == CustomUser.Role.HR_ADMIN:
+        if request.user.is_hr_admin:
             return request.method in permissions.SAFE_METHODS
         
         # Participants can read/write their own profile

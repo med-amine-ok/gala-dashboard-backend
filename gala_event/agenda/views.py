@@ -158,6 +158,9 @@ class AgendaViewSet(viewsets.ModelViewSet):
 class AgendaPublicView(APIView):
     """Public view of agenda for participants (no authentication required)"""
     permission_classes = [AllowAny]
+    # Public endpoint: never look at the Authorization header, so a stale or
+    # foreign token saved in the browser can't block it ("token not valid")
+    authentication_classes = []
 
     def get(self, request, *args, **kwargs):
         """Return public agenda items"""

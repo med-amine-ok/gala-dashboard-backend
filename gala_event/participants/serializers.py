@@ -273,6 +273,7 @@ class ParticipantWithTicketSerializer(ParticipantSerializer):
     ticket_serial_number = serializers.SerializerMethodField()
     ticket_status = serializers.SerializerMethodField()
     ticket_issued_at = serializers.SerializerMethodField()
+    ticket_email_sent = serializers.SerializerMethodField()
 
     @staticmethod
     def _ticket(obj):
@@ -290,9 +291,13 @@ class ParticipantWithTicketSerializer(ParticipantSerializer):
         ticket = self._ticket(obj)
         return ticket.issued_at if ticket else None
 
+    def get_ticket_email_sent(self, obj):
+        ticket = self._ticket(obj)
+        return ticket.email_sent if ticket else None
+
     class Meta(ParticipantSerializer.Meta):
         fields = ParticipantSerializer.Meta.fields + [
-            'ticket_serial_number', 'ticket_status', 'ticket_issued_at'
+            'ticket_serial_number', 'ticket_status', 'ticket_issued_at', 'ticket_email_sent'
         ]
         read_only_fields = fields
 

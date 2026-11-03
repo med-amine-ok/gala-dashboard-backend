@@ -109,6 +109,9 @@ class CompanyViewSet(viewsets.ModelViewSet):
 class CompanyListView(APIView):
     """Public list of active companies for participant registration dropdown"""
     permission_classes = [AllowAny]  # Public access for registration form
+    # Public endpoint: never look at the Authorization header, so a stale or
+    # foreign token saved in the browser can't block it ("token not valid")
+    authentication_classes = []
     
     def get(self, request, format=None):
         """Return only active companies with minimal data for dropdowns"""
@@ -119,6 +122,9 @@ class CompanyListView(APIView):
 class CompanyDetailPublicView(APIView):
     """Public view to get company details for participant registration"""
     permission_classes = [AllowAny]
+    # Public endpoint: never look at the Authorization header, so a stale or
+    # foreign token saved in the browser can't block it ("token not valid")
+    authentication_classes = []
     
     def get(self, request, pk, format=None):
         """Get specific company details for registration form"""

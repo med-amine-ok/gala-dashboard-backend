@@ -50,6 +50,12 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return f"{self.username} ({self.get_role_display()})"
+
+    @property
+    def is_hr_admin(self):
+        """Dashboard / HR rights: the HR role, or a Django superuser (whatever its
+        role field says - old company-creation code could overwrite it)."""
+        return self.role == self.Role.HR_ADMIN or self.is_superuser
         
     class Meta:
         verbose_name = "User"

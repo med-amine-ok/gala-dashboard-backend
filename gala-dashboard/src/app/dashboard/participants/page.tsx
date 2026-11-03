@@ -21,7 +21,9 @@ import {
   Phone,
   Mail,
   BookOpen,
-  GraduationCap
+  GraduationCap,
+  RefreshCw,
+  CreditCard
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -152,6 +154,101 @@ export default function ParticipantsPage() {
     }
   });
 
+  // Payment link email (approved + not paid). The link is also returned, so it
+  // can be copied if the email fails.
+  const sendPaymentLinkMutation = useMutation({
+    mutationFn: (id: number) => apiClient.sendPaymentLinks([id]),
+    onSuccess: (res) => {
+      if (res.sent.length) {
+        toast.success(`Payment link sent to ${res.sent[0].email}.`);
+      } else {
+        const skip = res.skipped[0];
+        toast.warning(`Not sent: ${skip?.reason || 'unknown reason'}.` + (skip?.paymentUrl ? ` Link: ${skip.paymentUrl}` : ''));
+      }
+      invalidateQueries();
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'The payment link could not be sent.');
+    }
+  });
+
+  const bulkPaymentLinksMutation = useMutation({
+    mutationFn: async (ids: number[]) => {
+      // Small chunks keep each request well inside the server time limit
+      let sent = 0;
+      let skipped = 0;
+      for (let i = 0; i < ids.length; i += 10) {
+        const res = await apiClient.sendPaymentLinks(ids.slice(i, i + 10));
+        sent += res.sent.length;
+        skipped += res.skipped.length;
+      }
+      return { sent, skipped };
+    },
+    onSuccess: ({ sent, skipped }) => {
+      const text = `Payment link sent to ${sent} participant(s).` +
+        (skipped ? ` ${skipped} skipped (not approved, already paid or email failed).` : '');
+      if (skipped && !sent) toast.warning(text); else toast.success(text);
+      setSelectedIds([]);
+      invalidateQueries();
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Sending payment links failed.');
+    }
+  });
+
+  // Ask Chargily whether the participant paid; issues + emails the ticket if so
+  const syncPaymentMutation = useMutation({
+    mutationFn: (id: number) => apiClient.landingPost('/api/payments/sync', { participantIds: [id] }, { acceptStatuses: [502] }),
+    onSuccess: (res: any) => {
+      const text = res.ticketNumber ? `${res.message} (${res.ticketNumber})` : res.message;
+      if (['ticket_issued', 'email_resent', 'up_to_date'].includes(res.result)) toast.success(text);
+      else toast.warning(text);
+      invalidateQueries();
+      queryClient.invalidateQueries({ queryKey: ['tickets'] });
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Could not check the payment.');
+    }
+  });
+
+  const [syncProgress, setSyncProgress] = useState<string | null>(null);
+  const syncAllMutation = useMutation({
+    mutationFn: async () => {
+      const totals: Record<string, number> = {};
+      let afterId: number | null = null;
+      let checked = 0;
+      do {
+        const res: any = await apiClient.landingPost('/api/payments/sync', { afterId });
+        for (const outcome of res.results || []) {
+          totals[outcome.result] = (totals[outcome.result] || 0) + 1;
+          if (outcome.result === 'error') throw new Error(outcome.detail || 'Could not reach Chargily.');
+        }
+        checked += res.results?.length || 0;
+        setSyncProgress(`${checked} checked…`);
+        afterId = res.nextAfterId;
+      } while (afterId);
+      return totals;
+    },
+    onSuccess: (totals) => {
+      setSyncProgress(null);
+      const parts = [
+        totals.ticket_issued && `${totals.ticket_issued} ticket(s) issued & emailed`,
+        totals.email_resent && `${totals.email_resent} ticket email(s) sent`,
+        totals.email_failed && `${totals.email_failed} email(s) failed`,
+        totals.needs_review && `${totals.needs_review} paid but not approved (review)`,
+        totals.not_paid && `${totals.not_paid} not paid yet`,
+      ].filter(Boolean);
+      const text = parts.length ? parts.join(' · ') : 'Everything is up to date.';
+      if (totals.email_failed || totals.needs_review) toast.warning(text); else toast.success(text);
+      invalidateQueries();
+      queryClient.invalidateQueries({ queryKey: ['tickets'] });
+    },
+    onError: (err: any) => {
+      setSyncProgress(null);
+      toast.error(err.message || 'Payment sync failed.');
+    }
+  });
+
   const deleteMutation = useMutation({
     mutationFn: (id: number) => {
       return apiClient.delete(`/api/participants/view/${id}/`);
@@ -215,6 +312,16 @@ export default function ParticipantsPage() {
             Review registration submissions, approve profiles, and manage ticket assignments.
           </p>
         </div>
+        <div className="flex flex-wrap items-center gap-3">
+        <button
+          onClick={() => syncAllMutation.mutate()}
+          disabled={syncAllMutation.isPending}
+          title="Check every approved participant with Chargily: issue and email missing tickets"
+          className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-white text-[#1A1A1A] border border-[#EAE3D5] rounded-2xl text-xs font-semibold hover:bg-[#FAF7F2] transition-colors cursor-pointer shadow-2xs disabled:opacity-60 min-h-[44px]"
+        >
+          <RefreshCw className={`h-4 w-4 ${syncAllMutation.isPending ? 'animate-spin' : ''}`} />
+          <span>{syncAllMutation.isPending ? (syncProgress || 'Syncing…') : 'Sync payments'}</span>
+        </button>
         <button
           onClick={() => setIsAddModalOpen(true)}
           className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#ECE5F8] text-[#6E4FA0] border border-[#DDD0F3] hover:bg-[#DDD0F3] rounded-2xl text-xs font-semibold transition-all shadow-2xs cursor-pointer w-full sm:w-auto shrink-0 min-h-[44px]"
@@ -222,6 +329,7 @@ export default function ParticipantsPage() {
           <Plus className="h-4 w-4" />
           <span>Add Participant</span>
         </button>
+        </div>
       </div>
 
       {/* Filters bar */}
@@ -299,6 +407,15 @@ export default function ParticipantsPage() {
             >
               <X className="h-3.5 w-3.5" />
               <span>Reject Selection</span>
+            </button>
+            <button
+              onClick={() => bulkPaymentLinksMutation.mutate(selectedIds)}
+              disabled={bulkPaymentLinksMutation.isPending}
+              title="Email the payment link to the selected approved participants who have not paid"
+              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-[#1A1A1A] text-white rounded-xl text-xs font-semibold hover:bg-black transition-colors cursor-pointer shadow-xs min-h-[40px] disabled:opacity-60"
+            >
+              {bulkPaymentLinksMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+              <span>Send Payment Links</span>
             </button>
           </div>
         </div>
@@ -398,11 +515,43 @@ export default function ParticipantsPage() {
                       }`}>
                         {p.payment_status.toUpperCase()}
                       </span>
+                      {p.ticket_serial_number && (
+                        <div className="mt-1 text-[10px] font-mono text-[#666666]" title={p.ticket_email_sent ? 'Ticket emailed' : 'Ticket not emailed yet'}>
+                          {p.ticket_serial_number}{' '}
+                          {p.ticket_email_sent != null && (
+                            <span className={p.ticket_email_sent ? 'text-[#2E5A36]' : 'text-[#B8964A] font-semibold'}>
+                              {p.ticket_email_sent ? '✓ emailed' : '• not emailed'}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </td>
                     <td className="py-4 px-6 text-[#666666]">
                       {new Date(p.registered_at).toLocaleDateString()}
                     </td>
-                    <td className="py-4 px-6 text-right space-x-2">
+                    <td className="py-4 px-6 text-right space-x-2 whitespace-nowrap">
+                      {p.status === 'APPROVED' && p.payment_status !== 'paid' && (
+                        <button
+                          onClick={() => sendPaymentLinkMutation.mutate(p.id)}
+                          disabled={sendPaymentLinkMutation.isPending}
+                          className="p-1 hover:text-[#6E4FA0] text-gray-400 transition-colors inline-block cursor-pointer disabled:opacity-50"
+                          title="Send the payment link by email"
+                        >
+                          {sendPaymentLinkMutation.isPending && sendPaymentLinkMutation.variables === p.id
+                            ? <Loader2 className="h-4 w-4 animate-spin" />
+                            : <CreditCard className="h-4 w-4" />}
+                        </button>
+                      )}
+                      {p.status === 'APPROVED' && !(p.payment_status === 'paid' && p.ticket_serial_number && p.ticket_email_sent) && (
+                        <button
+                          onClick={() => syncPaymentMutation.mutate(p.id)}
+                          disabled={syncPaymentMutation.isPending}
+                          className="p-1 hover:text-[#2E5A36] text-gray-400 transition-colors inline-block cursor-pointer disabled:opacity-50"
+                          title="Check payment with Chargily: issue and email the ticket if paid"
+                        >
+                          <RefreshCw className={`h-4 w-4 ${syncPaymentMutation.isPending && syncPaymentMutation.variables === p.id ? 'animate-spin' : ''}`} />
+                        </button>
+                      )}
                       <button
                         onClick={() => setDetailParticipant(p)}
                         className="p-1 hover:text-[#B8964A] text-gray-400 transition-colors inline-block cursor-pointer"

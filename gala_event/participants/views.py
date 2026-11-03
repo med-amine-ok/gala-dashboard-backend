@@ -20,7 +20,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.permissions import IsHRAdmin, IsParticipant
-from notifications.emails import send_payment_link_email
+from notifications.emails import payment_link, send_payment_link_email
+from tickets.chargily import CheckoutIndex
+from tickets.payment_handlers import sync_payment
 from .models import Participant, ParticipantImage, ParticipantParticipantLink
 from .serializers import (
     FeedbackSerializer,
@@ -36,6 +38,19 @@ from .serializers import (
 from .services import StatusChangeError, set_status
 
 logger = logging.getLogger(__name__)
+
+# Participants handled per "Sync payments" call: each one may mean a Chargily
+# call, a PDF download and an email, and the server has a request time limit.
+SYNC_BATCH = 5
+SYNC_MESSAGES = {
+    'ticket_issued': 'Payment confirmed: ticket issued and emailed.',
+    'email_resent': 'Ticket email sent (it had never been delivered).',
+    'email_failed': 'Paid and ticket issued, but the email could not be sent.',
+    'up_to_date': 'Already paid, ticket issued and emailed.',
+    'not_paid': 'No completed payment found on Chargily for this participant.',
+    'needs_review': 'Paid on Chargily but not approved: approve them, then check again (or refund).',
+    'error': 'Could not check with Chargily.',
+}
 
 
 def _own_profile(request):
@@ -240,7 +255,78 @@ class ParticipantViewSet(viewsets.ReadOnlyModelViewSet):
                 sent.append(participant.id)
             else:
                 skipped.append({'id': participant.id, 'reason': 'email failed'})
-        return Response({'sent': sent, 'skipped': skipped}, status=status.HTTP_200_OK)
+        message = f"Payment link sent to {len(sent)} participant(s)."
+        if skipped:
+            message += f" {len(skipped)} skipped (not approved, already paid or email failed)."
+        return Response({'message': message, 'sent': sent, 'skipped': skipped}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'])
+    def send_payment_link(self, request, pk=None):
+        """Email the payment link to one approved, unpaid participant.
+        The link is also returned so HR can share it another way if needed."""
+        participant = self.get_object()
+        if participant.status != Participant.Status.APPROVED:
+            return Response({'error': 'Approve the participant first.'}, status=status.HTTP_400_BAD_REQUEST)
+        if participant.payment_status == 'paid':
+            return Response({'error': 'This participant has already paid.'}, status=status.HTTP_400_BAD_REQUEST)
+        sent = send_payment_link_email(participant, sent_by=request.user)
+        body = {'email_sent': sent, 'payment_url': payment_link(participant), 'email': participant.email}
+        if not sent:
+            return Response({**body, 'error': 'The email could not be sent. Check the email settings (see email logs). '
+                                              'You can copy the payment link instead.'},
+                            status=status.HTTP_502_BAD_GATEWAY)
+        return Response({**body, 'message': f'Payment link sent to {participant.email}.'}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'])
+    def sync_payment(self, request, pk=None):
+        """Ask Chargily whether this participant paid; if so issue + email the ticket.
+        Also re-sends a ticket email that never went out."""
+        participant = self.get_object()
+        result = sync_payment(participant, sent_by=request.user)
+        result['message'] = SYNC_MESSAGES.get(result['result'], result['result'])
+        code = status.HTTP_502_BAD_GATEWAY if result['result'] == 'error' else status.HTTP_200_OK
+        return Response(result, status=code)
+
+    @action(detail=False, methods=['post'])
+    def sync_payments(self, request):
+        """Batch version of sync_payment over approved participants that are not
+        fully done (unpaid, paid without ticket, or ticket never emailed).
+        Processes SYNC_BATCH participants per call; call again with
+        `after_id` = `next_after_id` until it is null."""
+        try:
+            after_id = int(request.data.get('after_id') or 0)
+        except (TypeError, ValueError):
+            after_id = 0
+        candidates = (
+            Participant.objects.filter(status=Participant.Status.APPROVED, id__gt=after_id)
+            .filter(
+                Q(payment_status__in=['pending', 'failed'])
+                | Q(ticket__isnull=True)
+                | Q(ticket__email_sent=False)
+            )
+            .exclude(ticket__status='cancelled')
+            .select_related('user')
+            .order_by('id')
+            .distinct()
+        )
+        batch = list(candidates[:SYNC_BATCH + 1])
+        more = len(batch) > SYNC_BATCH
+        batch = batch[:SYNC_BATCH]
+        index = CheckoutIndex()
+        results = []
+        for participant in batch:
+            outcome = sync_payment(participant, index=index, sent_by=request.user)
+            results.append(outcome)
+            if outcome['result'] == 'error':
+                break  # Chargily unreachable / not configured: no point going on
+        summary = {}
+        for outcome in results:
+            summary[outcome['result']] = summary.get(outcome['result'], 0) + 1
+        return Response({
+            'results': results,
+            'summary': summary,
+            'next_after_id': batch[-1].id if (more and batch and results[-1]['result'] != 'error') else None,
+        }, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'])
     def statistics(self, request):

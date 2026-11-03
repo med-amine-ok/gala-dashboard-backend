@@ -20,7 +20,8 @@ import {
   ArrowRight,
   Sparkles,
   ShieldCheck,
-  QrCode
+  QrCode,
+  Mail
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -123,20 +124,37 @@ export default function TicketsPage() {
 
   const assignTicketMutation = useMutation({
     mutationFn: (payload: typeof assignForm) => {
-      return apiClient.post('/api/tickets/assign_ticket/', {
-        participant_id: Number(payload.participant_id),
-        ticket_serial: payload.ticket_serial,
+      // The landing site owns tickets: it assigns, marks paid and emails the PDF
+      return apiClient.landingPost('/api/tickets/assign', {
+        participantId: Number(payload.participant_id),
+        ticketSerial: payload.ticket_serial,
         reference: payload.reference
       });
     },
     onSuccess: (res: any) => {
-      toast.success(res.message || 'Ticket assigned & payment confirmed.');
+      // The ticket is emailed to the participant; warn when the email failed
+      if (res.email_sent === false) {
+        toast.warning(res.message || 'Ticket assigned, but the email could not be sent.');
+      } else {
+        toast.success(res.message || 'Ticket assigned and emailed to the participant.');
+      }
       setIsAssignModalOpen(false);
       setAssignForm({ participant_id: '', ticket_serial: '', reference: 'Manual cash payment' });
       invalidateQueries();
     },
     onError: (err: any) => {
       toast.error(err.message || 'Assignment failed.');
+    }
+  });
+
+  const resendEmailMutation = useMutation({
+    mutationFn: (id: number) => apiClient.landingPost('/api/tickets/resend', { ticketId: id }),
+    onSuccess: (res: any) => {
+      toast.success(res.message || 'Ticket emailed.');
+      invalidateQueries();
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'The ticket email could not be sent.');
     }
   });
 
@@ -450,6 +468,20 @@ export default function TicketsPage() {
                           >
                             <Eye className="h-4 w-4" />
                           </button>
+                          {t.participant && t.status !== 'cancelled' && (
+                            <button
+                              onClick={() => resendEmailMutation.mutate(t.id)}
+                              disabled={resendEmailMutation.isPending}
+                              className={`p-1.5 rounded-xl transition-colors cursor-pointer inline-block disabled:opacity-50 ${
+                                t.email_sent ? 'hover:bg-[#EBF2EC] text-[#2E5A36]' : 'hover:bg-[#FFF8E6] text-[#B8964A]'
+                              }`}
+                              title={t.email_sent ? 'Ticket emailed. Click to send it again' : 'Ticket NOT emailed yet. Click to send it'}
+                            >
+                              {resendEmailMutation.isPending && resendEmailMutation.variables === t.id
+                                ? <Loader2 className="h-4 w-4 animate-spin" />
+                                : <Mail className="h-4 w-4" />}
+                            </button>
+                          )}
                           {t.status !== 'cancelled' && (
                             <button
                               onClick={() => { if (confirm('Cancel this ticket pass?')) cancelTicketMutation.mutate(t.id); }}

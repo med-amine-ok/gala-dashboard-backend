@@ -32,6 +32,9 @@ def _tokens_for(user):
 
 class LoginView(APIView):
     permission_classes = [AllowAny]
+    # Public endpoint: never look at the Authorization header, so a stale or
+    # foreign token saved in the browser can't block it ("token not valid")
+    authentication_classes = []
     parser_classes = [JSONParser, FormParser]
     throttle_scope = 'login'
 
@@ -103,7 +106,7 @@ class CurrentUserView(APIView):
             "user": serializer.data,
             "role": user.role,
             "is_participant": user.role == CustomUser.Role.PARTICIPANT,
-            "is_hr_admin": user.role == CustomUser.Role.HR_ADMIN,
+            "is_hr_admin": user.is_hr_admin,
             "is_company": user.role == CustomUser.Role.COMPANY,
         }, status=status.HTTP_200_OK)
 
@@ -278,6 +281,9 @@ class SetPasswordView(APIView):
 
 class CSRFTokenView(APIView):
     permission_classes = [AllowAny]
+    # Public endpoint: never look at the Authorization header, so a stale or
+    # foreign token saved in the browser can't block it ("token not valid")
+    authentication_classes = []
 
     def get(self, request):
         return Response({'csrfToken': get_token(request)}, status=status.HTTP_200_OK)

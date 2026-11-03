@@ -95,6 +95,7 @@ export async function GET(req: NextRequest) {
       if (!paidCheckout) {
         return NextResponse.json({
           success: false,
+          pending: true,
           message: "Paiement en cours de vérification auprès de Chargily. Veuillez patienter.",
         });
       }

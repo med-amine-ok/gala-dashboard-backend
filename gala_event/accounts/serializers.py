@@ -10,15 +10,16 @@ from participants.models import Participant
 class CustomUserSerializer(serializers.ModelSerializer):
     """Serializer for all users (HR Admin and Participants)"""
     role_display = serializers.CharField(source='get_role_display', read_only=True)
+    is_hr_admin = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = CustomUser
         fields = [
             'id', 'username', 'email', 'first_name', 'last_name',
-            'role_display',
+            'role', 'role_display', 'is_hr_admin',
             'is_active', 'date_joined', 'last_login', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'date_joined', 'last_login', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'role', 'date_joined', 'last_login', 'created_at', 'updated_at']
 
 
 class LoginSerializer(serializers.Serializer):
@@ -80,6 +81,7 @@ class LoginSerializer(serializers.Serializer):
                 'last_name': user.last_name,
                 'role': user.role,
                 'role_display': user.get_role_display(),
+                'is_hr_admin': user.is_hr_admin,
             }
         return super().to_representation(instance)
 

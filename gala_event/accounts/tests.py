@@ -111,3 +111,64 @@ class LoginTests(TestCase):
         CustomUser.objects.create(email='dup@example.com', username='dup@example.com')
         r = self.client.post('/api/accounts/login/', {'email': 'dup@example.com', 'password': 'x'}, format='json')
         self.assertEqual(r.status_code, 400)
+
+
+class StaleTokenTests(TestCase):
+    """A token left in the browser from an old session (expired, or signed with
+    another SECRET_KEY) must never block logging in again."""
+
+    def test_login_ignores_a_stale_bearer_token(self):
+        user, _ = make_participant('stale@example.com')
+        user.set_password('S3cure-pass!')
+        user.save()
+        client = APIClient()
+        client.credentials(HTTP_AUTHORIZATION='Bearer stale.old.token')
+        r = client.post('/api/accounts/login/', {'email': 'stale@example.com', 'password': 'S3cure-pass!'}, format='json')
+        self.assertEqual(r.status_code, 200, r.content)
+        # Protected endpoints still reject the bad token
+        self.assertEqual(client.get('/api/accounts/check_auth/').status_code, 401)
+
+    def test_public_endpoints_ignore_a_stale_bearer_token(self):
+        client = APIClient()
+        client.credentials(HTTP_AUTHORIZATION='Bearer stale.old.token')
+        for path in ['/api/accounts/csrf_token/', '/api/agenda/public/', '/api/companies/list/']:
+            self.assertEqual(client.get(path).status_code, 200, path)
+
+
+class SetHrAdminCommandTests(TestCase):
+    def test_restores_hr_role_and_detaches_company(self):
+        from django.core.management import call_command
+        from companies.models import Company
+
+        user = CustomUser.objects.create_user(email='boss@example.com', role=CustomUser.Role.COMPANY, is_active=True)
+        Company.objects.create(user=user, name='Wrongly linked', email='boss@example.com')
+        call_command('set_hr_admin', 'BOSS@example.com', stdout=open('nul' if __import__('os').name == 'nt' else '/dev/null', 'w'))
+        user.refresh_from_db()
+        self.assertEqual(user.role, CustomUser.Role.HR_ADMIN)
+        self.assertTrue(user.is_staff)
+        self.assertIsNone(Company.objects.get(name='Wrongly linked').user)
+
+
+class SuperuserIsHrTests(TestCase):
+    """A superuser whose role field was overwritten (old company-creation bug)
+    keeps full dashboard access."""
+
+    def test_superuser_with_company_role_can_use_the_dashboard(self):
+        user = CustomUser.objects.create_superuser(email='admin@example.com', password='Hr-pass-12345',
+                                                   first_name='A', last_name='D')
+        CustomUser.objects.filter(id=user.id).update(role=CustomUser.Role.COMPANY)
+        client = APIClient()
+        r = client.post('/api/accounts/login/', {'email': 'admin@example.com', 'password': 'Hr-pass-12345'}, format='json')
+        self.assertEqual(r.status_code, 200)
+        self.assertTrue(r.json()['data']['is_hr_admin'])
+        client.credentials(HTTP_AUTHORIZATION='Bearer ' + r.json()['data']['access_token'])
+        self.assertEqual(client.get('/api/dashboard/overview/').status_code, 200)
+        self.assertEqual(client.get('/api/participants/view/').status_code, 200)
+        self.assertTrue(client.get('/api/accounts/check_auth/').json()['user']['is_hr_admin'])
+
+    def test_plain_company_account_is_still_refused(self):
+        company = CustomUser.objects.create_user(email='co2@example.com', password='Co-pass-12345',
+                                                 role=CustomUser.Role.COMPANY, is_active=True)
+        client = APIClient()
+        client.force_authenticate(company)
+        self.assertEqual(client.get('/api/dashboard/overview/').status_code, 403)

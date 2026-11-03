@@ -1,6 +1,243 @@
 # Engineers' Gala: backend fixes (Nov 2026)
 
-This file explains what changed after the audit in [BACKEND_AUDIT.md](BACKEND_AUDIT.md): the new rules, every changed file, and how to deploy. Nothing is committed yet; all changes are in the working tree.
+This file explains what changed after the audit in [BACKEND_AUDIT.md](BACKEND_AUDIT.md): the new rules, every changed file, and how to deploy. The first round of fixes is in commit `b9c1f80`. The **3 November update** (section 0) is not committed yet.
+
+---
+
+## ✅ Go-live checklist (public site = https://gala.vic-enp.com)
+
+**1. Vercel → landing project (the one serving gala.vic-enp.com) → Settings → Environment Variables (Production), then Redeploy:**
+
+| Variable | Value |
+|---|---|
+| `NEXT_PUBLIC_APP_URL` | `https://gala.vic-enp.com` |
+| `WEBHOOK_URL` | **delete it** (the webhook is then `https://gala.vic-enp.com/api/webhook`) |
+| `PAYMENT_LINK_BASE_URL` | `https://gala.vic-enp.com` |
+| `API_BASE_URL` and `NEXT_PUBLIC_API_BASE_URL` | `https://gala-dashboard-backend.onrender.com` |
+| `DATABASE_URL` | the **same** Neon database as Render |
+| `CHARGILY_API_KEY` (+ `CHARGILY_API_URL`) | test key + `https://pay.chargily.net/test/api/v2` for tests; live key + `https://pay.chargily.net/api/v2` for real payments |
+| `MAIL_HOST` `MAIL_PORT` `MAIL_USER` `MAIL_PASS` `MAIL_FROM` | your SMTP (for Gmail, an app password) |
+| `DASHBOARD_ORIGINS` | where the dashboard runs, e.g. `http://localhost:3000` (add the dashboard's deployed URL if it has one) |
+| `INTERNAL_API_TOKEN` | a long random string (diagnostics + internal routes) |
+
+**2. Render → backend → Environment:**
+* `LANDING_URL` = `https://gala.vic-enp.com`.
+* `CORS_ALLOWED_ORIGINS` must include `https://gala.vic-enp.com` and the dashboard's URL.
+* `DATABASE_URL`: the same Neon database as Vercel.
+* `EMAIL_HOST_USER` / `EMAIL_HOST_PASSWORD` / `DEFAULT_FROM_EMAIL`.
+* `CHARGILY_API_KEY`: same key as Vercel.
+* `SECRET_KEY` (keep the current one), `DEBUG=False`.
+
+**3. Dashboard:** `NEXT_PUBLIC_LANDING_URL` = `https://gala.vic-enp.com` once the code is pushed (until then `http://localhost:3001`, your local landing).
+
+**4. Push the code** (Vercel and Render redeploy). Then:
+* Open `https://gala.vic-enp.com/api/internal/diagnostics` with header `Authorization: Bearer <INTERNAL_API_TOKEN>`; `"ok": true` means the payment chain is configured.
+* Dashboard → Participants → **Sync payments** recovers everyone who paid while it was broken.
+
+**5. Refunds:** participant 3762051899 paid 3 times on 3 Nov (20:12, 20:57, 21:07). Keep one, refund two in Chargily.
+
+---
+
+## 0. Update 3 Nov 2026: "they paid, but no ticket and no email"
+
+### What was wrong
+
+| # | Cause | Effect |
+|---|---|---|
+| 1 | The ticket was only issued when Chargily's **webhook** reached the landing site, or when the payer's **success page** caught the payment. The success page asked Chargily **once**, right after the redirect, when the checkout is often still `pending`, and never asked again. | If the webhook didn't arrive, the payment was never recorded: no ticket, no email |
+| 2 | The webhook and return addresses came from `WEBHOOK_URL` / `NEXT_PUBLIC_APP_URL`. The local `.env.local` has a dead tunnel (`…loca.lt`) and `http://localhost:3000`; if Vercel has the same values, Chargily posts to a machine that isn't there. | Webhook lost |
+| 3 | Emails need SMTP settings: `MAIL_*` on Vercel for the landing site, `EMAIL_*` on Render for Django. If they're missing, sending fails quietly. | No email |
+| 4 | Nothing in the dashboard could look a payment up again, or re-send a ticket. | People who already paid stayed stuck |
+| 5 | (found while testing) The backend's calls to Chargily were refused by Cloudflare (**HTTP 403**, error 1010), because Python's default user agent is blocked. | Any server-side check from Django failed |
+
+### What changed
+
+**Django is now the safety net.** It asks Chargily directly, so a ticket no longer depends on the webhook or on the payer's browser:
+
+* **"Check payment"** (↻ icon on each approved participant): asks Chargily for that participant's checkout. If it's paid, it marks them paid, assigns a ticket (a free pre-generated one first), emails it, and syncs the landing site's `payments` row. It also repairs "paid but no ticket" and "ticket never emailed".
+* **"Sync payments"** (button at the top of Participants): the same for every approved participant who isn't completely done, 5 per request and looping automatically. The summary looks like *"3 ticket(s) issued & emailed · 1 ticket email(s) sent · 12 not paid yet"*. **Run it once after deploying: it recovers everyone who already paid.**
+* If Chargily says paid but the participant isn't approved, it records the payment but issues no ticket, and reports *needs review* (approve, then check again, or refund).
+
+**One ticket email for every path** (online payment recovered by sync, cash payment, manual assignment, resend):
+
+* Attachments: the **official PDF ticket**, fetched from the landing site so it's the same design, plus the **QR code image**. If the landing site can't be reached, the email contains a download link instead of the PDF.
+* `ticket.email_sent` is set only when SMTP really accepted the email. Every attempt is recorded in *Communications → email logs* with the error.
+
+**New dashboard buttons:**
+
+| Where | Button | What it does |
+|---|---|---|
+| Participants, row (approved + unpaid) | 💳 **Send payment link** | Emails the link `/payment/<secret token>`. If the email fails, the response still contains the link so you can share it another way |
+| Participants, selection bar | **Send Payment Links** | Same for all selected people; not-approved or already-paid ones are skipped and counted |
+| Participants, row (approved) | ↻ **Check payment** | See above |
+| Participants, header | **Sync payments** | See above |
+| Participants, payment column | `GT2026… ✓ emailed` / `• not emailed` | Ticket number and whether it was emailed |
+| Tickets, assign modal | (existing) **Issue & Confirm Payment** | Now **emails the ticket** to the participant, and the toast warns if the email failed |
+| Tickets, row | ✉ **Resend ticket email** | Gold = never emailed, green = already emailed |
+
+**Landing site:**
+
+* The success page now re-checks every 4 s for up to 2 minutes, and tells the payer the ticket will arrive by email if it's still pending after that.
+* In production, a localhost or tunnel value in `NEXT_PUBLIC_APP_URL` / `WEBHOOK_URL` is ignored (and logged). The site then uses its real address (`VERCEL_PROJECT_PRODUCTION_URL`, or `https://gala.vic-enp.com`).
+* A forged webhook signature now gets 401 instead of 500.
+* **New diagnostics endpoint** `GET /api/internal/diagnostics` (header `Authorization: Bearer <INTERNAL_API_TOKEN>`). It reports, without showing any secret: missing env vars, the URLs given to Chargily, whether Chargily answers (and test vs live key), whether the DB has the latest columns, how many people are *paid without ticket* / *ticket not emailed*, and whether the SMTP login works.
+
+### New / changed endpoints (all HR-only)
+
+| Method & path | Purpose |
+|---|---|
+| `POST /api/participants/view/{id}/send_payment_link/` | Email the payment link; returns `payment_url` |
+| `POST /api/participants/view/send_payment_links/` | Bulk version (`participant_ids`), now with a `message` |
+| `POST /api/participants/view/{id}/sync_payment/` | Check Chargily → ticket + email. `result`: `ticket_issued`, `email_resent`, `email_failed`, `up_to_date`, `not_paid`, `needs_review`, `error` |
+| `POST /api/participants/view/sync_payments/` | Batch version; send back `after_id` = `next_after_id` until it is `null` |
+| `POST /api/tickets/{id}/resend_email/` | Email the ticket again |
+| `POST /api/tickets/assign_ticket/`, `POST /api/payments/manual/` | Now email the ticket and return `email_sent` |
+| `GET /api/participants/view/` | Rows now include `ticket_email_sent` |
+
+### Files changed in this update
+
+* **Django:**
+  * `tickets/chargily.py` (new): Chargily client, user agent fixed, reads the stored checkout id or scans the list once.
+  * `tickets/payment_handlers.py`: `sync_payment`, `email_ticket`, emails on every ticket path.
+  * `notifications/emails.py`: attachments, plus `send_ticket_email` (PDF + QR, sets `email_sent`).
+  * `participants/views.py`: `send_payment_link`, `sync_payment`, `sync_payments`.
+  * `participants/serializers.py`: `ticket_email_sent`.
+  * `tickets/views.py`: `resend_email`, `email_sent` in responses.
+  * `gala_event/settings.py`: `CHARGILY_API_KEY`, `CHARGILY_API_URL`.
+  * `tickets/test_payment_sync.py` (new, 11 tests) and `tickets/tests.py` (no network in tests).
+* **Landing:**
+  * `src/lib/participants/lookup.ts`: `appUrl()` / `webhookUrl()` reject dev addresses in production.
+  * `src/app/api/payments/[id]/route.ts`: uses `webhookUrl()`; `params` typed as Next 15 expects.
+  * `src/app/api/payments/verify/route.ts`: `pending` flag.
+  * `src/app/payment/success/page.tsx`: polling.
+  * `src/app/api/webhook/route.ts`: 401 on a bad signature.
+  * `src/app/api/internal/diagnostics/route.ts` (new).
+* **Dashboard:**
+  * `src/app/dashboard/participants/page.tsx`: new buttons and ticket/email state.
+  * `src/app/dashboard/tickets/page.tsx`: resend button, email-aware toast.
+  * `src/lib/apiClient.ts`: `ticket_email_sent`.
+
+### ⚠️ Settings to check before/after deploying
+
+**Render (Django):**
+* `CHARGILY_API_KEY` (**new**, same secret key as the landing site; test or live, matching the landing site).
+* `CHARGILY_API_URL` (optional; it's inferred from the key).
+* `EMAIL_HOST` / `EMAIL_PORT` / `EMAIL_USE_TLS` / `EMAIL_HOST_USER` / `EMAIL_HOST_PASSWORD` / `DEFAULT_FROM_EMAIL`: without these, every Django email (approval, payment link, ticket) fails.
+* `LANDING_URL`: the real landing address; payment links and the PDF fetch use it.
+
+**Vercel (landing):**
+* `NEXT_PUBLIC_APP_URL` = the real public address (not localhost).
+* `WEBHOOK_URL`: **delete it**, or set it to `<real address>/api/webhook`.
+* `MAIL_HOST` / `MAIL_PORT` / `MAIL_USER` / `MAIL_PASS` / `MAIL_FROM`. For Gmail, `MAIL_PASS` must be an *app password*.
+* `INTERNAL_API_TOKEN` (any long random string), so you can open the diagnostics.
+* The **live** `CHARGILY_API_KEY` and the live API URL when you leave test mode. The diagnostics flags a test/live mismatch.
+
+In the **Chargily dashboard**, check the webhook URL there too if you set one.
+
+**After deploying:**
+1. Open the diagnostics:
+   ```bash
+   curl -H "Authorization: Bearer $INTERNAL_API_TOKEN" https://<landing>/api/internal/diagnostics
+   ```
+   `"ok": true` means the whole chain is configured.
+2. In the dashboard, Participants → **Sync payments**.
+
+### Dashboard login error "Given token not valid for any token type"
+
+* **Cause:** the dashboard sent the token saved in the browser on **every** request, including the login request itself. The backend's login view still checked that token first. So an old token (from before a deploy, a `SECRET_KEY` change, or another backend) made **logging in** fail with 401.
+* **Fix (dashboard)**, in `src/lib/apiClient.ts` and `src/app/providers.tsx`:
+  * Login, token refresh and set-password requests never carry a token.
+  * Logging in clears any old session first.
+  * A token the server rejects (`token_not_valid`) is deleted.
+* **Fix (backend):** login, set-password, CSRF, the public agenda and the public company lists ignore the `Authorization` header (`authentication_classes = []`).
+* **Also fixed:** `/api/agenda/public/` was unreachable (the agenda router swallowed it, like check-in before). The explicit route now comes first.
+* **If you still see the error before deploying:** log out, or clear the site data for the dashboard (DevTools → Application → Local storage → delete `access_token` / `refresh_token`).
+
+### Dashboard shows everything empty after a while (all API calls 401)
+
+* **Cause:** the access token now lives 60 min. When it expired, the dashboard's parallel requests **all** refreshed at the same moment with the same refresh token. The backend rotates and blacklists refresh tokens, so 1 refresh succeeded and the others failed. The failures wiped the tokens, but the `gala_auth_active` cookie stayed. The route guard (`middleware.ts`) trusts that cookie, so it kept sending `/login` back to `/dashboard`, where every call had no token → 401 → empty lists.
+  * Reproduced with the old client code: 6 refreshes, 5 rejected, tokens gone, cookie kept.
+* **Fix** (`src/lib/apiClient.ts`, `src/app/providers.tsx`):
+  * One shared refresh for all concurrent requests (now: 1 refresh, all 6 requests succeed).
+  * When the session really can't be recovered, the tokens **and** the cookie are cleared and you're taken to `/login?expired=true`.
+  * On page load, a cookie without a token is cleared too.
+
+### Dashboard shows 0 everywhere and the sidebar says "Company"
+
+* **Cause:** the logged-in account has the **Company** role, not HR Admin, and all dashboard statistics are HR-only. Only "Corporate Partners" loads, because any logged-in user may read companies.
+  * The old company-creation code (before commit `b9c1f80`) turned an *existing* account into a Company account (and reset its password) when a company was created with that email. That is how an HR account ends up as "Company". The new code refuses an email that is already used.
+* **Restore the HR role.** Pick one:
+  1. Neon console → SQL editor:
+     ```sql
+     UPDATE accounts_customuser SET role = 'HR', is_staff = true, is_active = true WHERE lower(email) = lower('<your email>');
+     ```
+  2. Django admin `https://gala-dashboard-backend.onrender.com/admin/` → Users → your account → *Role & HR* → **HR Admin** → Save.
+  3. After deploying this update, on Render's shell:
+     ```bash
+     python manage.py set_hr_admin <your email>
+     ```
+     This also detaches the account from the company profile it was wrongly linked to.
+
+  Then log out and log in again.
+* **Dashboard guard:** Company / Participant accounts now get a clear message at login (and an already-open non-HR session is closed) instead of a page of zeros.
+* **Superusers always count as HR admins.** A new `CustomUser.is_hr_admin` property (HR role **or** `is_superuser`) is used by every permission check, and is sent to the dashboard (`is_hr_admin` in the login, `current_user` and `check_auth` responses). So an HR account created with `createsuperuser`, whose role field was overwritten to Company, works again **once this backend update is deployed**, with no database edit. Until then, use the SQL fix above.
+
+### "Send payment link" now goes through the landing site
+
+The payment code lives in **gala-landing**, so the dashboard's payment-link buttons (single and bulk) now call the landing route **`POST /api/payments/send-link`** (`src/app/api/payments/send-link/route.ts`).
+
+* **Who can call it:** the route checks the caller's dashboard token with Django (`GET /api/accounts/current_user/`, already on Render), so only HR admins can send. It answers CORS only for the origins in `DASHBOARD_ORIGINS` (default `http://localhost:3000`).
+* **Who gets the email:** only APPROVED, unpaid participants with an email. It's sent directly with the landing's SMTP (`MAIL_*`), with the link `PAYMENT_LINK_BASE_URL/payment/<secret token>`.
+* **No localhost links:** it **refuses to send** if that base is a localhost address. `PAYMENT_LINK_BASE_URL=https://gala-vic.vercel.app` was added to `gala-landing/.env.local`. On Vercel, set it to your public landing domain.
+* **Dashboard setting:** `NEXT_PUBLIC_LANDING_URL` = where the landing runs (default `http://localhost:3001`). On a deployed dashboard, set it to the landing's URL, and add the dashboard's origin to the landing's `DASHBOARD_ORIGINS`.
+* **Error messages:** the dashboard shows real errors instead of "null" (for example "Server error 404: … is the latest backend deployed?").
+
+### Paid on Chargily, but nothing in the DB, dashboard or mailbox (3 Nov)
+
+* **Found by reading the checkouts on Chargily:** the paid checkouts of 3 Nov (11:52, 20:12, 20:57) were created with `webhook_endpoint` **and** `success_url` on **`gala.vic-enp.com`**, the domain that still serves an **old build**. That old site didn't record anything in the database. October's checkouts correctly used `gala-vic.vercel.app`.
+* **Cause:** since the security round, checkout URLs come from `NEXT_PUBLIC_APP_URL`, with a fallback of `https://gala.vic-enp.com`. Vercel apparently has no (or this) `NEXT_PUBLIC_APP_URL`, so the fallback sent Chargily to the old build.
+* **Fix** (`src/lib/participants/lookup.ts`, `src/app/api/payments/[id]/route.ts`): when `NEXT_PUBLIC_APP_URL` is not set, the checkout uses **the deployment the payer is on**. That's the request's own host, not the spoofable `Origin` header, and it is the deployment that receives the webhook and the payer's return. The fallback is now `https://gala-vic.vercel.app`, and Django's `LANDING_URL` default is too.
+* **Recover the people who already paid:** dashboard → Participants → **Sync payments** (or ↻ on the person). It asks Chargily, then marks them paid, assigns a ticket and emails the PDF.
+* **On Vercel (gala-vic project):** set `NEXT_PUBLIC_APP_URL=https://gala-vic.vercel.app`, or remove it, then redeploy. Later, point the `gala.vic-enp.com` domain at this project (Vercel → Settings → Domains) and switch the URL to it.
+
+### All ticket actions now run in gala-landing
+
+Payments **and** tickets are handled by the landing site's payment code. The dashboard calls these landing routes, all HR-only (the caller's token is checked with Django, as for `send-link`):
+
+| Dashboard button | Landing route | What it does |
+|---|---|---|
+| ↻ **Check payment** (participant row) | `POST /api/payments/sync` `{participantIds:[id]}` | Asks Chargily (stored checkout id, else the checkout list). If paid → the same `fulfillPayment` as the webhook: marks paid, assigns a ticket (free one first, row-locked), emails the PDF. Also repairs "paid but no ticket" and "ticket never emailed" |
+| **Sync payments** (header) | `POST /api/payments/sync` `{afterId}` | Same for every approved participant who isn't completely done, 5 per call, until `nextAfterId` is null |
+| **Assign ticket** (Tickets page) | `POST /api/tickets/assign` `{participantId, ticketSerial}` | Row-locked assignment, marks paid, records the `payments` row, emails the PDF ticket |
+| ✉ **Resend ticket email** | `POST /api/tickets/resend` `{ticketId}` | Emails the PDF again |
+| 💳 **Send payment link** | `POST /api/payments/send-link` | See above |
+
+* **New shared helpers:** `src/lib/security/hr-auth.ts` (HR check + CORS), `src/lib/payments/chargily.ts` (checkout lookup), `src/lib/tickets/email-ticket.ts` (PDF email + `email_sent`).
+* **Tested** on an isolated copy of the landing site (throw-away Postgres, fake mail server, real Chargily test API):
+  * "Paid but no ticket" → ticket + PDF email.
+  * Real unpaid checkout → "not paid", nothing changed.
+  * Manual assignment → paid + ticket + `payments` row + PDF email; assigning the same ticket twice is refused.
+  * Resend → PDF email.
+  * Bulk sync worked; no token → 401.
+* ⚠️ **Same Chargily mode:** the landing that runs "Check payment" must use the **same Chargily key and mode** (test vs live) as the site where people paid. Otherwise Chargily simply doesn't show the payment.
+
+### How it was tested
+
+Everything ran locally against a throw-away Postgres (PGlite, Postgres 18), a fake mail server that captures messages, and the real **Chargily test API**:
+
+* 47 Django tests pass; `makemigrations --check` is clean; landing and dashboard type-check.
+* All migrations, including the one that adds a column to `payments`, ran on that Postgres.
+* The real flow:
+  * Approved participant → payment page → **real Chargily test checkout created** (checkout id stored).
+  * Webhook pointed at an unreachable address, as in the bug.
+  * "Check payment" → real Chargily lookup → correctly "not paid" while unpaid. This is where the Cloudflare 403 was found and fixed.
+* A correctly signed `checkout.paid` webhook → the landing site assigned a free pre-generated ticket and emailed the PDF.
+* Manual assignment in the dashboard → ticket email with PDF + QR.
+* Resend button worked.
+* **Sync payments** repaired "paid, no ticket" and "ticket never emailed" in one click, and left the unpaid person alone.
+* Send payment link (single + bulk with a pending person skipped).
+* PDF download: 200 with the token, 404 with a numeric id. Forged webhook: 401.
+* **Not yet done:** completing a real test-mode payment on Chargily's checkout page, then pressing "Check payment" (it needs ticking Chargily's terms checkbox). The same path is covered by tests with Chargily's response simulated.
 
 **Verified:**
 * 36 new Django tests pass (`python manage.py test`).

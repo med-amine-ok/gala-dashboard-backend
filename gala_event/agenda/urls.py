@@ -5,7 +5,9 @@ from .views import AgendaViewSet, AgendaPublicView
 router = DefaultRouter()
 router.register(r'agenda', AgendaViewSet, basename='agenda')
 
+# The explicit path must come BEFORE the router, otherwise its detail route
+# `agenda/<pk>/` swallows `agenda/public/` (same issue as tickets/checkin/).
 urlpatterns = [
-    path('', include(router.urls)),
     path('agenda/public/', AgendaPublicView.as_view(), name='agenda-public'),
+    path('', include(router.urls)),
 ]

@@ -18,11 +18,13 @@ export async function POST(req: NextRequest) {
     }
 
     const chargilySecretKey = process.env.CHARGILY_API_KEY!;
-    const valid = verifySignature(
-      Buffer.from(rawBody, "utf-8"),
-      signature,
-      chargilySecretKey
-    );
+    let valid = false;
+    try {
+      valid = verifySignature(Buffer.from(rawBody, "utf-8"), signature, chargilySecretKey);
+    } catch {
+      // Malformed signature (wrong length / not hex): treat as invalid
+      valid = false;
+    }
 
     if (!valid) {
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 });

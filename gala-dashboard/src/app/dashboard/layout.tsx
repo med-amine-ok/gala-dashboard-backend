@@ -118,7 +118,7 @@ export default function DashboardLayout({
                 {user ? `${user.first_name} ${user.last_name}` : "HR Admin"}
               </p>
               <p className="text-[10px] text-[#8C6F45] uppercase tracking-wider font-semibold truncate">
-                {user?.role_display || "HR Admin"}
+                {user?.is_hr_admin ? "HR Admin" : (user?.role_display || "HR Admin")}
               </p>
             </div>
           </div>
@@ -207,7 +207,7 @@ export default function DashboardLayout({
                     {user ? `${user.first_name} ${user.last_name}` : "HR Admin"}
                   </p>
                   <p className="text-[10px] text-[#8C6F45] uppercase tracking-wider font-semibold truncate">
-                    {user?.role_display || "HR Admin"}
+                    {user?.is_hr_admin ? "HR Admin" : (user?.role_display || "HR Admin")}
                   </p>
                 </div>
               </div>

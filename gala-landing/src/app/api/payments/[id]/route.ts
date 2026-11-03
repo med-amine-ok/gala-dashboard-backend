@@ -2,7 +2,7 @@ import { db } from "@/db/client";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { payments, ticketsTicket } from "@/db/schema";
-import { appUrl, findParticipantByRef } from "@/lib/participants/lookup";
+import { appUrl, findParticipantByRef, webhookUrl } from "@/lib/participants/lookup";
 
 const AMOUNT_DZD = Number(process.env.TICKET_PRICE_DZD) || 1000;
 
@@ -14,9 +14,9 @@ const AMOUNT_DZD = Number(process.env.TICKET_PRICE_DZD) || 1000;
  */
 export async function POST(
   request: Request,
-  { params }: { params: Promise<{ id: string }> | { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await Promise.resolve(params);
+  const { id } = await params;
   const chargilyBaseUrl =
     process.env.CHARGILY_API_URL ||
     (process.env.CHARGILY_API_KEY?.startsWith("test_")
@@ -71,8 +71,8 @@ export async function POST(
     }
 
     // Never build these from request headers: they come from configuration only
-    const origin = appUrl();
-    const webhookEndpoint = process.env.WEBHOOK_URL || `${origin}/api/webhook`;
+    const origin = appUrl(request);
+    const webhookEndpoint = webhookUrl(request);
 
     const response = await fetch(`${chargilyBaseUrl}/checkouts`, {
       method: "POST",

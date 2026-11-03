@@ -17,7 +17,7 @@ from rest_framework.views import APIView
 from accounts.permissions import IsHRAdmin
 from participants.models import Participant
 from .models import Ticket, TicketScan
-from .payment_handlers import PaymentError, assign_ticket_with_payment, handle_payment_success
+from .payment_handlers import PaymentError, assign_ticket_with_payment, email_ticket, handle_payment_success
 from .serializers import AssignTicketSerializer, GenerateUnassignedTicketsSerializer, TicketSerializer
 
 logger = logging.getLogger(__name__)
@@ -68,6 +68,23 @@ class TicketViewSet(viewsets.ModelViewSet):
         return Response({
             'message': f'Ticket {ticket.serial_number} has been cancelled'
         }, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'])
+    def resend_email(self, request, pk=None):
+        """Email the ticket to its holder again"""
+        ticket = self.get_object()
+        if ticket.participant_id is None:
+            return Response({'error': 'This ticket is not assigned to anyone.'}, status=status.HTTP_400_BAD_REQUEST)
+        if ticket.status == 'cancelled':
+            return Response({'error': 'This ticket is cancelled.'}, status=status.HTTP_400_BAD_REQUEST)
+        sent = email_ticket(ticket.participant_id, sent_by=request.user, force=True)
+        if not sent:
+            return Response(
+                {'error': 'The email could not be sent. Check the email settings (see email logs).', 'email_sent': False},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+        return Response({'message': f'Ticket {ticket.serial_number} emailed to {ticket.participant.email}.',
+                         'email_sent': True}, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'])
     def statistics(self, request):
@@ -144,16 +161,21 @@ class TicketViewSet(viewsets.ModelViewSet):
         serializer = AssignTicketSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
-            participant, ticket = assign_ticket_with_payment(
+            participant, ticket, email_sent = assign_ticket_with_payment(
                 serializer.validated_data['participant_id'],
                 serializer.validated_data['ticket_serial'],
+                sent_by=request.user,
             )
         except PaymentError as exc:
             return Response({"error": str(exc)}, status=exc.status_code)
 
         return Response({
             "success": True,
-            "message": "Ticket assigned and payment processed successfully",
+            "message": (
+                f"Ticket assigned and emailed to {participant.email}." if email_sent
+                else "Ticket assigned, but the email could not be sent. Use 'Resend email' after fixing the email settings."
+            ),
+            "email_sent": email_sent,
             "data": {
                 "participant_id": participant.id,
                 "participant_name": participant.full_name,
@@ -318,7 +340,9 @@ class ManualPaymentView(APIView):
         except (TypeError, ValueError):
             return Response({"error": "participant_id is required"}, status=status.HTTP_400_BAD_REQUEST)
         try:
-            result = handle_payment_success(participant_id, payment_reference=request.data.get('reference'))
+            result = handle_payment_success(
+                participant_id, payment_reference=request.data.get('reference'), sent_by=request.user,
+            )
         except PaymentError as exc:
             return Response({"success": False, "message": str(exc)}, status=exc.status_code)
         return Response(result, status=status.HTTP_200_OK)
