@@ -38,6 +38,29 @@ This file explains what changed after the audit in [BACKEND_AUDIT.md](BACKEND_AU
 
 ---
 
+## Branded emails
+
+Every email now uses one branded design: deep plum header with the silver *Engineers' Gala* wordmark, Cinzel titles, magenta button, cream details card, and the event footer.
+
+* **Files:** `gala-landing/src/lib/email/layout.ts` and `templates.ts` (landing), `gala_event/notifications/email_layout.py` (backend). Same design; keep them in sync.
+* **Event details** (date, venue, price, organiser) live in the `EVENT` constant of each file.
+* **Emails:**
+
+| Email | Sent by | Highlights |
+|---|---|---|
+| Payment link ("Your seat is waiting") | landing `send-link` / `send-emails`, backend approval & payment link | Button "Pay 1,000 DA & confirm my seat", date / venue / price card |
+| Ticket ("Your ticket is ready") | landing (webhook, sync, assign, resend), backend ticket email | Ticket number on a plum pass card, PDF attached |
+| Activation code | backend | Big 6-digit code, validity |
+| Rejection ("Thank you for your interest") | backend | Warm wording, no reason exposed |
+
+* **Email-client safe:**
+  * 600 px tables, inline styles, a button that works with images off, and font fallbacks (Georgia / Arial).
+  * Hidden preview line, light colour scheme, and a plain-text version of every email.
+  * Checked at desktop width and at 375 px (iPhone).
+* **The weekday is left out on purpose:** the site says "Saturday 8 November 2026", but 8 Nov 2026 is a Sunday.
+* **HR overrides:** an active `EmailTemplate` row created by HR still overrides the built-in design for that email type.
+* **Logo:** loaded from `https://gala.vic-enp.com/GALA-silver.png`. Change it with `EMAIL_ASSET_BASE_URL` (landing) or `LANDING_URL` (backend).
+
 ## 0. Update 3 Nov 2026: "they paid, but no ticket and no email"
 
 ### What was wrong

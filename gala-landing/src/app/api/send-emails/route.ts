@@ -6,6 +6,7 @@ import { db } from "@/db/client";
 import inngest from "@/lib/inngest/inngest-client";
 import { isInternalRequest } from "@/lib/security/internal-auth";
 import { appUrl } from "@/lib/participants/lookup";
+import { paymentLinkEmail } from "@/lib/email/templates";
 
 /**
  * INTERNAL: email the payment link to approved, unpaid participants.
@@ -45,20 +46,10 @@ export async function POST(req: Request) {
 
       await inngest.send({
         name: "test/email.sent",
-        data: {
-          to: [email],
-          subject: "Secure Your Spot – Engineers Gala 2026 Payment Link",
-          text: `Hello ${participant.firstName || ""},
-
-We’re thrilled to have you joining us for the Engineers Gala 2026!
-
-To confirm your participation, please complete your payment at the link below:
-${appUrl()}/payment/${participant.publicToken}
-
-Once your payment is received, your place will be officially reserved.
-
-See you soon at Engineers Gala!`,
-        },
+        data: (() => {
+          const mail = paymentLinkEmail(participant.firstName, `${appUrl()}/payment/${participant.publicToken}`);
+          return { to: [email], subject: mail.subject, text: mail.text, html: mail.html };
+        })(),
       });
       results.push({ email, status: "queued" });
     }

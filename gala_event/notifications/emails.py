@@ -15,6 +15,7 @@ from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.utils import timezone
 
+from .email_layout import EVENT, render_email
 from .models import EmailLog, EmailTemplate
 
 logger = logging.getLogger(__name__)
@@ -80,9 +81,19 @@ def send_email(*, to, subject, text, html=None, participant=None, template=None,
     return ok
 
 
+def _first_name(participant):
+    return (participant.first_name or (participant.user.first_name if participant.user else '') or '').strip()
+
+
 def _greeting(participant):
-    name = (participant.first_name or (participant.user.first_name if participant.user else '') or '').strip()
-    return f"Hello {name}," if name else "Hello,"
+    name = _first_name(participant)
+    return f"Dear {name}," if name else "Hello,"
+
+
+def _branded(template_type, variables, subject, **content):
+    """Branded default email, unless HR created an active EmailTemplate of this type."""
+    html, text = render_email(**content)
+    return _from_template(template_type, variables, subject, text, html)
 
 
 def payment_link(participant):
@@ -92,17 +103,21 @@ def payment_link(participant):
 def send_activation_code(user, code):
     participant = getattr(user, 'participant_profile', None)
     minutes = settings.ACTIVATION_CODE_TTL_MINUTES
-    subject = "Your Engineers' Gala activation code"
-    text = (
-        f"Hello {user.first_name or ''},\n\n"
-        f"Your activation code is: {code}\n\n"
-        f"Enter it in the Engineers' Gala app together with your new password. "
-        f"It expires in {minutes} minutes.\n\n"
-        "If you did not ask for this code, you can ignore this email: nobody can "
-        "use your account without it.\n\n"
-        "Engineers' Gala team"
+    name = (user.first_name or '').strip()
+    html, text = render_email(
+        preheader=f"Your activation code: {code} (valid {minutes} minutes)",
+        eyebrow="Account activation",
+        title="Your activation code",
+        greeting=f"Dear {name}," if name else "Hello,",
+        paragraphs=[
+            f"Enter this code in the {EVENT['name']} app, together with your new password, "
+            "to create your account.",
+        ],
+        highlight={'label': f"Valid for {minutes} minutes", 'value': code, 'monospace': True, 'large': True},
+        footnote="Didn't ask for this code? You can safely ignore this email: nobody can use your account without it.",
     )
-    return send_email(to=user.email, subject=subject, text=text, participant=participant, contains_secret=True)
+    return send_email(to=user.email, subject=f"{code} is your Engineers' Gala activation code",
+                      text=text, html=html, participant=participant, contains_secret=True)
 
 
 def ticket_download_link(participant):
@@ -155,30 +170,31 @@ def send_ticket_email(participant, ticket, sent_by=None):
         attachments.append((f"ticket-{ticket.serial_number}.pdf", pdf, 'application/pdf'))
     attachments.append((f"ticket-{ticket.serial_number}-qr.png", _ticket_qr_png(participant, ticket), 'image/png'))
 
-    lines = [
-        _greeting(participant), "",
-        "Your seat at the Engineers' Gala is confirmed!", "",
-        f"Your ticket number: {ticket.serial_number}", "",
-        "Your ticket is attached to this email. Show its QR code at the entrance "
-        "(printed or on your phone).",
+    paragraphs = [
+        "Thank you, your payment has been received and your seat is officially confirmed.",
+        "Your personal ticket is attached to this email. Show its QR code at the entrance, "
+        "printed or on your phone.",
     ]
     if not pdf:
-        lines += ["", f"You can also download the PDF ticket here: {ticket_download_link(participant)}"]
-    lines += [
-        "",
-        "In the Engineers' Gala app, choose 'Create account' with this email address to see "
-        "your ticket and the programme (we'll send you a one-time code).", "",
-        "See you at the Gala!",
-        "Engineers' Gala team",
-    ]
+        paragraphs.append("The PDF version of your ticket can be downloaded with the button below.")
+    paragraphs.append(f"Tip: in the {EVENT['name']} app, choose 'Create account' with this email "
+                      "address to keep your ticket and the programme at hand.")
     variables = {
-        'first_name': participant.first_name or '',
+        'first_name': _first_name(participant),
         'ticket_serial': ticket.serial_number,
         'ticket_url': ticket_download_link(participant),
     }
-    template, subject, text, html = _from_template(
-        'payment_confirmation', variables,
-        "Your ticket - Engineers' Gala", "\n".join(lines),
+    template, subject, text, html = _branded(
+        'payment_confirmation', variables, f"Your ticket for the {EVENT['name']}",
+        preheader=f"Payment received. Your ticket {ticket.serial_number} is attached.",
+        eyebrow="Payment confirmed",
+        title="Your ticket is ready",
+        greeting=_greeting(participant),
+        paragraphs=paragraphs,
+        highlight={'label': 'Ticket number', 'value': ticket.serial_number, 'monospace': True},
+        cta=None if pdf else {'label': 'Download my ticket', 'url': ticket_download_link(participant)},
+        details=[('Date', EVENT['date']), ('Venue', EVENT['venue'])],
+        footnote="Each ticket admits one person and can be scanned only once. Keep it to yourself until the event.",
     )
     ok = send_email(to=email, subject=subject, text=text, html=html, participant=participant,
                     template=template, sent_by=sent_by, attachments=attachments)
@@ -189,34 +205,43 @@ def send_ticket_email(participant, ticket, sent_by=None):
     return ok
 
 
+def _payment_link_content(participant, intro):
+    return dict(
+        preheader=f"Your registration is approved. Confirm your seat with a {EVENT['price']} payment.",
+        eyebrow="Registration approved",
+        title="Your seat is waiting",
+        greeting=_greeting(participant),
+        paragraphs=[
+            intro,
+            f"To confirm your seat, complete your payment of {EVENT['price']} using the secure link "
+            "below. As soon as it is received, your official ticket will be emailed to you.",
+        ],
+        cta={'label': f"Pay {EVENT['price']} & confirm my seat", 'url': payment_link(participant)},
+        details=[('Date', EVENT['date']), ('Venue', EVENT['venue']), ('Entrance', EVENT['price'])],
+        footnote="This link is personal: please don't share it. Payments are processed securely by "
+                 "Chargily Pay (Edahabia / CIB).",
+    )
+
+
 def send_approval_email(participant, sent_by=None):
     email = participant.email or (participant.user.email if participant.user else None)
     if not email:
         return False
-    lines = [
-        _greeting(participant), "",
-        "Good news: your registration for the Engineers' Gala has been approved.", "",
-    ]
-    include_link = settings.PAYMENT_LINK_IN_APPROVAL_EMAIL and participant.payment_status != 'paid'
-    if include_link:
-        lines += [
-            "To confirm your seat, please complete your payment here:",
-            payment_link(participant), "",
-            "Your ticket will be emailed to you as soon as the payment is received.", "",
-        ]
-    lines += [
-        "You can also create your account in the Engineers' Gala app with this email address.", "",
-        "See you at the Gala!",
-        "Engineers' Gala team",
-    ]
-    variables = {
-        'first_name': participant.first_name or '',
-        'payment_url': payment_link(participant),
-    }
-    template, subject, text, html = _from_template(
-        'approval_notification', variables,
-        "Your Engineers' Gala registration is approved", "\n".join(lines),
-    )
+    variables = {'first_name': _first_name(participant), 'payment_url': payment_link(participant)}
+    intro = f"Good news: our committee has approved your registration for the {EVENT['name']}."
+    if settings.PAYMENT_LINK_IN_APPROVAL_EMAIL and participant.payment_status != 'paid':
+        content = _payment_link_content(participant, intro)
+    else:
+        content = dict(
+            preheader=f"Your registration for the {EVENT['name']} is approved.",
+            eyebrow="Registration approved",
+            title="Welcome to the Gala",
+            greeting=_greeting(participant),
+            paragraphs=[intro, "We can't wait to welcome you. Your ticket details will follow by email."],
+            details=[('Date', EVENT['date']), ('Venue', EVENT['venue'])],
+        )
+    template, subject, text, html = _branded(
+        'approval_notification', variables, f"You're approved for the {EVENT['name']}", **content)
     return send_email(to=email, subject=subject, text=text, html=html,
                       participant=participant, template=template, sent_by=sent_by)
 
@@ -225,16 +250,19 @@ def send_rejection_email(participant, sent_by=None):
     email = participant.email or (participant.user.email if participant.user else None)
     if not email:
         return False
-    text = "\n".join([
-        _greeting(participant), "",
-        "Thank you for your interest in the Engineers' Gala. Unfortunately we are "
-        "not able to confirm your registration this time.", "",
-        "Engineers' Gala team",
-    ])
-    variables = {'first_name': participant.first_name or '', 'rejection_reason': participant.rejection_reason}
-    template, subject, text, html = _from_template(
-        'rejection_notification', variables,
-        "Your Engineers' Gala registration", text,
+    variables = {'first_name': _first_name(participant), 'rejection_reason': participant.rejection_reason}
+    template, subject, text, html = _branded(
+        'rejection_notification', variables, f"About your {EVENT['name']} registration",
+        preheader=f"An update about your registration for the {EVENT['name']}.",
+        eyebrow="Registration update",
+        title="Thank you for your interest",
+        greeting=_greeting(participant),
+        paragraphs=[
+            f"Thank you for applying to the {EVENT['name']}. We received many more requests than "
+            "we have seats, and unfortunately we are not able to confirm your registration this time.",
+            "We truly appreciate your interest and hope to welcome you at a future edition.",
+        ],
+        footnote="Questions? Simply reply to this email.",
     )
     return send_email(to=email, subject=subject, text=text, html=html,
                       participant=participant, template=template, sent_by=sent_by)
@@ -244,19 +272,10 @@ def send_payment_link_email(participant, sent_by=None):
     email = participant.email or (participant.user.email if participant.user else None)
     if not email:
         return False
-    text = "\n".join([
-        _greeting(participant), "",
-        "We're thrilled to have you joining us for the Engineers' Gala!", "",
-        "To confirm your participation, please complete your payment at the link below:",
-        payment_link(participant), "",
-        "Once your payment is received, your place will be officially reserved and "
-        "your ticket will be emailed to you.", "",
-        "See you soon at the Engineers' Gala!",
-    ])
-    variables = {'first_name': participant.first_name or '', 'payment_url': payment_link(participant)}
-    template, subject, text, html = _from_template(
-        'payment_reminder', variables,
-        "Secure your spot - Engineers' Gala payment link", text,
+    variables = {'first_name': _first_name(participant), 'payment_url': payment_link(participant)}
+    template, subject, text, html = _branded(
+        'payment_reminder', variables, f"Your seat at the {EVENT['name']} is waiting",
+        **_payment_link_content(participant, f"Your registration for the {EVENT['name']} has been approved."),
     )
     return send_email(to=email, subject=subject, text=text, html=html,
                       participant=participant, template=template, sent_by=sent_by)

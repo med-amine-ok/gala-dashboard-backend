@@ -4,6 +4,7 @@ import { inArray } from "drizzle-orm";
 import { db } from "@/db/client";
 import { participantsParticipant } from "@/db/schema";
 import { sendEmail } from "@/lib/tickets/send-email";
+import { paymentLinkEmail } from "@/lib/email/templates";
 import { appUrl, isDevOnlyUrl } from "@/lib/participants/lookup";
 
 /**
@@ -23,21 +24,6 @@ const reply = corsReply;
 
 export async function OPTIONS(req: NextRequest) {
   return corsPreflight(req);
-}
-
-function paymentEmail(firstName: string | null, link: string) {
-  const hello = firstName ? `Hello ${firstName},` : "Hello,";
-  return `${hello}
-
-Good news: your registration for the Engineers' Gala has been approved!
-
-To confirm your seat, please complete your payment at the link below:
-${link}
-
-Once your payment is received, your place is officially reserved and your ticket will be emailed to you.
-
-See you soon at the Engineers' Gala!
-Engineers' Gala team`;
 }
 
 export async function POST(req: NextRequest) {
@@ -100,11 +86,8 @@ export async function POST(req: NextRequest) {
     }
     const paymentUrl = `${linkBase}/payment/${p.publicToken}`;
     try {
-      await sendEmail({
-        to: p.email,
-        subject: "Secure your spot – Engineers' Gala payment link",
-        text: paymentEmail(p.firstName, paymentUrl),
-      });
+      const mail = paymentLinkEmail(p.firstName, paymentUrl);
+      await sendEmail({ to: p.email, subject: mail.subject, text: mail.text, html: mail.html });
       sent.push({ id, email: p.email, paymentUrl });
     } catch (err) {
       console.error(`Payment link email to participant ${id} failed:`, err);

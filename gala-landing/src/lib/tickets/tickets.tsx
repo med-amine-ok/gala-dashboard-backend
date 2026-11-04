@@ -4,6 +4,7 @@ import { PDFDocument } from "pdf-lib";
 import QRCode from "qrcode";
 import inngest from "@/lib/inngest/inngest-client";
 import { sendEmail } from "./send-email";
+import { ticketEmail } from "@/lib/email/templates";
 
 type TicketData = {
   firstName: string;
@@ -83,15 +84,12 @@ export async function generateAndSendTicket(p: TicketData) {
     //       },
     //     });
 
+    const mail = ticketEmail(p.firstName, String(p.ticketId));
     await sendEmail({
       to: p.email,
-      subject: "Your Ticket – Engineers Gala 2026",
-      text: `Hello ${p.firstName},
-
-    Your ticket is attached. Please present it at the event.
-
-    See you soon!`,
-
+      subject: mail.subject,
+      text: mail.text,
+      html: mail.html,
       attachments: [
         {
           filename: `ticket-${p.ticketId}.pdf`,
