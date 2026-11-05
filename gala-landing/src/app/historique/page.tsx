@@ -1,10 +1,11 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { AnimatePresence, motion, useMotionValueEvent, useReducedMotion, useScroll } from "framer-motion";
+import { motion, useMotionValueEvent, useReducedMotion, useScroll, useTransform, type MotionValue } from "framer-motion";
+import { CHAPTER_IMAGES, MovementIndex, NUMERALS, type Chapter } from "../experience/page";
 import { useLanguage } from "../../context/LanguageContext";
-import { CountUp, DrawnRule, GALA_EASE, GalaButton, GalaFrame, RoomMasthead } from "../components/gala/Room";
+import { CountUp, DrawnRule, GALA_EASE, GalaButton, GalaFrame, GalaStar, RoomMasthead } from "../components/gala/Room";
 
 const EDITION_IMAGES: Record<string, string> = {
   "2017": "/images/lowla.png",
@@ -24,17 +25,19 @@ interface Edition {
 }
 
 /**
- * III · THE GALLERY — "The Archive"
- * One photograph at a time, presented like a print in a gallery: a deep plum
- * mat, a hairline silver bevel, a thin brushed-silver frame and a pane of
- * glass. The room holds while you scroll; each new edition is unveiled over
- * the last, its year rolls like an odometer and its story settles beside it.
- * A row of years beneath doubles as navigation.
- * Reduced motion: the same editions as an editorial column.
+ * III · THE CHAPTERS — a horizontal film
+ * The past editions and this year's programme as one strip of film that your
+ * scrolling draws sideways across the room: a title frame, then each edition
+ * (its year engraved large over its photograph, its name, story and figures),
+ * then Chapter V, 2026, and this year's four acts, and a last frame inviting
+ * you to join. Each photograph drifts a little inside its frame as it passes
+ * (parallax); a rail beneath marks the chapters and takes you to any of them.
+ * Reduced motion: the editions as an editorial column, then the four acts.
  */
 export default function ArchivesSection() {
   const { texts } = useLanguage();
   const a = texts.archives || {};
+  const chapters: Chapter[] = texts.thisYear?.chapters || [];
   const reduceMotion = useReducedMotion();
 
   const editions: Edition[] = YEARS.map((year) => {
@@ -50,21 +53,34 @@ export default function ArchivesSection() {
   });
 
   return (
-    <section className="relative w-full bg-transparent pt-28 text-[var(--color-cream)] sm:pt-36">
-      <div className="px-6 sm:px-12">
+    <section className="relative w-full bg-transparent pt-16 text-[var(--color-cream)] sm:pt-24">
+      {reduceMotion && (
+        <div className="px-6 sm:px-12">
         <RoomMasthead
           numeral="III"
-          label={a.roomLabel || "THE GALLERY"}
+          label="THE CHAPTERS"
           headline={a.headline || "Every edition leaves a story."}
           intro={a.subheadline}
         />
-      </div>
+        </div>
 
-      {reduceMotion ? <EditionColumn editions={editions} /> : <ArchiveEditions editions={editions} />}
+      )}
+      {reduceMotion ? (
+        <>
+          <EditionColumn editions={editions} />
+          <div className="mt-24">
+            <MovementIndex />
+          </div>
+        </>
+      ) : (
+        <ChaptersFilm editions={editions} chapters={chapters} />
+      )}
 
-      <div className="relative flex justify-center px-6 pb-28 pt-10 sm:pb-36">
-        <GalaButton href="#tarification">{a.joinCTA || "JOIN THE 2026 EDITION"}</GalaButton>
-      </div>
+      {reduceMotion && (
+        <div className="relative flex justify-center px-6 pb-28 pt-10 sm:pb-36">
+          <GalaButton href="#tarification">{a.joinCTA || "JOIN THE 2026 EDITION"}</GalaButton>
+        </div>
+      )}
     </section>
   );
 }
@@ -126,137 +142,214 @@ function Stats({ stats }: { stats: Edition["stats"] }) {
   );
 }
 
-/** Each digit on its own engraved drum, rolling to the new year */
-function Odometer({ value, className = "" }: { value: string; className?: string }) {
-  return (
-    <div className={`flex font-cinzel font-semibold leading-none ${className}`} role="img" aria-label={value}>
-      {value.split("").map((ch, i) => (
-        <Drum key={i} digit={Number(ch)} delay={i * 0.07} />
-      ))}
-    </div>
-  );
-}
+/* ───────────────────────────── The film ───────────────────────────── */
 
-function Drum({ digit, delay }: { digit: number; delay: number }) {
-  return (
-    <span className="relative inline-block h-[1.05em] overflow-hidden" aria-hidden="true">
-      <motion.span
-        className="flex flex-col"
-        initial={false}
-        animate={{ y: `${-digit * 1.05}em` }}
-        transition={{ duration: 1.2, delay, ease: GALA_EASE }}
-      >
-        {Array.from({ length: 10 }, (_, n) => (
-          <span key={n} className="block h-[1.05em] gala-engraved">
-            {n}
-          </span>
-        ))}
-      </motion.span>
-    </span>
-  );
-}
+const ROMAN = ["I", "II", "III", "IV", "V", "VI"];
 
-/* ───────────────────────────── The Archive ───────────────────────────── */
+function ChaptersFilm({ editions, chapters }: { editions: Edition[]; chapters: Chapter[] }) {
+  const { texts } = useLanguage();
+  const a = texts.archives || {};
+  const y = texts.thisYear || {};
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const viewRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const dist = useRef(1);
+  const [height, setHeight] = useState<number | null>(null);
+  // Where each chapter sits along the film (0–1 of the scroll)
+  const [marks, setMarks] = useState<number[]>([]);
 
-function ArchiveEditions({ editions }: { editions: Edition[] }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [active, setActive] = useState(0);
-  const [progress, setProgress] = useState(0);
-  const n = editions.length;
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
-  useMotionValueEvent(scrollYProgress, "change", (v) => {
-    setProgress(v);
-    setActive(Math.min(n - 1, Math.max(0, Math.round(v * (n - 1)))));
+  useEffect(() => {
+    const measure = () => {
+      const track = trackRef.current;
+      const view = viewRef.current;
+      if (!track || !view) return;
+      const vw = view.clientWidth;
+      const d = Math.max(1, track.scrollWidth - vw);
+      dist.current = d;
+      setHeight(d + window.innerHeight);
+      const ms = [...track.querySelectorAll<HTMLElement>("[data-chapter]")].map((el) =>
+        Math.min(1, Math.max(0, (el.offsetLeft + el.offsetWidth / 2 - vw / 2) / d)),
+      );
+      setMarks(ms);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    if (trackRef.current) ro.observe(trackRef.current);
+    window.addEventListener("resize", measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, []);
+
+  const { scrollYProgress } = useScroll({ target: wrapRef, offset: ["start start", "end end"] });
+  const x = useTransform(scrollYProgress, (v) => -v * dist.current);
+  const [p, setP] = useState(0);
+  useMotionValueEvent(scrollYProgress, "change", setP);
+
+  const P = editions.length;
+  let current = 0;
+  marks.forEach((m, i) => {
+    if (p >= m - 0.04) current = i;
   });
-  const e = editions[active];
+  const railLabels = [...editions.map((e) => e.year), "2026"];
 
-  // The years beneath take you straight to an edition
   const goTo = (i: number) => {
-    const el = ref.current;
-    if (!el) return;
+    const el = wrapRef.current;
+    if (!el || marks[i] === undefined) return;
     const top = el.getBoundingClientRect().top + window.scrollY;
-    const travel = el.offsetHeight - window.innerHeight;
-    window.scrollTo({ top: top + (travel * i) / Math.max(1, n - 1) + 2, behavior: "smooth" });
+    window.scrollTo({ top: top + marks[i] * dist.current + 2, behavior: "smooth" });
   };
 
   return (
-    <div ref={ref} className="relative mt-10" style={{ height: `${n * 100}vh` }}>
-      <div className="sticky top-0 flex h-[100dvh] flex-col justify-center overflow-hidden px-6 pb-6 pt-20 sm:px-12 lg:pb-8">
-        <div className="mx-auto grid w-full max-w-6xl grid-cols-1 items-center gap-6 lg:grid-cols-12 lg:gap-14">
-          {/* The print */}
-          <div className="lg:order-2 lg:col-span-7">
-            {/* Sized by the screen's height as well as its width, so the whole print always shows */}
-            <div className="mx-auto w-full max-w-[calc((100dvh-330px)*1.5)] min-w-[260px] lg:mr-0 lg:max-w-[calc((100dvh-250px)*1.5)]">
-              <Print editions={editions} active={active} />
-            </div>
-          </div>
+    <div ref={wrapRef} className="relative" style={{ height: height ? `${height}px` : "600vh" }}>
+      {/* Menu links to the programme land on Chapter V */}
+      <div
+        id="piliers"
+        aria-hidden
+        className="pointer-events-none absolute left-0"
+        style={{ top: marks[P] !== undefined ? `${marks[P] * dist.current}px` : "70%" }}
+      />
 
-          {/* The edition */}
-          <div className="lg:order-1 lg:col-span-5">
-            <div className="flex items-end justify-between lg:block">
-              <Odometer value={e.year} className="text-[clamp(52px,min(7.5vw,15vh),128px)]" />
-              <span className="mb-2 text-[10.5px] font-semibold uppercase tracking-[0.34em] text-[var(--color-silver)] lg:mb-0 lg:mt-3 lg:block">
-                {String(active + 1).padStart(2, "0")} / {String(n).padStart(2, "0")}
+      <div ref={viewRef} className="sticky top-0 flex h-[100dvh] flex-col overflow-hidden pb-5 pt-[78px] lg:pb-7 lg:pt-24">
+        {/* Film edge: a fine perforation of silver along the top */}
+        <div aria-hidden className="mx-5 h-[6px] bg-[radial-gradient(circle,rgba(214,219,226,0.22)_1.4px,transparent_1.6px)] bg-[length:14px_6px] sm:mx-10" />
+
+        <div className="relative flex min-h-0 flex-1 items-center">
+          <motion.div ref={trackRef} style={{ x }} className="flex h-full items-center gap-[9vw] pl-6 pr-[12vw] will-change-transform sm:pl-12 lg:gap-[7vw] lg:pl-20">
+            {/* The title frame */}
+            <div className="w-[min(78vw,440px)] shrink-0">
+              <span className="text-[10.5px] font-semibold uppercase tracking-[0.34em] text-[var(--color-silver)]">
+                III · {a.label || "THE ARCHIVES"}
               </span>
+              <h2 className="mt-4 whitespace-pre-line font-cormorant text-[clamp(40px,5.2vw,76px)] font-medium leading-[0.98] text-[var(--color-cream)]">
+                {a.headline || "Every edition\nleaves a story."}
+              </h2>
+              {a.subheadline && <p className="mt-5 max-w-sm text-[14.5px] font-light leading-relaxed text-[var(--color-cream)]/70">{a.subheadline}</p>}
+              <p className="mt-8 flex items-center gap-3 text-[10.5px] font-semibold uppercase tracking-[0.3em] text-[var(--color-silver-light)]/80">
+                <span className="h-px w-10 bg-[var(--color-silver)]/60" /> Scroll
+              </p>
             </div>
-            <DrawnRule className="mt-3 lg:mt-5" />
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={e.year}
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.55, ease: GALA_EASE }}
-              >
-                <h3 className="mt-4 font-cormorant text-[clamp(24px,2.4vw,36px)] italic leading-tight text-[var(--color-cream)] lg:mt-6">
-                  {e.title}
-                </h3>
-                <p className="mt-2 line-clamp-3 text-[14px] font-light leading-relaxed text-[var(--color-cream)]/72 sm:text-[14.5px] lg:mt-3 lg:line-clamp-none">
-                  {e.story}
-                </p>
-                <div className="hidden sm:block">
-                  <Stats stats={e.stats} />
+
+            {/* The editions */}
+            {editions.map((e, i) => (
+              <article key={e.year} data-chapter className="shrink-0">
+                <div className="relative">
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute -top-[0.62em] left-[-0.04em] z-10 font-cinzel text-[clamp(64px,15vh,150px)] font-semibold leading-none gala-engraved"
+                  >
+                    {e.year}
+                  </span>
+                  <FilmPhoto src={e.image} alt={e.title} progress={scrollYProgress} center={marks[i] ?? 0} dist={dist} className="aspect-[3/2] w-[min(82vw,calc(44dvh*1.5))]" />
                 </div>
-              </motion.div>
-            </AnimatePresence>
-          </div>
+                <div className="mt-4 w-[min(82vw,calc(44dvh*1.5))]">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.32em] text-[var(--color-silver)]">
+                    Chapter {ROMAN[i]} · {e.year}
+                  </span>
+                  <h3 className="mt-1 font-cormorant text-[clamp(22px,2.2vw,32px)] italic leading-tight text-[var(--color-cream)]">{e.title}</h3>
+                  <div className="mt-2 flex flex-col gap-3 lg:flex-row lg:items-start lg:gap-8">
+                    <p className="line-clamp-2 flex-1 text-[13.5px] font-light leading-relaxed text-[var(--color-cream)]/70">{e.story}</p>
+                    {e.stats.length > 0 && (
+                      <dl className="hidden shrink-0 gap-5 sm:flex">
+                        {e.stats.slice(0, 2).map((st) => (
+                          <div key={st.label}>
+                            <dd className="font-cinzel text-[22px] font-semibold leading-none gala-engraved">
+                              <CountUp value={st.value} />
+                            </dd>
+                            <dt className="mt-1 text-[8.5px] font-semibold uppercase tracking-[0.2em] text-[var(--color-cream)]/50">{st.label}</dt>
+                          </div>
+                        ))}
+                      </dl>
+                    )}
+                  </div>
+                </div>
+              </article>
+            ))}
+
+            {/* Chapter V: this year */}
+            <div data-chapter className="w-[min(80vw,460px)] shrink-0">
+              <span className="text-[10.5px] font-semibold uppercase tracking-[0.34em] text-[var(--color-silver)]">
+                Chapter {ROMAN[P]} · 2026 · {y.label || "This year"}
+              </span>
+              <h2 className="mt-4 whitespace-pre-line font-cormorant text-[clamp(40px,5vw,72px)] font-medium leading-[0.98] text-[var(--color-cream)]">
+                {y.headline || "This is\nGALA 2026."}
+              </h2>
+              {y.intro && <p className="mt-5 max-w-sm text-[14.5px] font-light leading-relaxed text-[var(--color-cream)]/70">{y.intro}</p>}
+              <DrawnRule className="mt-8 max-w-[220px]" />
+            </div>
+
+            {/* This year's four acts */}
+            {chapters.map((c, i) => (
+              <article key={c.id || i} className="shrink-0">
+                <div className="relative">
+                  <FilmPhoto
+                    src={CHAPTER_IMAGES[c.id] || CHAPTER_IMAGES.people}
+                    alt={c.title}
+                    progress={scrollYProgress}
+                    center={marks[P] ?? 0.7}
+                    dist={dist}
+                    className="aspect-[4/3] w-[min(78vw,calc(42dvh*4/3))]"
+                  />
+                  <span className="pointer-events-none absolute bottom-3 left-4 z-10 font-cinzel text-[clamp(48px,9vh,92px)] font-semibold leading-none gala-engraved drop-shadow-[0_6px_18px_rgba(10,1,6,0.7)]">
+                    {NUMERALS[i]}
+                  </span>
+                </div>
+                <div className="mt-4 w-[min(78vw,calc(42dvh*4/3))]">
+                  <span className="font-cormorant text-[16px] italic text-[var(--color-silver-light)]">{c.subtitle}</span>
+                  <h3 className="mt-0.5 font-cinzel text-[clamp(20px,2vw,28px)] font-normal leading-tight text-[var(--color-cream)]">{c.title}</h3>
+                  <p className="mt-2 line-clamp-3 text-[13.5px] font-light leading-relaxed text-[var(--color-cream)]/70">{c.description}</p>
+                </div>
+              </article>
+            ))}
+
+            {/* The last frame */}
+            <div className="w-[min(78vw,400px)] shrink-0">
+              <GalaStar className="w-10 text-[var(--color-silver-light)]" />
+              <p className="mt-6 font-cormorant text-[clamp(30px,3.4vw,48px)] italic leading-tight text-[var(--color-cream)]">
+                The next chapter is yours.
+              </p>
+              <div className="mt-8">
+                <GalaButton href="#tarification">{a.joinCTA || "JOIN THE 2026 EDITION"}</GalaButton>
+              </div>
+            </div>
+          </motion.div>
         </div>
 
-        {/* The years, joined by a hairline that fills as you go */}
-        <nav aria-label="Editions" className="mx-auto mt-6 w-full max-w-6xl lg:mt-8">
-          <div className="relative">
+        {/* The chapter rail */}
+        <nav aria-label="Chapters" className="mx-5 mt-4 sm:mx-10 lg:mt-6">
+          <div className="relative h-8">
             <div className="absolute left-0 right-0 top-[5px] h-px bg-[var(--color-silver)]/15" />
             <div
               className="absolute left-0 top-[5px] h-px bg-[linear-gradient(90deg,var(--color-silver),var(--color-silver-light))]"
-              style={{ width: `${Math.min(100, progress * 100)}%` }}
+              style={{ width: `${Math.min(100, p * 100)}%` }}
             />
-            <ol className="relative flex justify-between">
-              {editions.map((ed, i) => (
-                <li key={ed.year}>
-                  <button
-                    type="button"
-                    onClick={() => goTo(i)}
-                    className={`group flex flex-col items-center gap-3 luxury-focus-ring ${i === 0 ? "items-start" : i === n - 1 ? "items-end" : ""}`}
-                    aria-current={i === active ? "step" : undefined}
-                  >
-                    <span
-                      className={`block h-[11px] w-[11px] rotate-45 border transition-all duration-700 ${
-                        i <= active
-                          ? "border-[var(--color-silver-light)] bg-[var(--color-silver-light)]"
-                          : "border-[var(--color-silver)]/40 bg-[#1d0210] group-hover:border-[var(--color-silver-light)]"
-                      }`}
-                    />
-                    <span
-                      className={`font-cinzel text-[11px] tracking-[0.24em] transition-opacity duration-700 ${
-                        i === active ? "opacity-100" : "opacity-40 group-hover:opacity-80"
-                      }`}
-                    >
-                      {ed.year}
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ol>
+            {railLabels.map((label, i) => {
+              const at = marks[i];
+              if (at === undefined) return null;
+              const reached = i <= current && p >= at - 0.04;
+              return (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => goTo(i)}
+                  aria-label={`Chapter ${ROMAN[i]}, ${label}`}
+                  aria-current={i === current ? "step" : undefined}
+                  className="group absolute top-0 flex -translate-x-1/2 flex-col items-center gap-2 luxury-focus-ring"
+                  style={{ left: `${Math.min(97, Math.max(3, at * 100))}%` }}
+                >
+                  <span
+                    className={`block h-[11px] w-[11px] rotate-45 border transition-colors duration-700 ${
+                      reached ? "border-[var(--color-silver-light)] bg-[var(--color-silver-light)]" : "border-[var(--color-silver)]/40 bg-[#1d0210] group-hover:border-[var(--color-silver-light)]"
+                    }`}
+                  />
+                  <span className={`whitespace-nowrap font-cinzel text-[10.5px] tracking-[0.2em] transition-opacity duration-700 ${i === current ? "opacity-100" : "opacity-45 group-hover:opacity-80"}`}>
+                    <span className="text-[var(--color-silver-light)]">{ROMAN[i]}</span>
+                    <span className="ml-1.5 hidden sm:inline">{label}</span>
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </nav>
       </div>
@@ -264,66 +357,29 @@ function ArchiveEditions({ editions }: { editions: Edition[] }) {
   );
 }
 
-/**
- * The print: a thin brushed-silver frame, a deep mat with a bevelled window,
- * a pane of glass. Each edition is unveiled over the one before (a slow wipe,
- * the photograph settling from a slight zoom), so the frame never empties.
- */
-function Print({ editions, active }: { editions: Edition[]; active: number }) {
+/** A photograph in the film: it drifts a little inside its frame as it passes */
+function FilmPhoto({
+  src,
+  alt,
+  progress,
+  center,
+  dist,
+  className = "",
+}: {
+  src: string;
+  alt: string;
+  progress: MotionValue<number>;
+  center: number;
+  dist: { current: number };
+  className?: string;
+}) {
+  const shift = useTransform(progress, (v) => (v - center) * dist.current * 0.08);
   return (
-    <figure className="relative">
-      {/* A soft rose bloom on the velvet behind the frame */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -inset-[12%] bg-[radial-gradient(closest-side,rgba(211,55,145,0.22),transparent)] blur-2xl"
-      />
-      {/* Frame */}
-      <div className="relative rounded-[3px] bg-[linear-gradient(135deg,#f5f7fa_0%,#a9afb9_22%,#eef0f4_46%,#868d98_70%,#dfe2e8_100%)] p-[3px] shadow-[0_50px_90px_-40px_rgba(6,0,4,1),0_18px_30px_-18px_rgba(6,0,4,0.9)] sm:p-[5px]">
-        {/* Mat */}
-        <div className="bg-[radial-gradient(120%_120%_at_30%_0%,#2a0619_0%,#1a0410_60%,#140309_100%)] p-[clamp(12px,2.4vw,34px)] shadow-[inset_0_1px_2px_rgba(0,0,0,0.8),inset_0_0_0_1px_rgba(255,255,255,0.04)]">
-          {/* Bevelled window: a hairline of light on the cut edge */}
-          <div className="relative aspect-[3/2] overflow-hidden shadow-[0_0_0_1px_rgba(226,230,238,0.55),0_0_0_2px_rgba(10,1,6,0.6)]">
-            {editions.map((ed, i) => (
-              <motion.div
-                key={ed.year}
-                className="absolute inset-0"
-                initial={false}
-                animate={{ clipPath: i <= active ? "inset(0% 0% 0% 0%)" : "inset(0% 0% 0% 100%)" }}
-                transition={{ duration: 1.1, ease: GALA_EASE }}
-                style={{ zIndex: i }}
-              >
-                <motion.div
-                  className="absolute inset-0"
-                  initial={false}
-                  animate={{ scale: i === active ? 1 : 1.06 }}
-                  transition={{ duration: 2.2, ease: GALA_EASE }}
-                >
-                  <Image
-                    src={ed.image}
-                    alt={ed.title}
-                    fill
-                    priority={i === 0}
-                    sizes="(max-width: 1024px) 92vw, 680px"
-                    className="object-cover"
-                  />
-                </motion.div>
-              </motion.div>
-            ))}
-            {/* Glass: a faint diagonal reflection and a vignette at the edges */}
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-0 z-20 bg-[linear-gradient(118deg,rgba(255,255,255,0.10)_0%,rgba(255,255,255,0.03)_28%,transparent_42%)] shadow-[inset_0_0_60px_rgba(10,1,6,0.45)]"
-            />
-          </div>
-        </div>
-      </div>
-      {/* The museum label */}
-      <figcaption className="mt-3 flex items-baseline justify-between gap-4 text-[10px] font-semibold uppercase tracking-[0.3em] text-[var(--color-silver)]/80">
-        <span>GALA · {editions[active].year}</span>
-        <span className="truncate font-cormorant text-[15px] normal-case italic tracking-normal text-[var(--color-cream)]/70">
-          {editions[active].title}
-        </span>
-      </figcaption>
-    </figure>
+    <div className={`relative overflow-hidden rounded-[4px] shadow-[0_40px_80px_-40px_rgba(6,0,4,1)] ${className}`}>
+      <motion.div style={{ x: shift }} className="absolute -inset-x-[12%] inset-y-0">
+        <Image src={src} alt={alt} fill sizes="(max-width: 1024px) 85vw, 720px" className="object-cover" />
+      </motion.div>
+      <div className="pointer-events-none absolute inset-0 rounded-[4px] ring-1 ring-inset ring-[var(--color-silver-light)]/30" />
+    </div>
   );
 }

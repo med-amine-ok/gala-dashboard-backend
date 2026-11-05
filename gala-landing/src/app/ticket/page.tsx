@@ -116,9 +116,16 @@ function PinnedInvitation({ t, hint }: { t: any; hint: string }) {
   );
 }
 
-/** The terms of the invitation: the pass, its price, when and where, the request */
+/**
+ * The terms of the invitation: the pass and its price, what it includes (each
+ * line with a silver check), when and where, and one clear request.
+ */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function InvitationTerms({ t, compact = false }: { t: any; compact?: boolean }) {
+  const { lang } = useLanguage();
+  const fr = lang === "fr";
+  const inclusions: string[] = t.inclusions || [];
+  const when = [t.date, t.venue].filter(Boolean).join(" · ");
   return (
     <>
       <motion.span
@@ -132,48 +139,57 @@ function InvitationTerms({ t, compact = false }: { t: any; compact?: boolean }) 
       </motion.span>
       <PriceTag price={t.price || "1,000 DA"} />
       <DrawnRule className={compact ? "mt-4" : "mt-6"} />
-      {t.description && (
-        <motion.p
-          initial={{ opacity: 0, y: 14 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 1, delay: 0.2, ease: GALA_EASE }}
-          className={`max-w-md font-light leading-relaxed text-[var(--color-cream)]/75 ${
-            compact ? "mt-4 text-[14px] [@media(max-height:680px)]:line-clamp-3" : "mt-6 text-[15px] sm:text-base"
-          }`}
-        >
-          {t.description}
-        </motion.p>
+
+      {inclusions.length > 0 ? (
+        <div className={compact ? "mt-4" : "mt-6"}>
+          <p className="text-[10.5px] font-semibold uppercase tracking-[0.3em] text-[var(--color-cream)]/60">
+            {fr ? "Votre pass comprend" : "Your pass includes"}
+          </p>
+          <ul className={`mt-3 ${compact ? "space-y-2 [@media(max-height:700px)]:space-y-1" : "space-y-3"}`}>
+            {inclusions.map((item, i) => (
+              <motion.li
+                key={item}
+                initial={{ opacity: 0, x: -10 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: "-30px" }}
+                transition={{ duration: 0.7, delay: 0.1 + i * 0.07, ease: GALA_EASE }}
+                className="flex items-start gap-3"
+              >
+                <span
+                  aria-hidden
+                  className="mt-[3px] flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full border border-[var(--color-silver-light)]/55 bg-[#3a0a28]/70"
+                >
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                    <path d="M2 5.2 4.1 7.2 8 3" stroke="#e8ecf2" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </span>
+                <span className={`leading-snug text-[var(--color-cream)]/85 ${compact ? "text-[13.5px]" : "text-[15px]"}`}>{item}</span>
+              </motion.li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        t.description && <p className="mt-6 max-w-md text-[15px] font-light leading-relaxed text-[var(--color-cream)]/75">{t.description}</p>
       )}
-      <dl className={`border-t border-[var(--color-silver)]/12 ${compact ? "mt-5" : "mt-8"}`}>
-        {[
-          { k: "Date", v: t.date },
-          { k: "Venue", v: t.venue },
-        ]
-          .filter((r) => r.v)
-          .map((r, i) => (
-            <motion.div
-              key={r.k}
-              initial={{ opacity: 0, x: -12 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: "-40px" }}
-              transition={{ duration: 0.9, delay: 0.25 + i * 0.1, ease: GALA_EASE }}
-              className={`flex items-center gap-4 border-b border-[var(--color-silver)]/12 ${compact ? "py-3" : "py-4"}`}
-            >
-              <GalaStar satellites={false} className="h-3.5 w-3.5 shrink-0 text-[var(--color-silver)]" />
-              <dt className="sr-only">{r.k}</dt>
-              <dd className="font-cormorant text-[20px] italic leading-snug text-[var(--color-cream)]/90">{r.v}</dd>
-            </motion.div>
-          ))}
-      </dl>
+
+      {when && (
+        <p className={`flex items-center gap-3 border-y border-[var(--color-silver)]/12 font-cormorant italic text-[var(--color-cream)]/90 ${compact ? "mt-4 py-2.5 text-[18px]" : "mt-8 py-4 text-[20px]"}`}>
+          <GalaStar satellites={false} className="h-3.5 w-3.5 shrink-0 text-[var(--color-silver)]" />
+          {when}
+        </p>
+      )}
+
       <motion.div
         initial={{ opacity: 0, y: 14 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-60px" }}
-        transition={{ duration: 1, delay: 0.45, ease: GALA_EASE }}
-        className={compact ? "mt-6" : "mt-10"}
+        transition={{ duration: 1, delay: 0.3, ease: GALA_EASE }}
+        className={compact ? "mt-5" : "mt-8"}
       >
         <GalaButton href="/register">{t.selectCTA || "REQUEST YOUR ADMISSION PASS"}</GalaButton>
+        <p className={`mt-3 text-[12.5px] text-[var(--color-cream)]/50 ${compact ? "[@media(max-height:700px)]:hidden" : ""}`}>
+          {fr ? "Environ 3 minutes · réponse par e-mail" : "About 3 minutes · we reply by email"}
+        </p>
       </motion.div>
     </>
   );

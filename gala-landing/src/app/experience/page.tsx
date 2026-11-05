@@ -15,15 +15,15 @@ import { useLanguage } from "../../context/LanguageContext";
 import { GALA_EASE, GalaFrame, RoomMasthead } from "../components/gala/Room";
 
 /* Web-sized photographs for each movement of the evening */
-const CHAPTER_IMAGES: Record<string, string> = {
+export const CHAPTER_IMAGES: Record<string, string> = {
   people: "/images/programme/people.jpg",
   companies: "/images/programme/companies.jpg",
   conversations: "/images/programme/conversations.jpg",
   experience: "/images/programme/experience.jpg",
 };
-const NUMERALS = ["I", "II", "III", "IV"];
+export const NUMERALS = ["I", "II", "III", "IV"];
 
-interface Chapter {
+export interface Chapter {
   id: string;
   number: string;
   title: string;
@@ -64,7 +64,7 @@ export default function ExperiencePillars() {
 }
 
 /** Reduced motion: the editorial index of the four movements */
-function MovementIndex() {
+export function MovementIndex() {
   const { texts } = useLanguage();
   const y = texts.thisYear || {};
   const chapters: Chapter[] = y.chapters || [];
@@ -241,7 +241,7 @@ function Movement({
 
 /* ───────────────────────────── The four doors ───────────────────────────── */
 
-const DOOR_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
+export const DOOR_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
 
 function ActsPanels({ chapters }: { chapters: Chapter[] }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -308,7 +308,7 @@ function ActsPanels({ chapters }: { chapters: Chapter[] }) {
   );
 }
 
-function Door({
+export function Door({
   chapter,
   index,
   open,

@@ -1,24 +1,16 @@
 "use client";
 
-import { useCallback, useRef } from "react";
-import * as THREE from "three";
-import {
-  motion,
-  useMotionValueEvent,
-  useReducedMotion,
-  useScroll,
-  useTransform,
-} from "framer-motion";
+import { useRef } from "react";
+import { motion, useReducedMotion, useScroll, useTransform, type MotionValue } from "framer-motion";
 import { useLanguage } from "../../context/LanguageContext";
-import { CountUp, DrawnRule, GALA_EASE, RoomMasthead } from "../components/gala/Room";
-import Stage3D, { type StageContext } from "../components/gala/Stage3D";
+import { CountUp, GALA_EASE } from "../components/gala/Room";
 
 /**
- * VI · THE HOSTS
- * The Vision & Innovation Club, presented like a house crest: their story on one
- * side, the club's seal on the other, then the figures — set inside a slow
- * constellation of silver points that gathers as a ring, swells into a sphere
- * and unwinds into a galaxy as you scroll past — and the three principles.
+ * VI · THE HOSTS — an editorial statement (after Still/Form's quiet spreads)
+ * The club's belief set as one large line whose words light up one by one as
+ * you read down the page; then the club's mark beside its story, the club's
+ * figures as large engraved numbers between hairlines, and its three
+ * principles as numbered lines. Few elements, a lot of air.
  */
 export default function AboutUsSection() {
   const { texts } = useLanguage();
@@ -27,109 +19,147 @@ export default function AboutUsSection() {
   const pillars: { title: string; desc: string }[] = s.pillars || [];
 
   return (
-    <section className="relative w-full overflow-hidden bg-transparent px-6 py-28 text-[var(--color-cream)] sm:px-12 sm:py-36 font-sans">
+    <section className="relative w-full overflow-x-clip bg-transparent px-6 pb-28 pt-28 text-[var(--color-cream)] sm:px-12 sm:pb-36 sm:pt-40 font-sans">
       <div className="relative z-10 mx-auto max-w-6xl">
-        <RoomMasthead numeral="VI" label={s.roomLabel || "THE HOSTS"} headline={s.headline || "The story behind the night."} />
+        {/* The room */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 1, ease: GALA_EASE }}
+          className="flex items-center gap-4"
+        >
+          <span className="font-cinzel text-[12px] font-semibold tracking-[0.3em] gala-engraved">VI</span>
+          <span className="h-px w-12 bg-[var(--color-silver)]/50" />
+          <span className="text-[10.5px] font-semibold uppercase tracking-[0.34em] text-[var(--color-silver)]">{s.roomLabel || "THE HOSTS"}</span>
+        </motion.div>
 
-        {/* The belief, set large, beside the club's seal */}
-        <div className="mt-20 grid grid-cols-1 items-center gap-16 sm:mt-28 lg:grid-cols-12 lg:gap-12">
+        {/* The belief, lit word by word */}
+        {s.lead && <LitStatement text={s.lead} />}
+
+        <div className="mt-20 h-px w-full bg-[linear-gradient(90deg,transparent,rgba(214,219,226,0.28),transparent)] sm:mt-28" />
+
+        {/* The club and its story */}
+        <div className="mt-16 grid grid-cols-1 items-center gap-14 sm:mt-20 lg:grid-cols-12 lg:gap-16">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 1.3, ease: GALA_EASE }}
+            className="flex justify-center lg:col-span-5 lg:justify-start"
+          >
+            <ClubCrest />
+          </motion.div>
           <div className="lg:col-span-7">
-            {s.lead && (
-              <motion.blockquote
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 1.2, ease: GALA_EASE }}
-                className="relative"
-              >
-                <span
-                  aria-hidden="true"
-                  className="absolute -left-2 -top-14 font-cormorant text-[140px] leading-none gala-engraved opacity-60 sm:-left-8 sm:-top-20 sm:text-[200px]"
-                >
-                  “
-                </span>
-                <p className="relative whitespace-pre-line font-cormorant text-[clamp(28px,3.6vw,52px)] italic leading-[1.12] text-[var(--color-cream)]">
-                  {s.lead}
-                </p>
-              </motion.blockquote>
-            )}
-            <DrawnRule className="mt-10 max-w-sm" />
-            <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8">
+            <h2 className="font-cormorant text-[clamp(28px,3.2vw,44px)] italic leading-tight text-[var(--color-cream)]">
+              {(s.headline || "The story behind the night.").replace(/\n/g, " ")}
+            </h2>
+            <div className="mt-6 space-y-5">
               {[s.paragraph1, s.paragraph2].filter(Boolean).map((p: string, i: number) => (
                 <motion.p
                   key={i}
                   initial={{ opacity: 0, y: 14 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "-60px" }}
-                  transition={{ duration: 1, delay: 0.15 + i * 0.12, ease: GALA_EASE }}
-                  className="text-[14.5px] font-light leading-relaxed text-[var(--color-cream)]/72"
+                  transition={{ duration: 1, delay: 0.1 + i * 0.12, ease: GALA_EASE }}
+                  className="max-w-xl text-[15px] font-light leading-relaxed text-[var(--color-cream)]/72"
                 >
                   {p}
                 </motion.p>
               ))}
             </div>
           </div>
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.94 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true, margin: "-60px" }}
-            transition={{ duration: 1.4, ease: GALA_EASE }}
-            className="flex justify-center lg:col-span-5"
-          >
-            <ClubCrest />
-          </motion.div>
         </div>
 
-        {/* The figures, at display size across the room */}
+        {/* The figures */}
         {stats.length > 0 && (
-          <Constellation>
-          <dl className="relative z-10 grid grid-cols-3 border-y border-[var(--color-silver)]/15">
+          <dl className="mt-24 grid grid-cols-1 border-y border-[var(--color-silver)]/14 sm:mt-28 sm:grid-cols-3">
             {stats.map((st, i) => (
               <motion.div
                 key={st.label}
-                initial={{ opacity: 0, y: 24 }}
+                initial={{ opacity: 0, y: 22 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-60px" }}
                 transition={{ duration: 1.1, delay: i * 0.1, ease: GALA_EASE }}
-                className={`flex flex-col items-center gap-3 px-1 py-8 text-center sm:py-12 ${i > 0 ? "border-l border-[var(--color-silver)]/12" : ""}`}
+                className={`flex items-baseline justify-between gap-6 py-7 sm:flex-col sm:items-start sm:justify-start sm:px-8 sm:py-12 ${
+                  i > 0 ? "border-t border-[var(--color-silver)]/10 sm:border-l sm:border-t-0" : "sm:pl-0"
+                }`}
               >
-                <dd className="font-cinzel text-[clamp(34px,8.5vw,128px)] font-semibold leading-none gala-engraved">
+                <dd className="order-2 font-cinzel text-[clamp(44px,6.5vw,104px)] font-semibold leading-none gala-engraved sm:order-1">
                   <CountUp value={st.value} />
                 </dd>
-                <dt className="text-[8.5px] font-semibold uppercase leading-snug tracking-[0.18em] text-[var(--color-cream)]/60 sm:text-[11px] sm:tracking-[0.3em]">
-                  {st.label}
-                </dt>
+                <dt className="order-1 text-[10.5px] font-semibold uppercase tracking-[0.26em] text-[var(--color-cream)]/60 sm:order-2 sm:mt-4">{st.label}</dt>
               </motion.div>
             ))}
           </dl>
-          </Constellation>
         )}
 
-        {/* The three principles */}
+        {/* The principles */}
         {pillars.length > 0 && (
-          <ol className="mt-20 grid grid-cols-1 gap-14 sm:mt-24 md:grid-cols-3 md:gap-10">
+          <ol className="mt-20 sm:mt-28">
             {pillars.map((p, i) => (
               <motion.li
                 key={p.title}
-                initial={{ opacity: 0, y: 18 }}
+                initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 1, delay: i * 0.12, ease: GALA_EASE }}
-                className="relative"
+                viewport={{ once: true, margin: "-40px" }}
+                transition={{ duration: 0.9, delay: i * 0.1, ease: GALA_EASE }}
+                className="group relative grid grid-cols-[auto_1fr] gap-x-6 border-t border-[var(--color-silver)]/12 py-8 last:border-b sm:grid-cols-[90px_1fr_1.2fr] sm:gap-x-10 sm:py-10"
               >
-                <span className="block font-cinzel text-[56px] font-semibold leading-none gala-engraved opacity-90">
-                  {["I", "II", "III"][i]}
-                </span>
-                <DrawnRule className="mt-5" />
-                <h3 className="mt-5 font-cormorant text-[28px] italic leading-tight text-[var(--color-cream)]">{p.title}</h3>
-                <p className="mt-3 text-[14.5px] font-light leading-relaxed text-[var(--color-cream)]/70">{p.desc}</p>
+                {/* A line of silver that draws along the row on hover */}
+                <span
+                  aria-hidden
+                  className="absolute -top-px left-0 h-px w-0 bg-[linear-gradient(90deg,var(--color-silver-light),transparent)] transition-[width] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:w-full"
+                />
+                <span className="font-cinzel text-[13px] tracking-[0.24em] text-[var(--color-silver)]">{String(i + 1).padStart(2, "0")}</span>
+                <h3 className="font-cormorant text-[clamp(26px,2.8vw,40px)] italic leading-tight text-[var(--color-cream)] transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-1.5">
+                  {p.title}
+                </h3>
+                <p className="col-span-2 mt-3 max-w-lg text-[14.5px] font-light leading-relaxed text-[var(--color-cream)]/68 sm:col-span-1 sm:mt-1.5">{p.desc}</p>
               </motion.li>
             ))}
           </ol>
         )}
       </div>
     </section>
+  );
+}
+
+/** One large line whose words come into the light as you read down the page */
+function LitStatement({ text }: { text: string }) {
+  const ref = useRef<HTMLParagraphElement>(null);
+  const reduce = useReducedMotion();
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start 85%", "end 50%"] });
+  const lines = text.split("\n");
+  const total = Math.max(1, text.split(/\s+/).filter(Boolean).length);
+  let n = 0;
+  return (
+    <p ref={ref} className="mt-10 max-w-5xl font-cormorant text-[clamp(34px,5.4vw,82px)] font-medium leading-[1.06] text-[var(--color-cream)] sm:mt-14">
+      {lines.map((line, li) => (
+        <span key={li} className="block">
+          {line
+            .split(/\s+/)
+            .filter(Boolean)
+            .map((w, wi) => {
+              const i = n++;
+              return reduce ? (
+                <span key={wi}>{w} </span>
+              ) : (
+                <Word key={wi} word={w} progress={scrollYProgress} from={i / total} to={(i + 1) / total} />
+              );
+            })}
+        </span>
+      ))}
+    </p>
+  );
+}
+
+function Word({ word, progress, from, to }: { word: string; progress: MotionValue<number>; from: number; to: number }) {
+  const opacity = useTransform(progress, [from, to], [0.16, 1]);
+  return (
+    <motion.span style={{ opacity }} className="inline-block pr-[0.26em]">
+      {word}
+    </motion.span>
   );
 }
 
@@ -163,109 +193,4 @@ function ClubCrest() {
       </span>
     </div>
   );
-}
-
-/* ───────────────────────────── The constellation ───────────────────────────── */
-
-function Constellation({ children }: { children: React.ReactNode }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const progress = useRef(0);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
-  useMotionValueEvent(scrollYProgress, "change", (v) => (progress.current = v));
-  const setup = useCallback((ctx: StageContext) => buildConstellation(ctx, progress), []);
-  return (
-    <div ref={ref} className="relative mt-16 py-20 sm:mt-20 sm:py-28">
-      <Stage3D setup={setup} className="absolute inset-x-[-10vw] inset-y-0 [mask-image:radial-gradient(ellipse_at_center,#000_45%,transparent_75%)]" />
-      {children}
-    </div>
-  );
-}
-
-/** Points that morph ring → sphere → galaxy with scroll, turning slowly */
-function buildConstellation(ctx: StageContext, progress: { current: number }) {
-  const { scene, camera, isMobile } = ctx;
-  const N = isMobile ? 1400 : 2600;
-  const ring = new Float32Array(N * 3);
-  const sphere = new Float32Array(N * 3);
-  const galaxy = new Float32Array(N * 3);
-  const colors = new Float32Array(N * 3);
-  const silver = new THREE.Color(0xe8ecf4);
-  const rose = new THREE.Color(0xd33791);
-  const c = new THREE.Color();
-  for (let i = 0; i < N; i++) {
-    const r = Math.random();
-    // A ring with a little thickness
-    const a = (i / N) * Math.PI * 2 * 3 + Math.random() * 0.2;
-    const rr = 3.2 + (Math.random() - 0.5) * 0.35;
-    ring.set([Math.cos(a) * rr, (Math.random() - 0.5) * 0.18, Math.sin(a) * rr], i * 3);
-    // A sphere (Fibonacci shell)
-    const y = 1 - (2 * (i + 0.5)) / N;
-    const sr = Math.sqrt(1 - y * y);
-    const phi = i * 2.39996;
-    const R = 2.5 + (Math.random() - 0.5) * 0.1;
-    sphere.set([Math.cos(phi) * sr * R, y * R, Math.sin(phi) * sr * R], i * 3);
-    // A three-armed spiral galaxy
-    const arm = (i % 3) * ((Math.PI * 2) / 3);
-    const d = Math.pow(r, 0.6) * 4.6;
-    const g = arm + d * 1.1;
-    const sc = (1 - r) * 0.5 + 0.12;
-    galaxy.set(
-      [Math.cos(g) * d + (Math.random() - 0.5) * sc, (Math.random() - 0.5) * sc * 0.6, Math.sin(g) * d + (Math.random() - 0.5) * sc],
-      i * 3,
-    );
-    c.copy(silver).lerp(rose, Math.random() < 0.22 ? 0.85 : Math.random() * 0.15);
-    colors.set([c.r, c.g, c.b], i * 3);
-  }
-  const pos = new Float32Array(ring);
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-  geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-  const sprite = (() => {
-    const cv = document.createElement("canvas");
-    cv.width = cv.height = 32;
-    const g2 = cv.getContext("2d")!;
-    const grad = g2.createRadialGradient(16, 16, 0, 16, 16, 16);
-    grad.addColorStop(0, "rgba(255,255,255,1)");
-    grad.addColorStop(0.3, "rgba(255,255,255,0.4)");
-    grad.addColorStop(1, "rgba(255,255,255,0)");
-    g2.fillStyle = grad;
-    g2.fillRect(0, 0, 32, 32);
-    return new THREE.CanvasTexture(cv);
-  })();
-  const mat = new THREE.PointsMaterial({
-    size: isMobile ? 0.1 : 0.09,
-    map: sprite,
-    vertexColors: true,
-    transparent: true,
-    opacity: 0.75,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending,
-  });
-  const points = new THREE.Points(geo, mat);
-  points.frustumCulled = false;
-  scene.add(points);
-
-  camera.position.set(0, 2, 7.5);
-  camera.lookAt(0, 0, 0);
-
-  let p = 0;
-  return {
-    update(dt: number, t: number) {
-      p = THREE.MathUtils.damp(p, progress.current, 3, dt);
-      // 0 → 0.5: ring to sphere; 0.5 → 1: sphere to galaxy
-      const k1 = THREE.MathUtils.smoothstep(p, 0.15, 0.45);
-      const k2 = THREE.MathUtils.smoothstep(p, 0.55, 0.85);
-      for (let i = 0; i < N * 3; i++) {
-        const ab = ring[i] + (sphere[i] - ring[i]) * k1;
-        pos[i] = ab + (galaxy[i] - ab) * k2;
-      }
-      geo.attributes.position.needsUpdate = true;
-      points.rotation.y = t * 0.06 + ctx.pointer.x * 0.5;
-      points.rotation.x = 0.15 + ctx.pointer.y * 0.25 + k2 * 0.25;
-      mat.opacity = 0.9 + 0.1 * Math.sin(t * 0.8);
-    },
-    resize(w: number) {
-      camera.position.z = w < 700 ? 10 : 7.5;
-    },
-  };
 }

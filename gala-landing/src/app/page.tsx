@@ -2,7 +2,6 @@
 
 import NavBar from "./components/NavBar";
 import Accueil from "./accueil/page";
-import ExperiencePillars from "./experience/page";
 import Historique from "./historique/page";
 import Pricing from "./ticket/page";
 import Apropos from "./apropos/page";
@@ -34,16 +33,11 @@ export default function Home() {
         {/* I & II — THE ENTRANCE (HERO) & THE MANIFESTO */}
         <Accueil />
 
-        {/* III — THE GALLERY (ARCHIVES) */}
+        {/* III — THE CHAPTERS: past editions and this year's programme, one story */}
         <section id="historique" className="relative">
           {/* Hand-off: the entrance's dark hall dissolves into the enfilade */}
           <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[45vh] bg-gradient-to-b from-[#2E061E]/70 via-[#2E061E]/30 to-transparent" />
           <Historique />
-        </section>
-
-        {/* IV — THE PROGRAMME (GALA 2026) */}
-        <section id="piliers">
-          <ExperiencePillars />
         </section>
 
         {/* V — THE INVITATION */}
