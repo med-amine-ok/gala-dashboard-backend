@@ -1,11 +1,35 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
+import * as THREE from "three";
 import Image from "next/image";
-import { motion, useMotionValueEvent, useReducedMotion, useScroll, useTransform, type MotionValue } from "framer-motion";
-import { CHAPTER_IMAGES, MovementIndex, NUMERALS, type Chapter } from "../experience/page";
+import {
+  AnimatePresence,
+  motion,
+  useMotionValueEvent,
+  useReducedMotion,
+  useScroll,
+} from "framer-motion";
+import {
+  CHAPTER_IMAGES,
+  MovementIndex,
+  NUMERALS,
+  type Chapter,
+} from "../experience/page";
 import { useLanguage } from "../../context/LanguageContext";
-import { CountUp, DrawnRule, GALA_EASE, GalaButton, GalaFrame, GalaStar, RoomMasthead } from "../components/gala/Room";
+import {
+  CountUp,
+  DrawnRule,
+  GALA_EASE,
+  GalaButton,
+  GalaFrame,
+  RoomMasthead,
+} from "../components/gala/Room";
+import Stage3D, {
+  optimisedImage,
+  stageDust,
+  type StageContext,
+} from "../components/gala/Stage3D";
 
 const EDITION_IMAGES: Record<string, string> = {
   "2017": "/images/lowla.png",
@@ -25,13 +49,13 @@ interface Edition {
 }
 
 /**
- * III · THE CHAPTERS — a horizontal film
- * The past editions and this year's programme as one strip of film that your
- * scrolling draws sideways across the room: a title frame, then each edition
- * (its year engraved large over its photograph, its name, story and figures),
- * then Chapter V, 2026, and this year's four acts, and a last frame inviting
- * you to join. Each photograph drifts a little inside its frame as it passes
- * (parallax); a rail beneath marks the chapters and takes you to any of them.
+ * III · THE CHAPTERS — the reel
+ * Real 3D (three.js): the past editions and this year's four acts hang on a
+ * great curved wall around you, like the inside of a panorama, mirrored softly
+ * in a dark glossy floor. Scrolling turns the reel; each photograph stays a
+ * simple flat print, hung on the arc facing you. The words for
+ * the photograph in front of you roll in beneath it, and a rail of chapters
+ * (I 2017 … V 2026) shows where you are and takes you to any of them.
  * Reduced motion: the editions as an editorial column, then the four acts.
  */
 export default function ArchivesSection() {
@@ -56,14 +80,13 @@ export default function ArchivesSection() {
     <section className="relative w-full bg-transparent pt-16 text-[var(--color-cream)] sm:pt-24">
       {reduceMotion && (
         <div className="px-6 sm:px-12">
-        <RoomMasthead
-          numeral="III"
-          label="THE CHAPTERS"
-          headline={a.headline || "Every edition leaves a story."}
-          intro={a.subheadline}
-        />
+          <RoomMasthead
+            numeral="III"
+            label="THE CHAPTERS"
+            headline={a.headline || "Every edition leaves a story."}
+            intro={a.subheadline}
+          />
         </div>
-
       )}
       {reduceMotion ? (
         <>
@@ -73,12 +96,14 @@ export default function ArchivesSection() {
           </div>
         </>
       ) : (
-        <ChaptersFilm editions={editions} chapters={chapters} />
+        <ChaptersReel editions={editions} chapters={chapters} />
       )}
 
       {reduceMotion && (
         <div className="relative flex justify-center px-6 pb-28 pt-10 sm:pb-36">
-          <GalaButton href="#tarification">{a.joinCTA || "JOIN THE 2026 EDITION"}</GalaButton>
+          <GalaButton href="#tarification">
+            {a.joinCTA || "JOIN THE 2026 EDITION"}
+          </GalaButton>
         </div>
       )}
     </section>
@@ -98,14 +123,20 @@ function EditionColumn({ editions }: { editions: Edition[] }) {
           transition={{ duration: 1.1, ease: GALA_EASE }}
         >
           <div className="flex items-end justify-between">
-            <span className="font-cinzel text-[clamp(72px,22vw,120px)] font-semibold leading-[0.85] gala-engraved">{e.year}</span>
+            <span className="font-cinzel text-[clamp(72px,22vw,120px)] font-semibold leading-[0.85] gala-engraved">
+              {e.year}
+            </span>
             <span className="mb-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-[var(--color-silver)]">
-              {String(i + 1).padStart(2, "0")} / {String(editions.length).padStart(2, "0")}
+              {String(i + 1).padStart(2, "0")} /{" "}
+              {String(editions.length).padStart(2, "0")}
             </span>
           </div>
           <DrawnRule className="mt-3" />
           <GalaFrame className="mt-6">
-            <div data-gala-media className="relative aspect-[3/2] overflow-hidden">
+            <div
+              data-gala-media
+              className="relative aspect-[3/2] overflow-hidden"
+            >
               <Image
                 src={e.image}
                 alt={e.title}
@@ -115,8 +146,12 @@ function EditionColumn({ editions }: { editions: Edition[] }) {
               />
             </div>
           </GalaFrame>
-          <h3 className="mt-6 font-cormorant text-[28px] italic leading-tight text-[var(--color-cream)]">{e.title}</h3>
-          <p className="mt-3 text-[15px] font-light leading-relaxed text-[var(--color-cream)]/72">{e.story}</p>
+          <h3 className="mt-6 font-cormorant text-[28px] italic leading-tight text-[var(--color-cream)]">
+            {e.title}
+          </h3>
+          <p className="mt-3 text-[15px] font-light leading-relaxed text-[var(--color-cream)]/72">
+            {e.story}
+          </p>
           <Stats stats={e.stats} />
         </motion.li>
       ))}
@@ -129,7 +164,10 @@ function Stats({ stats }: { stats: Edition["stats"] }) {
   return (
     <dl className="mt-7 grid grid-cols-3 border-t border-[var(--color-silver)]/15">
       {stats.map((s, i) => (
-        <div key={s.label} className={`pt-4 ${i > 0 ? "border-l border-[var(--color-silver)]/12 pl-4" : ""}`}>
+        <div
+          key={s.label}
+          className={`pt-4 ${i > 0 ? "border-l border-[var(--color-silver)]/12 pl-4" : ""}`}
+        >
           <dd className="font-cinzel text-[26px] font-semibold leading-none gala-engraved sm:text-[32px]">
             <CountUp value={s.value} />
           </dd>
@@ -146,240 +184,419 @@ function Stats({ stats }: { stats: Edition["stats"] }) {
 
 const ROMAN = ["I", "II", "III", "IV", "V", "VI"];
 
-function ChaptersFilm({ editions, chapters }: { editions: Edition[]; chapters: Chapter[] }) {
+type ReelItem =
+  | { kind: "edition"; src: string; edition: Edition; chapter: number }
+  | { kind: "act"; src: string; act: Chapter; index: number; chapter: number };
+
+function ChaptersReel({
+  editions,
+  chapters,
+}: {
+  editions: Edition[];
+  chapters: Chapter[];
+}) {
   const { texts } = useLanguage();
   const a = texts.archives || {};
   const y = texts.thisYear || {};
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const viewRef = useRef<HTMLDivElement>(null);
-  const trackRef = useRef<HTMLDivElement>(null);
-  const dist = useRef(1);
-  const [height, setHeight] = useState<number | null>(null);
-  // Where each chapter sits along the film (0–1 of the scroll)
-  const [marks, setMarks] = useState<number[]>([]);
-
-  useEffect(() => {
-    const measure = () => {
-      const track = trackRef.current;
-      const view = viewRef.current;
-      if (!track || !view) return;
-      const vw = view.clientWidth;
-      const d = Math.max(1, track.scrollWidth - vw);
-      dist.current = d;
-      setHeight(d + window.innerHeight);
-      const ms = [...track.querySelectorAll<HTMLElement>("[data-chapter]")].map((el) =>
-        Math.min(1, Math.max(0, (el.offsetLeft + el.offsetWidth / 2 - vw / 2) / d)),
-      );
-      setMarks(ms);
-    };
-    measure();
-    const ro = new ResizeObserver(measure);
-    if (trackRef.current) ro.observe(trackRef.current);
-    window.addEventListener("resize", measure);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener("resize", measure);
-    };
-  }, []);
-
-  const { scrollYProgress } = useScroll({ target: wrapRef, offset: ["start start", "end end"] });
-  const x = useTransform(scrollYProgress, (v) => -v * dist.current);
-  const [p, setP] = useState(0);
-  useMotionValueEvent(scrollYProgress, "change", setP);
-
+  const ref = useRef<HTMLDivElement>(null);
+  const progress = useRef(0);
   const P = editions.length;
-  let current = 0;
-  marks.forEach((m, i) => {
-    if (p >= m - 0.04) current = i;
+  const items: ReelItem[] = [
+    ...editions.map((e, i) => ({
+      kind: "edition" as const,
+      src: e.image,
+      edition: e,
+      chapter: i,
+    })),
+    ...chapters.map((c, i) => ({
+      kind: "act" as const,
+      src: CHAPTER_IMAGES[c.id] || CHAPTER_IMAGES.people,
+      act: c,
+      index: i,
+      chapter: P,
+    })),
+  ];
+  const N = items.length;
+
+  const [active, setActive] = useState(0);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start start", "end end"],
   });
-  const railLabels = [...editions.map((e) => e.year), "2026"];
+  useMotionValueEvent(scrollYProgress, "change", (v) => {
+    progress.current = v;
+    setActive(Math.min(N - 1, Math.max(0, Math.round(v * (N - 1)))));
+  });
+  // The reel is built once; its photographs never change
+  const setup = useCallback(
+    (ctx: StageContext) =>
+      buildReel(
+        ctx,
+        items.map((it) => it.src),
+        progress,
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
 
   const goTo = (i: number) => {
-    const el = wrapRef.current;
-    if (!el || marks[i] === undefined) return;
+    const el = ref.current;
+    if (!el) return;
     const top = el.getBoundingClientRect().top + window.scrollY;
-    window.scrollTo({ top: top + marks[i] * dist.current + 2, behavior: "smooth" });
+    window.scrollTo({
+      top: top + ((el.offsetHeight - window.innerHeight) * i) / (N - 1) + 2,
+      behavior: "smooth",
+    });
   };
 
+  const it = items[active];
+  const chapterNow = it.chapter;
+  const rail = [...editions.map((e) => e.year), "2026"];
+
   return (
-    <div ref={wrapRef} className="relative" style={{ height: height ? `${height}px` : "600vh" }}>
-      {/* Menu links to the programme land on Chapter V */}
+    <>
       <div
-        id="piliers"
-        aria-hidden
-        className="pointer-events-none absolute left-0"
-        style={{ top: marks[P] !== undefined ? `${marks[P] * dist.current}px` : "70%" }}
-      />
+        ref={ref}
+        className="relative"
+        style={{ height: `${N * 70 + 30}vh` }}
+      >
+        {/* Menu links to the programme land on Chapter V */}
+        <div
+          id="piliers"
+          aria-hidden
+          className="pointer-events-none absolute left-0"
+          style={{ top: `calc((100% - 100vh) * ${P / Math.max(1, N - 1)})` }}
+        />
 
-      <div ref={viewRef} className="sticky top-0 flex h-[100dvh] flex-col overflow-hidden pb-5 pt-[78px] lg:pb-7 lg:pt-24">
-        {/* Film edge: a fine perforation of silver along the top */}
-        <div aria-hidden className="mx-5 h-[6px] bg-[radial-gradient(circle,rgba(214,219,226,0.22)_1.4px,transparent_1.6px)] bg-[length:14px_6px] sm:mx-10" />
+        <div className="sticky top-0 h-[100dvh] overflow-hidden">
+          <Stage3D setup={setup} className="absolute inset-0" />
 
-        <div className="relative flex min-h-0 flex-1 items-center">
-          <motion.div ref={trackRef} style={{ x }} className="flex h-full items-center gap-[9vw] pl-6 pr-[12vw] will-change-transform sm:pl-12 lg:gap-[7vw] lg:pl-20">
-            {/* The title frame */}
-            <div className="w-[min(78vw,440px)] shrink-0">
+          {/* The room's title, above the reel */}
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-10 px-5 pt-[84px] sm:px-10 lg:pt-24">
+            <div className="mx-auto flex max-w-7xl items-baseline justify-between gap-6">
               <span className="text-[10.5px] font-semibold uppercase tracking-[0.34em] text-[var(--color-silver)]">
                 III · {a.label || "THE ARCHIVES"}
               </span>
-              <h2 className="mt-4 whitespace-pre-line font-cormorant text-[clamp(40px,5.2vw,76px)] font-medium leading-[0.98] text-[var(--color-cream)]">
-                {a.headline || "Every edition\nleaves a story."}
-              </h2>
-              {a.subheadline && <p className="mt-5 max-w-sm text-[14.5px] font-light leading-relaxed text-[var(--color-cream)]/70">{a.subheadline}</p>}
-              <p className="mt-8 flex items-center gap-3 text-[10.5px] font-semibold uppercase tracking-[0.3em] text-[var(--color-silver-light)]/80">
-                <span className="h-px w-10 bg-[var(--color-silver)]/60" /> Scroll
-              </p>
+              <span className="hidden whitespace-pre-line text-right font-cormorant text-[clamp(18px,1.6vw,24px)] italic leading-tight text-[var(--color-cream)]/80 sm:block">
+                {(chapterNow < P ? a.headline : y.headline) || ""}
+              </span>
             </div>
+          </div>
 
-            {/* The editions */}
-            {editions.map((e, i) => (
-              <article key={e.year} data-chapter className="shrink-0">
-                <div className="relative">
-                  <span
-                    aria-hidden
-                    className="pointer-events-none absolute -top-[0.62em] left-[-0.04em] z-10 font-cinzel text-[clamp(64px,15vh,150px)] font-semibold leading-none gala-engraved"
-                  >
-                    {e.year}
-                  </span>
-                  <FilmPhoto src={e.image} alt={e.title} progress={scrollYProgress} center={marks[i] ?? 0} dist={dist} className="aspect-[3/2] w-[min(82vw,calc(44dvh*1.5))]" />
-                </div>
-                <div className="mt-4 w-[min(82vw,calc(44dvh*1.5))]">
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.32em] text-[var(--color-silver)]">
-                    Chapter {ROMAN[i]} · {e.year}
-                  </span>
-                  <h3 className="mt-1 font-cormorant text-[clamp(22px,2.2vw,32px)] italic leading-tight text-[var(--color-cream)]">{e.title}</h3>
-                  <div className="mt-2 flex flex-col gap-3 lg:flex-row lg:items-start lg:gap-8">
-                    <p className="line-clamp-2 flex-1 text-[13.5px] font-light leading-relaxed text-[var(--color-cream)]/70">{e.story}</p>
-                    {e.stats.length > 0 && (
-                      <dl className="hidden shrink-0 gap-5 sm:flex">
-                        {e.stats.slice(0, 2).map((st) => (
+          {/* A shade over the floor so the words read clearly */}
+        <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 z-[5] h-[46%] bg-[linear-gradient(0deg,rgba(24,2,14,0.92)_0%,rgba(24,2,14,0.6)_45%,transparent_100%)]" />
+        {/* The words for the photograph in front of you */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-[86px] z-10 px-5 sm:bottom-[96px] sm:px-10">
+            <div className="mx-auto max-w-7xl">
+              <AnimatePresence mode="wait">
+                <motion.div key={active} className="max-w-xl">
+                  <RollLine delay={0}>
+                    <span className="text-[10.5px] font-semibold uppercase tracking-[0.32em] text-[var(--color-silver)]">
+                      Chapter {ROMAN[chapterNow]} ·{" "}
+                      {it.kind === "edition"
+                        ? it.edition.year
+                        : `2026 · ${y.label || "This year"} · ${NUMERALS[it.index]}`}
+                    </span>
+                  </RollLine>
+                  <RollLine delay={0.06}>
+                    <h3 className="mt-2 font-cormorant text-[clamp(28px,3.4vw,52px)] italic leading-[1.05] text-[var(--color-cream)]">
+                      {it.kind === "edition" ? it.edition.title : it.act.title}
+                    </h3>
+                  </RollLine>
+                  <RollLine delay={0.12}>
+                    <p className="mt-2 line-clamp-2 text-[13.5px] font-light leading-relaxed text-[var(--color-cream)]/72 sm:text-[14.5px]">
+                      {it.kind === "edition"
+                        ? it.edition.story
+                        : it.act.description}
+                    </p>
+                  </RollLine>
+                  {it.kind === "edition" && it.edition.stats.length > 0 && (
+                    <RollLine delay={0.18}>
+                      <dl className="mt-3 hidden gap-8 sm:flex">
+                        {it.edition.stats.map((st) => (
                           <div key={st.label}>
-                            <dd className="font-cinzel text-[22px] font-semibold leading-none gala-engraved">
+                            <dd className="font-cinzel text-[24px] font-semibold leading-none gala-engraved">
                               <CountUp value={st.value} />
                             </dd>
-                            <dt className="mt-1 text-[8.5px] font-semibold uppercase tracking-[0.2em] text-[var(--color-cream)]/50">{st.label}</dt>
+                            <dt className="mt-1 text-[8.5px] font-semibold uppercase tracking-[0.2em] text-[var(--color-cream)]/55">
+                              {st.label}
+                            </dt>
                           </div>
                         ))}
                       </dl>
-                    )}
-                  </div>
-                </div>
-              </article>
-            ))}
-
-            {/* Chapter V: this year */}
-            <div data-chapter className="w-[min(80vw,460px)] shrink-0">
-              <span className="text-[10.5px] font-semibold uppercase tracking-[0.34em] text-[var(--color-silver)]">
-                Chapter {ROMAN[P]} · 2026 · {y.label || "This year"}
-              </span>
-              <h2 className="mt-4 whitespace-pre-line font-cormorant text-[clamp(40px,5vw,72px)] font-medium leading-[0.98] text-[var(--color-cream)]">
-                {y.headline || "This is\nGALA 2026."}
-              </h2>
-              {y.intro && <p className="mt-5 max-w-sm text-[14.5px] font-light leading-relaxed text-[var(--color-cream)]/70">{y.intro}</p>}
-              <DrawnRule className="mt-8 max-w-[220px]" />
+                    </RollLine>
+                  )}
+                </motion.div>
+              </AnimatePresence>
             </div>
-
-            {/* This year's four acts */}
-            {chapters.map((c, i) => (
-              <article key={c.id || i} className="shrink-0">
-                <div className="relative">
-                  <FilmPhoto
-                    src={CHAPTER_IMAGES[c.id] || CHAPTER_IMAGES.people}
-                    alt={c.title}
-                    progress={scrollYProgress}
-                    center={marks[P] ?? 0.7}
-                    dist={dist}
-                    className="aspect-[4/3] w-[min(78vw,calc(42dvh*4/3))]"
-                  />
-                  <span className="pointer-events-none absolute bottom-3 left-4 z-10 font-cinzel text-[clamp(48px,9vh,92px)] font-semibold leading-none gala-engraved drop-shadow-[0_6px_18px_rgba(10,1,6,0.7)]">
-                    {NUMERALS[i]}
-                  </span>
-                </div>
-                <div className="mt-4 w-[min(78vw,calc(42dvh*4/3))]">
-                  <span className="font-cormorant text-[16px] italic text-[var(--color-silver-light)]">{c.subtitle}</span>
-                  <h3 className="mt-0.5 font-cinzel text-[clamp(20px,2vw,28px)] font-normal leading-tight text-[var(--color-cream)]">{c.title}</h3>
-                  <p className="mt-2 line-clamp-3 text-[13.5px] font-light leading-relaxed text-[var(--color-cream)]/70">{c.description}</p>
-                </div>
-              </article>
-            ))}
-
-            {/* The last frame */}
-            <div className="w-[min(78vw,400px)] shrink-0">
-              <GalaStar className="w-10 text-[var(--color-silver-light)]" />
-              <p className="mt-6 font-cormorant text-[clamp(30px,3.4vw,48px)] italic leading-tight text-[var(--color-cream)]">
-                The next chapter is yours.
-              </p>
-              <div className="mt-8">
-                <GalaButton href="#tarification">{a.joinCTA || "JOIN THE 2026 EDITION"}</GalaButton>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* The chapter rail */}
-        <nav aria-label="Chapters" className="mx-5 mt-4 sm:mx-10 lg:mt-6">
-          <div className="relative h-8">
-            <div className="absolute left-0 right-0 top-[5px] h-px bg-[var(--color-silver)]/15" />
-            <div
-              className="absolute left-0 top-[5px] h-px bg-[linear-gradient(90deg,var(--color-silver),var(--color-silver-light))]"
-              style={{ width: `${Math.min(100, p * 100)}%` }}
-            />
-            {railLabels.map((label, i) => {
-              const at = marks[i];
-              if (at === undefined) return null;
-              const reached = i <= current && p >= at - 0.04;
-              return (
-                <button
-                  key={label}
-                  type="button"
-                  onClick={() => goTo(i)}
-                  aria-label={`Chapter ${ROMAN[i]}, ${label}`}
-                  aria-current={i === current ? "step" : undefined}
-                  className="group absolute top-0 flex -translate-x-1/2 flex-col items-center gap-2 luxury-focus-ring"
-                  style={{ left: `${Math.min(97, Math.max(3, at * 100))}%` }}
-                >
-                  <span
-                    className={`block h-[11px] w-[11px] rotate-45 border transition-colors duration-700 ${
-                      reached ? "border-[var(--color-silver-light)] bg-[var(--color-silver-light)]" : "border-[var(--color-silver)]/40 bg-[#1d0210] group-hover:border-[var(--color-silver-light)]"
-                    }`}
-                  />
-                  <span className={`whitespace-nowrap font-cinzel text-[10.5px] tracking-[0.2em] transition-opacity duration-700 ${i === current ? "opacity-100" : "opacity-45 group-hover:opacity-80"}`}>
-                    <span className="text-[var(--color-silver-light)]">{ROMAN[i]}</span>
-                    <span className="ml-1.5 hidden sm:inline">{label}</span>
-                  </span>
-                </button>
-              );
-            })}
           </div>
-        </nav>
+
+          {/* The chapter rail */}
+          <nav
+            aria-label="Chapters"
+            className="absolute inset-x-0 bottom-0 z-10 px-5 pb-5 sm:px-10 sm:pb-7"
+          >
+            <div className="relative mx-auto max-w-7xl">
+              <div className="absolute left-0 right-0 top-[5px] h-px bg-[var(--color-silver)]/15" />
+              <motion.div
+                className="absolute left-0 top-[5px] h-px origin-left bg-[linear-gradient(90deg,var(--color-silver),var(--color-silver-light))]"
+                style={{ scaleX: scrollYProgress, width: "100%" }}
+              />
+              <ol className="relative flex justify-between">
+                {rail.map((label, i) => {
+                  const target = i < P ? i : P;
+                  const reached = i <= chapterNow;
+                  return (
+                    <li key={label}>
+                      <button
+                        type="button"
+                        onClick={() => goTo(target)}
+                        aria-current={i === chapterNow ? "step" : undefined}
+                        className={`group flex flex-col gap-2 luxury-focus-ring ${i === 0 ? "items-start" : i === rail.length - 1 ? "items-end" : "items-center"}`}
+                      >
+                        <span
+                          className={`block h-[11px] w-[11px] rotate-45 border transition-colors duration-700 ${
+                            reached
+                              ? "border-[var(--color-silver-light)] bg-[var(--color-silver-light)]"
+                              : "border-[var(--color-silver)]/40 bg-[#1d0210] group-hover:border-[var(--color-silver-light)]"
+                          }`}
+                        />
+                        <span
+                          className={`font-cinzel text-[10.5px] tracking-[0.2em] transition-opacity duration-700 ${i === chapterNow ? "opacity-100" : "opacity-45 group-hover:opacity-80"}`}
+                        >
+                          <span className="text-[var(--color-silver-light)]">
+                            {ROMAN[i]}
+                          </span>
+                          <span className="ml-1.5 hidden sm:inline">
+                            {label}
+                          </span>
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+          </nav>
+        </div>
       </div>
+      {/* After the reel: the invitation onward */}
+      <div className="flex justify-center px-6 pb-20 pt-12">
+        <GalaButton href="#tarification">
+          {a.joinCTA || "JOIN THE 2026 EDITION"}
+        </GalaButton>
+      </div>
+    </>
+  );
+}
+
+/** A line that rolls up into view from beneath a mask */
+function RollLine({
+  children,
+  delay,
+}: {
+  children: React.ReactNode;
+  delay: number;
+}) {
+  return (
+    <div className="overflow-hidden">
+      <motion.div
+        initial={{ y: "105%" }}
+        animate={{
+          y: "0%",
+          transition: { duration: 0.75, delay: 0.15 + delay, ease: GALA_EASE },
+        }}
+        exit={{ y: "-105%", transition: { duration: 0.3, ease: GALA_EASE } }}
+      >
+        {children}
+      </motion.div>
     </div>
   );
 }
 
-/** A photograph in the film: it drifts a little inside its frame as it passes */
-function FilmPhoto({
-  src,
-  alt,
-  progress,
-  center,
-  dist,
-  className = "",
-}: {
-  src: string;
-  alt: string;
-  progress: MotionValue<number>;
-  center: number;
-  dist: { current: number };
-  className?: string;
-}) {
-  const shift = useTransform(progress, (v) => (v - center) * dist.current * 0.08);
-  return (
-    <div className={`relative overflow-hidden rounded-[4px] shadow-[0_40px_80px_-40px_rgba(6,0,4,1)] ${className}`}>
-      <motion.div style={{ x: shift }} className="absolute -inset-x-[12%] inset-y-0">
-        <Image src={src} alt={alt} fill sizes="(max-width: 1024px) 85vw, 720px" className="object-cover" />
-      </motion.div>
-      <div className="pointer-events-none absolute inset-0 rounded-[4px] ring-1 ring-inset ring-[var(--color-silver-light)]/30" />
-    </div>
+/* The reel in WebGL ------------------------------------------------------------ */
+
+const REEL_VERT = /* glsl */ `
+  uniform float uAngle;   // where along the wall this photograph hangs (radians)
+  uniform float uRadius;
+  uniform float uMirror;  // 1 for the reflection on the floor
+  uniform float uFloor;
+  varying vec2 vUv;
+  void main() {
+    vUv = uv;
+    vec3 p = position;
+    // Each photograph stays a flat print, hung on the arc facing you
+    float y = p.y;
+    if (uMirror > 0.5) y = 2.0 * uFloor - y;
+    vec3 c = vec3(sin(uAngle) * uRadius, 0.0, -cos(uAngle) * uRadius);
+    vec3 tangent = vec3(cos(uAngle), 0.0, sin(uAngle));
+    vec3 w = c + tangent * p.x + vec3(0.0, y, 0.0);
+    gl_Position = projectionMatrix * viewMatrix * vec4(w, 1.0);
+  }
+`;
+
+const REEL_FRAG = /* glsl */ `
+  uniform sampler2D map;
+  uniform float uHas;
+  uniform vec2 uRepeat;
+  uniform vec2 uOffset;
+  uniform float uAspect;
+  uniform float uMirror;
+  uniform float uOpacity;
+  varying vec2 vUv;
+
+  float sdRoundBox(vec2 p, vec2 b, float r) {
+    vec2 q = abs(p) - b + r;
+    return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
+  }
+
+  void main() {
+    vec2 p = (vUv - 0.5) * vec2(uAspect, 1.0);
+    float d = sdRoundBox(p, vec2(uAspect * 0.5, 0.5), 0.02);
+    float aa = fwidth(d);
+    float alpha = 1.0 - smoothstep(-aa, aa, d);
+    vec3 col = uHas > 0.5 ? texture2D(map, vUv * uRepeat + uOffset).rgb : vec3(0.12, 0.02, 0.08);
+    // A hairline of silver at the edge
+    col = mix(col, vec3(0.86, 0.88, 0.92), smoothstep(-0.007 - aa, -0.007 + aa, d) * 0.7);
+    if (uMirror > 0.5) {
+      // The reflection fades away from the floor line
+      alpha *= pow(1.0 - vUv.y, 2.2) * 0.26;
+    }
+    gl_FragColor = vec4(col, alpha * uOpacity);
+    #include <colorspace_fragment>
+  }
+`;
+
+function buildReel(
+  ctx: StageContext,
+  images: string[],
+  progress: { current: number },
+) {
+  const { scene, camera, isMobile } = ctx;
+  const N = images.length;
+  const W = isMobile ? 3.1 : 4.6;
+  const H = W / 1.5;
+  const R = isMobile ? 6.2 : 8.4;
+  const GAP = isMobile ? 0.35 : 0.5;
+  const STEP = (W + GAP) / R; // radians between photographs
+  const FLOOR = -H / 2 - 0.12;
+  const LIFT = isMobile ? 0.55 : 0.35; // the wall sits a little above the eye line
+
+  type Frame = {
+    photo: THREE.ShaderMaterial;
+    mirror: THREE.ShaderMaterial;
+    shown: number;
+  };
+  const frames: Frame[] = images.map((src) => {
+    const geo = new THREE.PlaneGeometry(W, H);
+    const make = (mirror: boolean) =>
+      new THREE.ShaderMaterial({
+        uniforms: {
+          map: { value: null },
+          uHas: { value: 0 },
+          uRepeat: { value: new THREE.Vector2(1, 1) },
+          uOffset: { value: new THREE.Vector2(0, 0) },
+          uAspect: { value: W / H },
+          uAngle: { value: 0 },
+          uRadius: { value: R },
+          uMirror: { value: mirror ? 1 : 0 },
+          uFloor: { value: FLOOR },
+          uOpacity: { value: 0 },
+        },
+        vertexShader: REEL_VERT,
+        fragmentShader: REEL_FRAG,
+        transparent: true,
+        depthWrite: false,
+        toneMapped: false,
+        side: THREE.DoubleSide,
+      });
+    const photo = make(false);
+    const mirror = make(true);
+    const m1 = new THREE.Mesh(geo, photo);
+    const m2 = new THREE.Mesh(geo, mirror);
+    m1.frustumCulled = m2.frustumCulled = false;
+    m1.renderOrder = 2;
+    m2.renderOrder = 1;
+    scene.add(m1, m2);
+    const f: Frame = { photo, mirror, shown: 0 };
+    ctx.texture(optimisedImage(src, isMobile ? 1200 : 1920)).then((t) => {
+      const img = t.image as { width: number; height: number };
+      const ia = img.width / img.height;
+      const fa = W / H;
+      const rep =
+        ia > fa ? new THREE.Vector2(fa / ia, 1) : new THREE.Vector2(1, ia / fa);
+      const off = new THREE.Vector2((1 - rep.x) / 2, (1 - rep.y) / 2);
+      for (const m of [photo, mirror]) {
+        m.uniforms.map.value = t;
+        m.uniforms.uHas.value = 1;
+        m.uniforms.uRepeat.value.copy(rep);
+        m.uniforms.uOffset.value.copy(off);
+      }
+    });
+    return f;
+  });
+
+  // A soft rose light on the wall straight ahead, and dust in the room
+  const glow = (() => {
+    const c = document.createElement("canvas");
+    c.width = c.height = 128;
+    const g = c.getContext("2d")!;
+    const grad = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+    grad.addColorStop(0, "rgba(211,55,145,0.35)");
+    grad.addColorStop(1, "rgba(0,0,0,0)");
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 128, 128);
+    return new THREE.Mesh(
+      new THREE.PlaneGeometry(W * 3, H * 3),
+      new THREE.MeshBasicMaterial({
+        map: new THREE.CanvasTexture(c),
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      }),
+    );
+  })();
+  glow.position.set(0, 0, -R - 0.6);
+  glow.renderOrder = 0;
+  scene.add(glow);
+  const dust = stageDust(
+    isMobile ? 160 : 300,
+    new THREE.Vector3(R * 2, 6, R * 2),
+    0.045,
   );
+  scene.add(dust);
+
+  let rot = 0;
+  const look = new THREE.Vector3();
+  return {
+    update(dt: number, t: number) {
+      const target = progress.current * (N - 1) * STEP;
+      rot = THREE.MathUtils.damp(rot, target, 3.6, dt);
+
+      frames.forEach((f, i) => {
+        const angle = i * STEP - rot;
+        // Photographs fade in on arrival; far ones rest quietly
+        f.shown = Math.min(1, f.shown + dt * 1.5);
+        const far = Math.min(1, Math.abs(angle) / 1.4);
+        for (const m of [f.photo, f.mirror]) {
+          m.uniforms.uAngle.value = angle;
+          m.uniforms.uOpacity.value = f.shown * (1 - far * 0.55);
+        }
+      });
+      dust.rotation.y = t * 0.02 - rot * 0.3;
+
+      camera.position.set(
+        ctx.pointer.x * 0.25,
+        -LIFT + ctx.pointer.y * 0.12,
+        0,
+      );
+      look.set(ctx.pointer.x * 0.6, -LIFT * 0.4, -R);
+      camera.lookAt(look);
+    },
+    resize(w: number, h: number) {
+      camera.fov = w / h < 0.8 ? 64 : 42;
+      camera.near = 0.1;
+      camera.updateProjectionMatrix();
+    },
+  };
 }

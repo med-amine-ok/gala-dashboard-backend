@@ -119,6 +119,7 @@ const DUST_VERT = /* glsl */ `
 
 const DUST_FRAG = /* glsl */ `
   uniform float uOverlay;
+  uniform float uDim;            // softer once the dust travels with the sections
   varying float vAlpha;
   varying vec3 vColor;
   void main() {
@@ -128,7 +129,7 @@ const DUST_FRAG = /* glsl */ `
     float a = exp(-r2 * 5.0) * 0.75 + exp(-r2 * 36.0) * 0.8;
     // Premultiplied: rgb adds light; alpha (over the hero only) shades what
     // lies behind each grain, so the mark reads over the bright façade too
-    gl_FragColor = vec4(vColor * a * vAlpha, uOverlay * a * vAlpha);
+    gl_FragColor = vec4(vColor * a * vAlpha * uDim, uOverlay * a * vAlpha * uDim);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
   }
@@ -270,6 +271,7 @@ export default function GalaWorld() {
         uCtaShow: { value: 0 },
         uEmerging: { value: 0 },
         uOverlay: { value: 0 },
+        uDim: { value: 1 },
       },
       vertexShader: DUST_VERT,
       fragmentShader: DUST_FRAG,
@@ -646,6 +648,10 @@ export default function GalaWorld() {
       u.uEmerging.value = sScroll >= emergeStart ? 1 : 0;
       // Over the bright façade each grain shades what lies behind it a little
       u.uOverlay.value = 0.22 * (1 - smooth(emerge * 2));
+      // Over the hero the dust keeps its full light; travelling with the
+      // sections it is a quiet presence, brightening again as it forms the
+      // footer's mark
+      u.uDim.value = heroLive ? 1 : THREE.MathUtils.lerp(0.18, 1, form);
       u.uSize.value = (isMobile ? 26 : 30) * (heroLive ? 1 + 0.25 * (1 - form) : 1.15);
 
       // The button dissolves the moment the walk begins
