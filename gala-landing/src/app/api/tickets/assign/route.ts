@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
         await tx.update(payments).set({ status: "succeeded", updatedAt: now }).where(eq(payments.id, payment.id));
       } else {
         await tx.insert(payments).values({
-          id: crypto.randomUUID(), participantId, amount: Number(process.env.TICKET_PRICE_DZD) || 1000,
+          id: crypto.randomUUID(), participantId, amount: Number(process.env.TICKET_PRICE_DZD) || 100,
           status: "succeeded", createdAt: now, updatedAt: now,
         });
       }
