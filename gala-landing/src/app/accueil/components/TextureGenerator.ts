@@ -45,6 +45,76 @@ export interface BannerFabricTextureSet {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
+   BAKED TEXTURES
+   The procedural maps below are deterministic, so they were rendered once and
+   saved as WebP in /public/textures/hero (same pixels). Loading them takes a
+   fraction of a second; generating them took ~3 s of main-thread work on every
+   visit. If an image is missing or fails, the generator paints it as before.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+const BAKED_DIR = "/textures/hero";
+const BAKED_NAMES = [
+  "stone-diffuse", "stone-roughness", "stone-bump", "stone-normal",
+  "floor-diffuse", "floor-roughness", "floor-normal",
+  "carpet-diffuse", "carpet-roughness", "carpet-normal",
+  "silver-diffuse", "silver-roughness", "silver-normal",
+  "banner-diffuse", "banner-roughness", "banner-normal",
+  "rope-normal",
+];
+const baked: Record<string, HTMLImageElement> = {};
+let preload: Promise<void> | null = null;
+
+/** Start loading the baked maps (safe to call many times; resolves even on failure) */
+export function preloadHeroTextures(): Promise<void> {
+  if (typeof window === "undefined") return Promise.resolve();
+  if (!preload) {
+    preload = Promise.all(
+      BAKED_NAMES.map(
+        (name) =>
+          new Promise<void>((resolve) => {
+            const img = new Image();
+            img.decoding = "async";
+            img.onload = () => {
+              baked[name] = img;
+              resolve();
+            };
+            img.onerror = () => resolve();
+            img.src = `${BAKED_DIR}/${name}.webp`;
+          }),
+      ),
+    ).then(() => undefined);
+  }
+  return preload;
+}
+// Begin as soon as this module loads, ahead of the scene
+if (typeof window !== "undefined") void preloadHeroTextures();
+
+/** Paint each canvas from its baked image; false (and nothing drawn) unless all are present */
+function drawBaked(key: string, canvases: Record<string, HTMLCanvasElement>, extra: string[] = []): boolean {
+  const names = [...Object.keys(canvases), ...extra];
+  if (!names.every((m) => baked[`${key}-${m}`])) return false;
+  for (const [m, c] of Object.entries(canvases)) {
+    c.getContext("2d")!.drawImage(baked[`${key}-${m}`], 0, 0, c.width, c.height);
+  }
+  return true;
+}
+
+/** A baked normal map, set up exactly as createNormalMapFromHeights sets its output */
+function bakedNormal(key: string): THREE.CanvasTexture {
+  const img = baked[`${key}-normal`];
+  const canvas = document.createElement("canvas");
+  canvas.width = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+  canvas.getContext("2d")!.drawImage(img, 0, 0);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.RepeatWrapping;
+  tex.colorSpace = THREE.NoColorSpace;
+  tex.generateMipmaps = true;
+  return tex;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
    PROCEDURAL NOISE HELPERS
    ───────────────────────────────────────────────────────────────────────────── */
 
@@ -173,6 +243,8 @@ export function createBurgundyStoneTextures(anisotropy = 4): BurgundyStoneTextur
 
   const heights = new Float32Array(size * size);
 
+  const isBaked = drawBaked("stone", { diffuse: dCanvas, roughness: rCanvas, bump: bCanvas }, ["normal"]);
+  if (!isBaked) {
   for (let y = 0; y < size; y++) {
     const yOffset = y * size;
     const v = y / size;
@@ -223,6 +295,7 @@ export function createBurgundyStoneTextures(anisotropy = 4): BurgundyStoneTextur
   dCtx.putImageData(dImg, 0, 0);
   rCtx.putImageData(rImg, 0, 0);
   bCtx.putImageData(bImg, 0, 0);
+  }
 
   const diffuse = new THREE.CanvasTexture(dCanvas);
   diffuse.wrapS = diffuse.wrapT = THREE.RepeatWrapping;
@@ -239,7 +312,7 @@ export function createBurgundyStoneTextures(anisotropy = 4): BurgundyStoneTextur
   bump.wrapS = bump.wrapT = THREE.RepeatWrapping;
   bump.repeat.set(6, 6);
 
-  const normal = createNormalMapFromHeights(heights, size, size, 1.2);
+  const normal = isBaked ? bakedNormal("stone") : createNormalMapFromHeights(heights, size, size, 1.2);
   normal.repeat.set(6, 6);
   normal.anisotropy = anisotropy;
 
@@ -271,6 +344,8 @@ export function createBurgundyFloorTextures(anisotropy = 4): FloorTextureSet {
   const slabW = size / 2; // 2 slabs wide
   const slabH = size / 4; // 4 slabs long
 
+  const isBaked = drawBaked("floor", { diffuse: dCanvas, roughness: rCanvas }, ["normal"]);
+  if (!isBaked) {
   for (let y = 0; y < size; y++) {
     const yOffset = y * size;
     const v = y / size;
@@ -316,6 +391,7 @@ export function createBurgundyFloorTextures(anisotropy = 4): FloorTextureSet {
 
   dCtx.putImageData(dImg, 0, 0);
   rCtx.putImageData(rImg, 0, 0);
+  }
 
   const diffuse = new THREE.CanvasTexture(dCanvas);
   diffuse.wrapS = diffuse.wrapT = THREE.RepeatWrapping;
@@ -328,7 +404,7 @@ export function createBurgundyFloorTextures(anisotropy = 4): FloorTextureSet {
   roughness.anisotropy = anisotropy;
   roughness.repeat.set(6, 6);
 
-  const normal = createNormalMapFromHeights(heights, size, size, 1.5);
+  const normal = isBaked ? bakedNormal("floor") : createNormalMapFromHeights(heights, size, size, 1.5);
   normal.repeat.set(6, 6);
   normal.anisotropy = anisotropy;
 
@@ -359,6 +435,8 @@ export function createRedCarpetTextures(anisotropy = 4): CarpetTextureSet {
   const heights = new Float32Array(width * height);
   const borderPixels = Math.round(width * 0.038); // 3.8% selvage trim
 
+  const isBaked = drawBaked("carpet", { diffuse: dCanvas, roughness: rCanvas }, ["normal"]);
+  if (!isBaked) {
   for (let y = 0; y < height; y++) {
     const yOffset = y * width;
     const warpY = Math.sin((y / height) * Math.PI * 512) * 0.5 + 0.5;
@@ -411,6 +489,7 @@ export function createRedCarpetTextures(anisotropy = 4): CarpetTextureSet {
 
   dCtx.putImageData(dImg, 0, 0);
   rCtx.putImageData(rImg, 0, 0);
+  }
 
   const diffuse = new THREE.CanvasTexture(dCanvas);
   diffuse.wrapS = THREE.ClampToEdgeWrapping;
@@ -424,7 +503,7 @@ export function createRedCarpetTextures(anisotropy = 4): CarpetTextureSet {
   roughness.anisotropy = anisotropy;
   roughness.repeat.set(1, 16);
 
-  const normal = createNormalMapFromHeights(heights, width, height, 1.8);
+  const normal = isBaked ? bakedNormal("carpet") : createNormalMapFromHeights(heights, width, height, 1.8);
   normal.wrapS = THREE.ClampToEdgeWrapping;
   normal.wrapT = THREE.RepeatWrapping;
   normal.repeat.set(1, 16);
@@ -454,6 +533,8 @@ export function createBrushedSilverTextures(anisotropy = 4): SilverTextureSet {
 
   const heights = new Float32Array(size * size);
 
+  const isBaked = drawBaked("silver", { diffuse: dCanvas, roughness: rCanvas }, ["normal"]);
+  if (!isBaked) {
   for (let y = 0; y < size; y++) {
     const yOffset = y * size;
     const brushStreak = fbm((y / size) * 32.0, 0.5, 3) * 0.18;
@@ -483,6 +564,7 @@ export function createBrushedSilverTextures(anisotropy = 4): SilverTextureSet {
 
   dCtx.putImageData(dImg, 0, 0);
   rCtx.putImageData(rImg, 0, 0);
+  }
 
   const diffuse = new THREE.CanvasTexture(dCanvas);
   diffuse.wrapS = diffuse.wrapT = THREE.RepeatWrapping;
@@ -495,7 +577,7 @@ export function createBrushedSilverTextures(anisotropy = 4): SilverTextureSet {
   roughness.anisotropy = anisotropy;
   roughness.repeat.set(2, 8);
 
-  const normal = createNormalMapFromHeights(heights, size, size, 1.8);
+  const normal = isBaked ? bakedNormal("silver") : createNormalMapFromHeights(heights, size, size, 1.8);
   normal.repeat.set(2, 8);
   normal.anisotropy = anisotropy;
 
@@ -523,6 +605,8 @@ export function createBannerFabricTextures(anisotropy = 4): BannerFabricTextureS
 
   const heights = new Float32Array(size * size);
 
+  const isBaked = drawBaked("banner", { diffuse: dCanvas, roughness: rCanvas }, ["normal"]);
+  if (!isBaked) {
   for (let y = 0; y < size; y++) {
     const yOffset = y * size;
     const weaveY = Math.sin((y / size) * Math.PI * 128) * 0.5 + 0.5;
@@ -555,6 +639,7 @@ export function createBannerFabricTextures(anisotropy = 4): BannerFabricTextureS
 
   dCtx.putImageData(dImg, 0, 0);
   rCtx.putImageData(rImg, 0, 0);
+  }
 
   const diffuse = new THREE.CanvasTexture(dCanvas);
   diffuse.wrapS = diffuse.wrapT = THREE.RepeatWrapping;
@@ -565,7 +650,7 @@ export function createBannerFabricTextures(anisotropy = 4): BannerFabricTextureS
   roughness.wrapS = roughness.wrapT = THREE.RepeatWrapping;
   roughness.repeat.set(4, 6);
 
-  const normal = createNormalMapFromHeights(heights, size, size, 2.2);
+  const normal = isBaked ? bakedNormal("banner") : createNormalMapFromHeights(heights, size, size, 2.2);
   normal.repeat.set(4, 6);
 
   return { diffuse, roughness, normal };
@@ -577,6 +662,12 @@ export function createBannerFabricTextures(anisotropy = 4): BannerFabricTextureS
 export function createVelvetRopeNormalMap(): THREE.CanvasTexture {
   const width = 256;
   const height = 512;
+  if (baked["rope-normal"]) {
+    const normal = bakedNormal("rope");
+    normal.wrapS = normal.wrapT = THREE.RepeatWrapping;
+    normal.repeat.set(1, 8);
+    return normal;
+  }
   const heights = new Float32Array(width * height);
 
   for (let y = 0; y < height; y++) {

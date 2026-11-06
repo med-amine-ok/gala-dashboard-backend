@@ -7,27 +7,33 @@ import Pricing from "./ticket/page";
 import Apropos from "./apropos/page";
 import Footer from "./footer/page";
 import GalaWorld from "./components/gala/GalaWorld";
-import GalaMedia from "./components/gala/GalaMedia";
-import mixpanel from "mixpanel-browser";
-
-// Initialize Mixpanel if token is provided
-if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_MIXPANEL_TOKEN) {
-  mixpanel.init(process.env.NEXT_PUBLIC_MIXPANEL_TOKEN, {
-    autocapture: true,
-    record_sessions_percent: 100,
-    api_host: "https://api-eu.mixpanel.com",
-  });
-}
+import { useEffect } from "react";
 
 export default function Home() {
+  // Analytics load only if configured, and only once the page is idle, so
+  // they never compete with the entrance for the first seconds
+  useEffect(() => {
+    const token = process.env.NEXT_PUBLIC_MIXPANEL_TOKEN;
+    if (!token) return;
+    const start = () =>
+      import("mixpanel-browser").then(({ default: mixpanel }) =>
+        mixpanel.init(token, {
+          autocapture: true,
+          record_sessions_percent: 100,
+          api_host: "https://api-eu.mixpanel.com",
+        }),
+      );
+    const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
+    if (w.requestIdleCallback) w.requestIdleCallback(start, { timeout: 4000 });
+    else window.setTimeout(start, 2500);
+  }, []);
+
   return (
     <div className="w-full min-h-screen bg-[var(--color-dark)] text-[var(--color-cream)]">
       <NavBar />
 
       {/* The hall every room after the entrance stands in (fixed WebGL, behind the content) */}
       <GalaWorld />
-      {/* The rooms' photographs, drawn in WebGL over their frames */}
-      <GalaMedia />
 
       <main className="relative z-[1] w-full overflow-x-clip">
         {/* I & II — THE ENTRANCE (HERO) & THE MANIFESTO */}

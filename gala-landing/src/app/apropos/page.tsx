@@ -94,32 +94,8 @@ export default function AboutUsSection() {
           </dl>
         )}
 
-        {/* The principles */}
-        {pillars.length > 0 && (
-          <ol className="mt-20 sm:mt-28">
-            {pillars.map((p, i) => (
-              <motion.li
-                key={p.title}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-40px" }}
-                transition={{ duration: 0.9, delay: i * 0.1, ease: GALA_EASE }}
-                className="group relative grid grid-cols-[auto_1fr] gap-x-6 border-t border-[var(--color-silver)]/12 py-8 last:border-b sm:grid-cols-[90px_1fr_1.2fr] sm:gap-x-10 sm:py-10"
-              >
-                {/* A line of silver that draws along the row on hover */}
-                <span
-                  aria-hidden
-                  className="absolute -top-px left-0 h-px w-0 bg-[linear-gradient(90deg,var(--color-silver-light),transparent)] transition-[width] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:w-full"
-                />
-                <span className="font-cinzel text-[13px] tracking-[0.24em] text-[var(--color-silver)]">{String(i + 1).padStart(2, "0")}</span>
-                <h3 className="font-cormorant text-[clamp(26px,2.8vw,40px)] italic leading-tight text-[var(--color-cream)] transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-1.5">
-                  {p.title}
-                </h3>
-                <p className="col-span-2 mt-3 max-w-lg text-[14.5px] font-light leading-relaxed text-[var(--color-cream)]/68 sm:col-span-1 sm:mt-1.5">{p.desc}</p>
-              </motion.li>
-            ))}
-          </ol>
-        )}
+        
+       
       </div>
     </section>
   );

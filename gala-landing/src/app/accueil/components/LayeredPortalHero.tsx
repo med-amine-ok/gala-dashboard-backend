@@ -7,6 +7,7 @@ import { ArrowRight } from "lucide-react";
 import { useLanguage } from "../../../context/LanguageContext";
 import ManifestoSection from "../../manifesto/page";
 import Real3DEntranceCanvas, { type EntranceFrame } from "./Real3DEntranceCanvas";
+import { preloadHeroTextures } from "./TextureGenerator";
 
 // Attendee photo (5472 x 3648) used for the out-of-focus hall beyond the doors
 const HALL_PHOTO_ASPECT = 1.5;
@@ -61,6 +62,17 @@ export default function LayeredPortalHero() {
     minutes: "38",
     seconds: "00",
   });
+
+  // The 3D entrance mounts once its baked textures are in (a fraction of a
+  // second), instead of generating them on the main thread for ~3 s
+  const [texturesReady, setTexturesReady] = useState(false);
+  useEffect(() => {
+    let live = true;
+    preloadHeroTextures().then(() => live && setTexturesReady(true));
+    return () => {
+      live = false;
+    };
+  }, []);
 
   // Detection & Initial Mode Selection
   useEffect(() => {
@@ -370,10 +382,12 @@ export default function LayeredPortalHero() {
 
         {/* REAL 3D BURGUNDY & SILVER ENTRANCE MODEL (Live Three.js) */}
         <div className="absolute inset-0 w-full h-full z-[1] pointer-events-none">
-          <Real3DEntranceCanvas
-            scrollProgressRef={scrollProgressRef}
-            onFrame={handleFrame}
-          />
+          {texturesReady && (
+            <Real3DEntranceCanvas
+              scrollProgressRef={scrollProgressRef}
+              onFrame={handleFrame}
+            />
+          )}
         </div>
 
         {/* =====================================================================

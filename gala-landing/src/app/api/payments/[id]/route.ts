@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { payments, ticketsTicket } from "@/db/schema";
 import { appUrl, findParticipantByRef, webhookUrl } from "@/lib/participants/lookup";
 
-const AMOUNT_DZD = Number(process.env.TICKET_PRICE_DZD) || 100;
+const AMOUNT_DZD = Number(process.env.TICKET_PRICE_DZD) || 1000;
 
 /**
  * Start a Chargily checkout for a participant.

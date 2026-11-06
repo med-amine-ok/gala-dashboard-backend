@@ -33,7 +33,7 @@ export async function fulfillPayment({
   participantId,
   paymentId,
   chargilyCheckoutId,
-  amount = 100,
+  amount = 1000,
 }: FulfillPaymentParams) {
   const pId = Number(participantId);
   const now = new Date().toISOString();
