@@ -5,12 +5,13 @@ import { useSearchParams } from "next/navigation";
 import { useForm, FormProvider, useFormContext } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { Loader2, ArrowRight, ArrowLeft, Check, ChevronDown, AlertCircle, PenLine, Send, Clock } from "lucide-react";
+import { Loader2, ArrowLeft, Check, ChevronDown, AlertCircle, PenLine, Send, Clock } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import * as z from "zod";
 import { useLanguage } from "../../context/LanguageContext";
-import { GALA_EASE, GalaStar } from "../components/gala/Room";
+import { GALA_EASE, GalaButton, GalaStar } from "../components/gala/Room";
+import { REGISTRATION_OPENS, registrationIsOpen } from "../../lib/event";
 
 const fieldOfStudyOptions = [
   { value: "hydraulics", label: "Hydraulics Engineering" },
@@ -414,51 +415,48 @@ function RegistrationContent() {
               <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[var(--color-silver)]/15 bg-[#1d0314]/94 px-4 py-3 backdrop-blur-md sm:static sm:mt-6 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
                 <div className="flex items-center justify-between gap-3">
                   {step > 1 ? (
-                    <button
-                      type="button"
+                    <GalaButton
+                      variant="ghost"
                       onClick={prevStep}
                       disabled={loading}
-                      className="inline-flex min-h-[48px] cursor-pointer items-center gap-2 rounded-full px-4 text-[13px] font-medium text-[var(--color-cream)]/75 transition-colors hover:text-[var(--color-cream)] focus-visible:outline focus-visible:outline-1 focus-visible:outline-[var(--color-silver)] disabled:opacity-40"
+                      icon={<ArrowLeft className="h-3.5 w-3.5" aria-hidden />}
                     >
-                      <ArrowLeft className="h-4 w-4" aria-hidden />
                       {texts.register?.buttons?.previous || copy.previous}
-                    </button>
+                    </GalaButton>
                   ) : (
                     <span className="hidden text-[12.5px] text-[var(--color-cream)]/50 sm:block">
                       <span className="text-[#f0a6d2]">*</span> {copy.requiredNote}
                     </span>
                   )}
                   {step < 4 ? (
-                    <PrimaryButton onClick={goNext}>
+                    <GalaButton onClick={goNext} className="flex-1 sm:flex-none">
                       <span className="sm:hidden">{copy.continueShort}</span>
                       <span className="hidden sm:inline">
                         {copy.continueTo} {copy.steps[step].name}
                       </span>
-                      <ArrowRight className="h-4 w-4" aria-hidden />
-                    </PrimaryButton>
+                    </GalaButton>
                   ) : (
-                    <PrimaryButton onClick={sendRequest} disabled={loading}>
-                      {loading ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-                          {texts.register?.buttons?.submitting || copy.sending}
-                        </>
-                      ) : (
-                        <>
-                          {copy.send}
-                          <Send className="h-4 w-4" aria-hidden />
-                        </>
-                      )}
-                    </PrimaryButton>
+                    <GalaButton
+                      onClick={sendRequest}
+                      disabled={loading}
+                      className="flex-1 sm:flex-none"
+                      icon={
+                        loading ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+                        ) : (
+                          <Send className="h-3.5 w-3.5" aria-hidden />
+                        )
+                      }
+                    >
+                      {loading ? texts.register?.buttons?.submitting || copy.sending : copy.send}
+                    </GalaButton>
                   )}
                 </div>
               </div>
             )}
             {done && (
               <div className="mt-6 flex justify-center sm:justify-end">
-                <PrimaryButton href="/">
-                  {copy.returnHome} <ArrowRight className="h-4 w-4" aria-hidden />
-                </PrimaryButton>
+                <GalaButton href="/">{copy.returnHome}</GalaButton>
               </div>
             )}
           </form>
@@ -477,8 +475,89 @@ export default function RegistrationPage() {
         </div>
       }
     >
-      <RegistrationContent />
+      <RegistrationGate />
     </Suspense>
+  );
+}
+
+/** Before registration opens, a clear notice with a countdown; then the form */
+function RegistrationGate() {
+  const [open, setOpen] = useState<boolean | null>(null);
+  useEffect(() => {
+    const tick = () => setOpen(registrationIsOpen());
+    tick();
+    const id = window.setInterval(tick, 15_000);
+    return () => window.clearInterval(id);
+  }, []);
+  if (open === null) {
+    return <div className="min-h-screen bg-[#1d0314]" />;
+  }
+  return open ? <RegistrationContent /> : <RegistrationClosed />;
+}
+
+function RegistrationClosed() {
+  const { texts, lang } = useLanguage();
+  const c = texts.register?.closed || {};
+  const fr = lang === "fr";
+  const [left, setLeft] = useState<{ d: number; h: number; m: number } | null>(null);
+  useEffect(() => {
+    const tick = () => {
+      const ms = REGISTRATION_OPENS.getTime() - Date.now();
+      setLeft(ms > 0 ? { d: Math.floor(ms / 86_400_000), h: Math.floor(ms / 3_600_000) % 24, m: Math.floor(ms / 60_000) % 60 } : null);
+    };
+    tick();
+    const id = window.setInterval(tick, 30_000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  return (
+    <div className="relative min-h-screen bg-[#1d0314] text-[var(--color-cream)] font-sans">
+      <Salon />
+      <header className="relative z-20 mx-auto flex max-w-6xl items-center justify-between px-5 pt-5 sm:px-10 sm:pt-8">
+        <Link href="/" aria-label="Return to the Gala">
+          <Image src="/GALA-silver.png" alt="Engineers' Gala" width={631} height={215} priority className="h-auto w-[92px] sm:w-[116px]" />
+        </Link>
+      </header>
+      <main className="relative z-10 mx-auto flex min-h-[80vh] max-w-2xl flex-col items-center justify-center px-6 py-16 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.9, ease: GALA_EASE }}
+          className="w-full rounded-[22px] border border-[var(--color-silver)]/14 bg-[linear-gradient(180deg,rgba(52,8,34,0.82),rgba(34,4,22,0.86))] px-6 py-12 shadow-[0_40px_90px_-40px_rgba(5,0,3,0.95)] backdrop-blur-md sm:px-12"
+        >
+          <GalaStar className="mx-auto w-10 text-[var(--color-silver-light)]" />
+          <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.32em] text-[var(--color-silver)]">{c.eyebrow || "REGISTRATION"}</p>
+          <h1 className="mt-3 font-cormorant text-[clamp(30px,4.4vw,46px)] font-medium leading-tight">
+            {c.title || "Registration opens on 10 November."}
+          </h1>
+          <p className="mx-auto mt-4 max-w-md text-[15px] leading-relaxed text-[var(--color-cream)]/70">
+            {c.message || "Requests for an admission pass open on Tuesday 10 November. Date and venue of the evening: stay tuned."}
+          </p>
+          {left && (
+            <div className="mt-8">
+              <p className="text-[10.5px] font-semibold uppercase tracking-[0.3em] text-[var(--color-cream)]/50">{c.countdown || "Opens in"}</p>
+              <p className="mt-3 flex items-baseline justify-center gap-5">
+                {[
+                  { v: left.d, l: fr ? "jours" : "days" },
+                  { v: left.h, l: fr ? "h" : "hrs" },
+                  { v: left.m, l: "min" },
+                ].map((u) => (
+                  <span key={u.l} className="flex items-baseline gap-1.5">
+                    <span className="font-cinzel text-[clamp(34px,5vw,52px)] font-semibold leading-none gala-engraved">{String(u.v).padStart(2, "0")}</span>
+                    <span className="text-[11px] uppercase tracking-[0.2em] text-[var(--color-cream)]/60">{u.l}</span>
+                  </span>
+                ))}
+              </p>
+            </div>
+          )}
+          <div className="mt-10 flex justify-center">
+            <GalaButton href="/" variant="ghost" icon={<ArrowLeft className="h-3.5 w-3.5" aria-hidden />}>
+              {c.back || "Return to the evening"}
+            </GalaButton>
+          </div>
+        </motion.div>
+      </main>
+    </div>
   );
 }
 
@@ -1114,40 +1193,5 @@ function Received({ data, texts, copy }: { data: RegistrationData; texts: Texts;
         </ol>
       </div>
     </div>
-  );
-}
-
-/* ───────────────────────────── Buttons ───────────────────────────── */
-
-function PrimaryButton({
-  children,
-  onClick,
-  href,
-  disabled,
-}: {
-  children: React.ReactNode;
-  onClick?: () => void;
-  href?: string;
-  disabled?: boolean;
-}) {
-  const cls =
-    "group relative inline-flex min-h-[52px] flex-1 cursor-pointer items-center justify-center gap-3 overflow-hidden rounded-full border border-[#e8ecf2]/55 bg-[linear-gradient(180deg,#8a1460,#550a39)] px-7 text-[14px] font-semibold text-[var(--color-cream)] shadow-[0_14px_30px_-12px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.2)] transition-[transform,border-color,filter] duration-300 hover:border-[#f4f5f7] hover:brightness-110 active:scale-[0.98] disabled:cursor-wait disabled:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#d6dbe2] sm:flex-none sm:px-9";
-  const inner = (
-    <>
-      <span
-        aria-hidden
-        className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 -skew-x-12 bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent)] transition-transform duration-700 group-hover:translate-x-[300%]"
-      />
-      <span className="relative inline-flex items-center gap-2.5">{children}</span>
-    </>
-  );
-  return href ? (
-    <Link href={href} className={cls}>
-      {inner}
-    </Link>
-  ) : (
-    <button type="button" onClick={onClick} disabled={disabled} className={cls}>
-      {inner}
-    </button>
   );
 }

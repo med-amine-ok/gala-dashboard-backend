@@ -149,37 +149,87 @@ export function RoomSpotlight(_props: { x?: string; y?: string; className?: stri
   return null;
 }
 
-/** Letterpress plaque button, identical in spirit to the hero invitation CTA */
+/**
+ * Letterpress plaque button, identical in spirit to the hero invitation CTA.
+ * The one button style of the site: a plum plaque with a hairline cream
+ * border, small caps, an underline that draws on hover and a square arrow.
+ * As a link (href) or a button (onClick / type="submit"). `variant="ghost"`
+ * is the quiet secondary (no fill), `icon` replaces the arrow.
+ */
 export function GalaButton({
   href,
+  onClick,
+  type = "button",
+  disabled,
+  variant = "plaque",
+  icon,
   children,
   className = "",
+  target,
+  rel,
+  ariaLabel,
+  download,
 }: {
-  href: string;
+  href?: string;
+  onClick?: () => void;
+  type?: "button" | "submit";
+  disabled?: boolean;
+  variant?: "plaque" | "ghost";
+  icon?: React.ReactNode | null;
   children: React.ReactNode;
   className?: string;
+  target?: string;
+  rel?: string;
+  ariaLabel?: string;
+  /** File name: renders a plain download link */
+  download?: string;
 }) {
-  return (
-    <Link
-      href={href}
-      className={`group relative inline-flex items-center gap-3 sm:gap-4 pl-5 sm:pl-7 pr-2 py-2 min-h-[52px] rounded-[2px] bg-[#310621]/85 border border-[var(--color-cream)]/40 hover:border-[var(--color-cream)]/85 text-[var(--color-cream)] text-[10.5px] sm:text-[12px] font-medium uppercase tracking-[0.14em] sm:tracking-[0.22em] transition-[border-color,background-color,transform] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-[#41092C]/95 active:scale-[0.985] luxury-focus-ring ${className}`}
-    >
-      <span className="relative pb-0.5">
+  const cls = `group relative inline-flex items-center justify-between gap-3 sm:gap-4 pl-5 sm:pl-7 pr-2 py-2 min-h-[52px] rounded-[2px] border text-[var(--color-cream)] text-[10.5px] sm:text-[12px] font-medium uppercase tracking-[0.14em] sm:tracking-[0.22em] transition-[border-color,background-color,transform,opacity] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.985] disabled:cursor-wait disabled:opacity-60 luxury-focus-ring cursor-pointer ${
+    variant === "ghost"
+      ? "bg-transparent border-[var(--color-cream)]/25 hover:border-[var(--color-cream)]/60 hover:bg-[#310621]/50"
+      : "bg-[#310621]/85 border-[var(--color-cream)]/40 hover:border-[var(--color-cream)]/85 hover:bg-[#41092C]/95"
+  } ${className}`;
+  const inner = (
+    <>
+      <span className="relative inline-flex items-center gap-2 pb-0.5">
         {children}
         <span
           aria-hidden="true"
           className="absolute bottom-0 left-0 h-px w-0 bg-[var(--color-cream)]/75 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:w-full"
         />
       </span>
-      <span
-        aria-hidden="true"
-        className="flex h-9 w-9 items-center justify-center border border-[var(--color-cream)]/30 text-[var(--color-silver-light)] transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-0.5 group-hover:border-[var(--color-cream)]/60"
-      >
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <path d="M1 7h11M8 3l4 4-4 4" stroke="currentColor" strokeWidth="1.1" />
-        </svg>
-      </span>
-    </Link>
+      {icon !== null && (
+        <span
+          aria-hidden="true"
+          className="flex h-9 w-9 shrink-0 items-center justify-center border border-[var(--color-cream)]/30 text-[var(--color-silver-light)] transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-0.5 group-hover:border-[var(--color-cream)]/60"
+        >
+          {icon ?? (
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M1 7h11M8 3l4 4-4 4" stroke="currentColor" strokeWidth="1.1" />
+            </svg>
+          )}
+        </span>
+      )}
+    </>
+  );
+  if (href && download) {
+    return (
+      <a href={href} download={download} className={cls} aria-label={ariaLabel}>
+        {inner}
+      </a>
+    );
+  }
+  if (href) {
+    return (
+      <Link href={href} className={cls} target={target} rel={rel} aria-label={ariaLabel}>
+        {inner}
+      </Link>
+    );
+  }
+  return (
+    <button type={type} onClick={onClick} disabled={disabled} className={cls} aria-label={ariaLabel}>
+      {inner}
+    </button>
   );
 }
 

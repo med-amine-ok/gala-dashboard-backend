@@ -5,12 +5,36 @@
     "closeLabel": "FERMER",
     "requestInvitation": "DEMANDER UNE INVITATION",
     "menuItems": [
-      { "label": "L'Expérience", "id": "home", "subtitle": "Là où l'ambition rencontre l'opportunité" },
-      { "label": "Le Manifeste", "id": "manifesto", "subtitle": "Une soirée. Les bonnes personnes." },
-      { "label": "Les Quatre Piliers", "id": "piliers", "subtitle": "Talents, entreprises & salons" },
-      { "label": "Les Archives", "id": "historique", "subtitle": "Des chapitres d'excellence" },
-      { "label": "Billet Officiel", "id": "tarification", "subtitle": "Pass d'admission (1 000 DA)" },
-      { "label": "Notre Histoire", "id": "apropos", "subtitle": "Héritage et vision" }
+      {
+        "label": "L'Expérience",
+        "id": "home",
+        "subtitle": "Là où l'ambition rencontre l'opportunité"
+      },
+      {
+        "label": "Le Manifeste",
+        "id": "manifesto",
+        "subtitle": "Une soirée. Les bonnes personnes."
+      },
+      {
+        "label": "Les Quatre Piliers",
+        "id": "piliers",
+        "subtitle": "Talents, entreprises & salons"
+      },
+      {
+        "label": "Les Archives",
+        "id": "historique",
+        "subtitle": "Des chapitres d'excellence"
+      },
+      {
+        "label": "Billet Officiel",
+        "id": "tarification",
+        "subtitle": "Pass d'admission (1 000 DA)"
+      },
+      {
+        "label": "Notre Histoire",
+        "id": "apropos",
+        "subtitle": "Héritage et vision"
+      }
     ]
   },
   "hero": {
@@ -19,10 +43,16 @@
     "subheadline": "Une soirée exclusive réunissant l'élite des ingénieurs, des entreprises pionnières et des leaders visionnaires.",
     "requestCTA": "DEMANDER VOTRE INVITATION",
     "discoverCTA": "DÉCOUVRIR LE GALA",
-    "date": "08 Novembre 2026",
-    "venue": "Hôtel Mercure · Grande Salle de Bal",
-    "countdownLabel": "CLÔTURE DES INVITATIONS DANS",
-    "countdown": ["JOURS", "HEURES", "MINUTES", "SECONDES"]
+    "date": "Date & lieu : restez à l’écoute",
+    "venue": "",
+    "countdownLabel": "OUVERTURE DES INSCRIPTIONS DANS",
+    "countdown": [
+      "JOURS",
+      "HEURES",
+      "MINUTES",
+      "SECONDES"
+    ],
+    "countdownOpenLabel": "LES INSCRIPTIONS SONT OUVERTES"
   },
   "manifesto": {
     "label": "LE MANIFESTE GALA",
@@ -32,10 +62,22 @@
     "paragraph2": "Nous orchestrons un environnement où le dialogue authentique remplace les discours convenus, et où un échange unique peut transformer une carrière ou façonner l'avenir d'une organisation.",
     "quote": "« Des connexions qui comptent. Des conversations qui créent l'opportunité. »",
     "stats": [
-      { "value": "100%", "label": "Sélection Rigoureuse" },
-      { "value": "1:1", "label": "Accès Dirigeants" },
-      { "value": "5 Étoiles", "label": "Hospitalité d'Exception" },
-      { "value": "500+", "label": "Futurs Leaders" }
+      {
+        "value": "100%",
+        "label": "Sélection Rigoureuse"
+      },
+      {
+        "value": "1:1",
+        "label": "Accès Dirigeants"
+      },
+      {
+        "value": "5 Étoiles",
+        "label": "Hospitalité d'Exception"
+      },
+      {
+        "value": "500+",
+        "label": "Futurs Leaders"
+      }
     ],
     "moments": [
       {
@@ -96,49 +138,109 @@
     "subheadline": "Explorez les chapitres précédents d'excellence technique, de partenariats et de prestige.",
     "exploreCTA": "DÉCOUVRIR CETTE ÉDITION",
     "editions": {
-      "2025": {
-        "year": "2025",
-        "title": "GALA 2025 · La Renaissance",
-        "story": "L'édition 2025 a marqué une étape historique dans le networking de haut niveau, rassemblant plus de mille délégués triés sur le volet, 32 entreprises internationales et des conférenciers de premier plan en énergie, IA et industrie.",
+      "2017": {
+        "year": "2017",
+        "title": "2017 · L'Inception",
+        "story": "La genèse d'un héritage : le Vision & Innovation Club organise le premier GALA à l'École Nationale Polytechnique d'Alger, posant les fondations d'élégance et d'excellence.",
         "stats": [
-          { "value": "1 200", "label": "INVITÉS" },
-          { "value": "32", "label": "ENTREPRISES" },
-          { "value": "01", "label": "SOIRÉE INOUBLIABLE" }
+          {
+            "value": "300",
+            "label": "PIONNIERS"
+          },
+          {
+            "value": "10",
+            "label": "FONDATEURS"
+          },
+          {
+            "value": "01",
+            "label": "TRADITION NÉE"
+          }
         ],
-        "image": "/DSCF7403.jpg"
+        "image": "/images/lowla.png"
       },
-      "2024": {
-        "year": "2024",
-        "title": "GALA 2024 · Horizons d'Innovation",
-        "story": "Célébrée avec élégance, l'édition 2024 a réuni 176 diplômés d'élite, des partenaires recruteurs d'envergure et des panels d'experts sur les transitions industrielles.",
-        "stats": [
-          { "value": "850", "label": "INVITÉS" },
-          { "value": "24", "label": "ENTREPRISES" },
-          { "value": "16", "label": "CONFÉRENCES & PANELS" }
-        ],
-        "image": "/images/troisième.png"
+      "2018": {
+        "year": "2018",
+        "title": "GALA 2018 · La Continuité",
+        "story": "La deuxième édition a fait d’une première soirée une tradition, réunissant à nouveau talents de l’ingénierie et industrie autour d’une même ambition : des liens qui durent au-delà de la soirée.",
+        "stats": []
       },
       "2019": {
         "year": "2019",
         "title": "GALA 2019 · Énergie & Synergie",
         "story": "Un rassemblement d'envergure réunissant figures de l'ingénierie et géants de l'énergie, établissant le GALA comme la référence entre université et industrie.",
         "stats": [
-          { "value": "500+", "label": "PARTICIPANTS" },
-          { "value": "18", "label": "PARTENAIRES" },
-          { "value": "100%", "label": "SATISFACTION" }
+          {
+            "value": "500+",
+            "label": "PARTICIPANTS"
+          },
+          {
+            "value": "18",
+            "label": "PARTENAIRES"
+          },
+          {
+            "value": "100%",
+            "label": "SATISFACTION"
+          }
         ],
         "image": "/images/deuxième.png"
       },
-      "2017": {
-        "year": "2017",
-        "title": "2017 · L'Inception",
-        "story": "La genèse d'un héritage : le Vision & Innovation Club organise le premier GALA à l'École Nationale Polytechnique d'Alger, posant les fondations d'élégance et d'excellence.",
+      "2021": {
+        "year": "2021",
+        "title": "GALA 2021 · Le Retour",
+        "story": "Après une pause, le Gala est revenu rassembler la communauté de l’ingénierie, renouant le lien entre les talents de l’École Nationale Polytechnique et les entreprises qui les recherchent.",
+        "stats": []
+      },
+      "2022": {
+        "year": "2022",
+        "title": "GALA 2022 · L’Élan",
+        "story": "La communauté de nouveau réunie, l’édition 2022 a voulu élargir le cercle, ouvrant le dialogue entre université et industrie à de nouvelles voix et de nouveaux partenaires.",
+        "stats": []
+      },
+      "2023": {
+        "year": "2023",
+        "title": "GALA 2023 · L’Ascension",
+        "story": "L’édition 2023 a recentré la soirée sur l’essentiel : des échanges directs et sincères entre jeunes ingénieurs et organisations qui façonnent leur domaine.",
+        "stats": []
+      },
+      "2024": {
+        "year": "2024",
+        "title": "GALA 2024 · Horizons d'Innovation",
+        "story": "Célébrée avec élégance, l'édition 2024 a réuni 176 diplômés d'élite, des partenaires recruteurs d'envergure et des panels d'experts sur les transitions industrielles.",
         "stats": [
-          { "value": "300", "label": "PIONNIERS" },
-          { "value": "10", "label": "FONDATEURS" },
-          { "value": "01", "label": "TRADITION NÉE" }
+          {
+            "value": "850",
+            "label": "INVITÉS"
+          },
+          {
+            "value": "24",
+            "label": "ENTREPRISES"
+          },
+          {
+            "value": "16",
+            "label": "CONFÉRENCES & PANELS"
+          }
         ],
-        "image": "/images/lowla.png"
+        "image": "/images/troisième.png"
+      },
+      "2025": {
+        "year": "2025",
+        "title": "GALA 2025 · La Renaissance",
+        "story": "L'édition 2025 a marqué une étape historique dans le networking de haut niveau, rassemblant plus de mille délégués triés sur le volet, 32 entreprises internationales et des conférenciers de premier plan en énergie, IA et industrie.",
+        "stats": [
+          {
+            "value": "1 200",
+            "label": "INVITÉS"
+          },
+          {
+            "value": "32",
+            "label": "ENTREPRISES"
+          },
+          {
+            "value": "01",
+            "label": "SOIRÉE INOUBLIABLE"
+          }
+        ],
+        "image": "/DSCF7403.jpg"
       }
     }
   },
@@ -202,8 +304,8 @@
     "selectCTA": "RÉSERVER VOTRE BILLET D'ADMISSION",
     "ticketName": "BILLET D'ADMISSION OFFICIEL",
     "price": "1 000 DA",
-    "date": "Samedi 08 Novembre 2026",
-    "venue": "Hôtel Mercure, Bab Ezzouar",
+    "date": "Date & lieu : restez à l’écoute",
+    "venue": "",
     "serial": "GL-2026-0881",
     "tagline": "WHERE THE NEXT CHAPTER OF ENGINEERING BEGINS",
     "inclusionsTitle": "PRIVILÈGES D'ADMISSION INCLUS",
@@ -252,14 +354,32 @@
     "paragraph1": "Fondé en 2014 sous l'égide de l'association EL-MAARIFA, le Vision & Innovation Club (VIC) à l'École Nationale Polytechnique d'Alger a bâti une institution dédiée à l'ambition et au dépassement.",
     "paragraph2": "Plus d'une décennie plus tard, GALA est le rendez-vous incontournable où la rigueur technique rencontre le leadership industriel dans un cadre d'une élégance rare.",
     "stats": [
-      { "value": "10+", "label": "Années de Tradition" },
-      { "value": "200+", "label": "Membres Actifs" },
-      { "value": "800+", "label": "Alumni Remarquables" }
+      {
+        "value": "10+",
+        "label": "Années de Tradition"
+      },
+      {
+        "value": "200+",
+        "label": "Membres Actifs"
+      },
+      {
+        "value": "800+",
+        "label": "Alumni Remarquables"
+      }
     ],
     "pillars": [
-      { "title": "Élever l'Ambition", "desc": "Donner aux futurs ingénieurs le réseau, la visibilité et la confiance nécessaires pour diriger." },
-      { "title": "Connecter l'Industrie", "desc": "Créer des synergies authentiques et directes entre grands groupes et talents de premier ordre." },
-      { "title": "Excellence Pérenne", "desc": "Garantir des standards d'organisation, d'hospitalité et de transmission sans compromis." }
+      {
+        "title": "Élever l'Ambition",
+        "desc": "Donner aux futurs ingénieurs le réseau, la visibilité et la confiance nécessaires pour diriger."
+      },
+      {
+        "title": "Connecter l'Industrie",
+        "desc": "Créer des synergies authentiques et directes entre grands groupes et talents de premier ordre."
+      },
+      {
+        "title": "Excellence Pérenne",
+        "desc": "Garantir des standards d'organisation, d'hospitalité et de transmission sans compromis."
+      }
     ]
   },
   "concierge": {
@@ -298,10 +418,22 @@
     "headline": "Votre soirée\ncommence ici.",
     "subheadline": "Complétez vos coordonnées pour solliciter votre pass d'admission au GALA (1 000 DA).",
     "steps": {
-      "step1": { "title": "01 PERSONNEL", "subtitle": "Identité et coordonnées de contact" },
-      "step2": { "title": "02 PARCOURS", "subtitle": "Formation académique et spécialité" },
-      "step3": { "title": "03 VISION", "subtitle": "Motivations, ambitions et attentes" },
-      "step4": { "title": "04 CONFIRMATION", "subtitle": "Vérification et transmission" }
+      "step1": {
+        "title": "01 PERSONNEL",
+        "subtitle": "Identité et coordonnées de contact"
+      },
+      "step2": {
+        "title": "02 PARCOURS",
+        "subtitle": "Formation académique et spécialité"
+      },
+      "step3": {
+        "title": "03 VISION",
+        "subtitle": "Motivations, ambitions et attentes"
+      },
+      "step4": {
+        "title": "04 CONFIRMATION",
+        "subtitle": "Vérification et transmission"
+      }
     },
     "fields": {
       "firstName": "Prénom *",
@@ -375,7 +507,10 @@
         "OTHER": "Autre Canal"
       }
     },
-    "options": { "yes": "Oui", "no": "Non" },
+    "options": {
+      "yes": "Oui",
+      "no": "Non"
+    },
     "buttons": {
       "previous": "PRÉCÉDENT",
       "next": "CONTINUER",
@@ -385,11 +520,23 @@
     "success": {
       "title": "Votre demande a été enregistrée.",
       "message": "Notre comité d'admission examinera votre dossier. Une confirmation officielle vous sera adressée par e-mail.",
-      "journey": ["DEMANDE ENVOYÉE", "EXAMEN DU DOSSIER", "CONFIRMATION", "VOTRE INVITATION"]
+      "journey": [
+        "DEMANDE ENVOYÉE",
+        "EXAMEN DU DOSSIER",
+        "CONFIRMATION",
+        "VOTRE INVITATION"
+      ]
     },
     "errors": {
       "submit": "La demande n'a pas pu aboutir. Veuillez vérifier vos informations.",
       "network": "Connexion impossible avec le serveur sécurisé. Veuillez réessayer."
+    },
+    "closed": {
+      "eyebrow": "INSCRIPTIONS",
+      "title": "Les inscriptions ouvrent le 10 novembre.",
+      "message": "Les demandes de pass d’admission ouvrent le mardi 10 novembre. Date et lieu de la soirée : restez à l’écoute.",
+      "countdown": "Ouverture dans",
+      "back": "Retour à la soirée"
     }
   },
   "footer": {

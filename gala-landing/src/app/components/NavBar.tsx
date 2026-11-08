@@ -98,7 +98,7 @@ export default function NavBar() {
       <header
         className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 font-sans ${
           scrolled
-            ? "py-3 sm:py-4 pt-[max(0.75rem,env(safe-area-inset-top))] bg-[var(--color-dark)]/85 backdrop-blur-md border-b border-[var(--color-silver)]/15 shadow-[0_10px_30px_rgba(0,0,0,0.6)]"
+            ? "py-3 sm:py-4 pt-[max(0.75rem,env(safe-area-inset-top))] bg-[#1d0313]/95 border-b border-[var(--color-silver)]/15 shadow-[0_10px_30px_rgba(0,0,0,0.6)]"
             : "py-4 sm:py-8 pt-[max(1rem,env(safe-area-inset-top))] bg-transparent"
         }`}
       >

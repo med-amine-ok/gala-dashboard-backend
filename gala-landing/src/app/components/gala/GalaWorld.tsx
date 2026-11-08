@@ -399,6 +399,12 @@ export default function GalaWorld() {
       if (l) l.style.opacity = "";
       const vw = window.innerWidth;
       const vh = window.innerHeight;
+      // A window with no size yet (hidden tab, mid-resize): try again later
+      // rather than throwing inside the animation loop
+      if (!vw || !vh) {
+        copyDirty = true;
+        return;
+      }
       const c = document.createElement("canvas");
       c.width = vw;
       c.height = vh;

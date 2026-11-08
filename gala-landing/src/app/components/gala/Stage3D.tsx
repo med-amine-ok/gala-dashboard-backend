@@ -35,8 +35,10 @@ export interface StageHandle {
   update: (dt: number, t: number) => void;
   resize?: (w: number, h: number) => void;
   dispose?: () => void;
-  /** Clicks on the stage (e.g. to turn a card over) */
-  onClick?: () => void;
+  /** Clicks on the stage (e.g. to turn a card over), with the point in NDC (-1..1) */
+  onClick?: (ndc?: { x: number; y: number }) => void;
+  /** Whether the point (NDC) is clickable: shows a hand cursor */
+  hover?: (ndc: { x: number; y: number }) => boolean;
 }
 
 // The optimiser only serves its configured widths (Next's default device sizes) at q=75
@@ -52,17 +54,23 @@ export default function Stage3D({
   className = "",
   fallback = null,
   cursor = false,
+  active = true,
 }: {
   setup: (ctx: StageContext) => StageHandle;
   className?: string;
   fallback?: React.ReactNode;
   /** Show a pointer cursor (the stage is clickable) */
   cursor?: boolean;
+  /** Draw only while true (on top of being on screen), e.g. while another layer covers it */
+  active?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [failed, setFailed] = useState(false);
   const setupRef = useRef(setup);
   setupRef.current = setup;
+  const activeRef = useRef(active);
+  activeRef.current = active;
+  const syncRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     const host = ref.current;
@@ -170,10 +178,17 @@ export default function Stage3D({
       const r = host.getBoundingClientRect();
       over = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
       if (e.pointerType !== "mouse") return;
+      if (over && handle.hover) {
+        const hand = handle.hover({ x: ((e.clientX - r.left) / r.width) * 2 - 1, y: -(((e.clientY - r.top) / r.height) * 2 - 1) });
+        canvas.style.cursor = hand ? "pointer" : "";
+      }
       target.set(((e.clientX - r.left) / r.width) * 2 - 1, -(((e.clientY - r.top) / r.height) * 2 - 1));
       if (!over) target.set(0, 0);
     };
-    const onClick = () => handle.onClick?.();
+    const onClick = (e: MouseEvent) => {
+      const r = host.getBoundingClientRect();
+      handle.onClick?.({ x: ((e.clientX - r.left) / r.width) * 2 - 1, y: -(((e.clientY - r.top) / r.height) * 2 - 1) });
+    };
     window.addEventListener("pointermove", onMove, { passive: true });
     canvas.addEventListener("click", onClick);
 
@@ -190,7 +205,8 @@ export default function Stage3D({
 
     // Only draw while on screen and the tab is visible
     let onScreen = false;
-    const sync = () => renderer.setAnimationLoop(onScreen && !document.hidden ? frame : null);
+    const sync = () => renderer.setAnimationLoop(onScreen && activeRef.current && !document.hidden ? frame : null);
+    syncRef.current = sync;
     const io = new IntersectionObserver(
       (entries) => {
         onScreen = entries[0]?.isIntersecting ?? false;
@@ -230,6 +246,8 @@ export default function Stage3D({
       canvas.remove();
     };
   }, []);
+
+  useEffect(() => syncRef.current(), [active]);
 
   if (failed) return <>{fallback}</>;
   // Positioned by the caller (absolute/fixed), otherwise a containing block for the canvas

@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import { CreditCard, Loader2, AlertCircle } from "lucide-react";
 import * as z from "zod";
+import { GalaButton } from "../../components/gala/Room";
 import { useParams, useRouter } from "next/navigation";
 
 // Payment Schema
@@ -112,23 +113,13 @@ export default function PaymentPage() {
             )}
 
             <div className="mt-10 flex justify-end">
-              <button
+              <GalaButton
                 type="submit"
                 disabled={loading}
-                className="cursor-pointer flex items-center justify-center gap-2 rounded-2xl px-8 py-3.5 text-xs font-semibold uppercase tracking-wider text-[var(--color-cream)] bg-[var(--color-maroon)] border border-[var(--color-silver)] hover:bg-[var(--color-primary)] hover:text-[var(--color-silver)] transition-all disabled:opacity-50 shadow-md"
+                icon={loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CreditCard size={14} />}
               >
-                {loading ? (
-                  <>
-                    <Loader2 className="animate-spin -ml-1 mr-1 h-4 w-4" />
-                    Redirection...
-                  </>
-                ) : (
-                  <>
-                    <CreditCard size={16} />
-                    Procéder au paiement
-                  </>
-                )}
-              </button>
+                {loading ? "Redirection..." : "Procéder au paiement"}
+              </GalaButton>
             </div>
           </div>
         </main>

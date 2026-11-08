@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import Link from "next/link";
 import Image from "next/image";
+import { GalaButton } from "../../components/gala/Room";
 import {
   CheckCircle2,
   Download,
@@ -15,7 +15,6 @@ import {
   Calendar,
   MapPin,
   Sparkles,
-  ArrowRight,
   ShieldCheck,
   Printer,
 } from "lucide-react";
@@ -151,18 +150,10 @@ function SuccessContent() {
               <p className="text-sm text-[var(--color-cream)]/75 max-w-md mx-auto">{error}</p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-              <button
-                onClick={() => window.location.reload()}
-                className="px-6 py-3 rounded-2xl text-xs font-semibold uppercase tracking-wider text-[var(--color-cream)] bg-[var(--color-maroon)] border border-[var(--color-silver)]/50 hover:bg-[var(--color-primary)] transition cursor-pointer"
-              >
-                Réessayer la vérification
-              </button>
-              <Link
-                href="/"
-                className="px-6 py-3 rounded-2xl text-xs font-semibold uppercase tracking-wider text-[var(--color-silver)] bg-[var(--color-dark)] border border-[var(--color-silver)]/30 hover:bg-[var(--color-maroon)] transition"
-              >
+              <GalaButton onClick={() => window.location.reload()}>Réessayer la vérification</GalaButton>
+              <GalaButton href="/" variant="ghost">
                 Retour à l&apos;accueil
-              </Link>
+              </GalaButton>
             </div>
           </div>
         ) : (
@@ -305,31 +296,21 @@ function SuccessContent() {
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3.5 justify-center items-center">
               {data?.downloadUrl && (
-                <a
+                <GalaButton
                   href={data.downloadUrl}
                   download={"ticket-" + (data?.ticketSerial || "pass") + ".pdf"}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl text-xs font-semibold uppercase tracking-wider text-[var(--color-cream)] bg-[var(--color-maroon)] border border-[var(--color-silver)] hover:bg-[var(--color-primary)] hover:text-[var(--color-silver)] shadow-md transition-all cursor-pointer"
+                  icon={<Download className="h-3.5 w-3.5" />}
+                  className="w-full sm:w-auto"
                 >
-                  <Download className="w-4 h-4" />
-                  <span>Télécharger le Billet (PDF)</span>
-                </a>
+                  Télécharger le Billet (PDF)
+                </GalaButton>
               )}
-
-              <button
-                onClick={handlePrint}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl text-xs font-semibold uppercase tracking-wider text-[var(--color-cream)] bg-[var(--color-dark)] border border-[var(--color-silver)]/40 hover:bg-[var(--color-maroon)] transition-all cursor-pointer"
-              >
-                <Printer className="w-4 h-4 text-[var(--color-silver)]" />
-                <span>Imprimer</span>
-              </button>
-
-              <Link
-                href="/"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl text-xs font-semibold uppercase tracking-wider text-[var(--color-silver)] bg-[var(--color-dark)] border border-[var(--color-silver)]/40 hover:bg-[var(--color-maroon)] transition-all"
-              >
-                <span>Retour à l&apos;accueil</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
+              <GalaButton onClick={handlePrint} variant="ghost" icon={<Printer className="h-3.5 w-3.5" />} className="w-full sm:w-auto">
+                Imprimer
+              </GalaButton>
+              <GalaButton href="/" variant="ghost" className="w-full sm:w-auto">
+                Retour à l&apos;accueil
+              </GalaButton>
             </div>
           </div>
         )}

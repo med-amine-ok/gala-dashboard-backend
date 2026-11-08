@@ -5,22 +5,18 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { useLanguage } from "../../context/LanguageContext";
 import { GALA_EASE, GalaButton } from "../components/gala/Room";
+import { REGISTRATION_OPENS } from "../../lib/event";
+import { SOCIALS } from "../../lib/socials";
 
-const EVENT_DATE = new Date("2026-11-08T09:00:00");
 
-const SOCIALS = [
-  { label: "Instagram", href: "https://www.instagram.com/vic.enp/" },
-  { label: "LinkedIn", href: "https://www.linkedin.com/company/vicenp/" },
-  { label: "Facebook", href: "https://www.facebook.com/vic.enpa" },
-  { label: "TikTok", href: "https://www.tiktok.com/@vic.enp" },
-];
 
-/** Days, hours and minutes to the doors (client-only, refreshed each half minute) */
+
+/** Days, hours and minutes until registration opens (client-only, refreshed each half minute) */
 function useCountdown() {
   const [left, setLeft] = useState<{ d: number; h: number; m: number } | null>(null);
   useEffect(() => {
     const tick = () => {
-      const ms = EVENT_DATE.getTime() - Date.now();
+      const ms = REGISTRATION_OPENS.getTime() - Date.now();
       if (ms <= 0) return setLeft(null);
       setLeft({ d: Math.floor(ms / 86_400_000), h: Math.floor(ms / 3_600_000) % 24, m: Math.floor(ms / 60_000) % 60 });
     };
@@ -125,7 +121,7 @@ export default function Footer() {
                 ))}
               </p>
             )}
-            <p className="mt-2 text-[12.5px] text-[var(--color-cream)]/50">{fr ? "avant l'ouverture des portes" : "until the doors open"}</p>
+            {left && <p className="mt-2 text-[12.5px] text-[var(--color-cream)]/50">{fr ? "avant l'ouverture des inscriptions" : "until registration opens"}</p>}
             <div className="mt-6">
               <GalaButton href="/register">{texts.nav?.requestInvitation || "REQUEST INVITATION"}</GalaButton>
             </div>

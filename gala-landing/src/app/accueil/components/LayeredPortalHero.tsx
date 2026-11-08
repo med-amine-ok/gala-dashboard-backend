@@ -8,6 +8,7 @@ import { useLanguage } from "../../../context/LanguageContext";
 import ManifestoSection from "../../manifesto/page";
 import Real3DEntranceCanvas, { type EntranceFrame } from "./Real3DEntranceCanvas";
 import { preloadHeroTextures } from "./TextureGenerator";
+import { REGISTRATION_OPENS } from "../../../lib/event";
 
 // Attendee photo (5472 x 3648) used for the out-of-focus hall beyond the doors
 const HALL_PHOTO_ASPECT = 1.5;
@@ -54,8 +55,9 @@ export default function LayeredPortalHero() {
   const [fps, setFps] = useState<number>(60);
   const [reducedMotion, setReducedMotion] = useState<boolean>(false);
 
-  // Event countdown state (Target: Nov 8, 2026)
-  const eventDate = new Date("2026-11-08T09:00:00");
+  // Countdown to the opening of registration (see src/lib/event.ts)
+  const eventDate = REGISTRATION_OPENS;
+  const [registrationOpen, setRegistrationOpen] = useState(false);
   const [timeLeft, setTimeLeft] = useState({
     days: "74",
     hours: "14",
@@ -103,7 +105,11 @@ export default function LayeredPortalHero() {
     // Countdown timer
     const updateCountdown = () => {
       const diff = eventDate.getTime() - new Date().getTime();
-      if (diff <= 0) return;
+      if (diff <= 0) {
+        setRegistrationOpen(true);
+        setTimeLeft({ days: "00", hours: "00", minutes: "00", seconds: "00" });
+        return;
+      }
       const days = Math.floor(diff / (1000 * 60 * 60 * 24));
       const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
       const minutes = Math.floor((diff / (1000 * 60)) % 60);
@@ -152,6 +158,13 @@ export default function LayeredPortalHero() {
       const top = container.getBoundingClientRect().top;
       const p = travel > 0 ? -top / travel : 0;
       scrollProgressRef.current = p < 0 ? 0 : p > 1 ? 1 : p;
+      // The hotel walk is pinned under the whole portal: as the doors fill the
+      // frame the stage dissolves, and the live hotel beneath carries on
+      const t = Math.min(1, Math.max(0, (p - 0.88) / 0.1));
+      const fade = t * t * (3 - 2 * t);
+      stage.style.opacity = fade > 0 ? (1 - fade).toFixed(3) : "";
+      stage.style.visibility = fade >= 1 ? "hidden" : "";
+      stage.style.pointerEvents = fade > 0.5 ? "none" : "";
     };
     update();
     window.addEventListener("scroll", update, { passive: true });
@@ -329,7 +342,7 @@ export default function LayeredPortalHero() {
     <div
       ref={containerRef}
       // Scroll length of the move: 1 viewport of stage + 120% (phones) / 150%
-      className={`relative w-full ${reducedMotion ? "" : "h-[220svh] md:h-[250svh]"}`}
+      className={`relative z-[1] w-full ${reducedMotion ? "" : "h-[160svh] md:h-[175svh]"}`}
       id="home"
     >
       {/* Sticky Stage Element: EXACT website background token var(--color-dark) (#2E061E) */}
@@ -369,14 +382,8 @@ export default function LayeredPortalHero() {
             className="absolute inset-0 z-0 pointer-events-none will-change-transform overflow-hidden"
             style={{ transformOrigin: "50% 50%", visibility: "hidden" }}
           >
-            <ManifestoSection />
-            {/* Warm light blooming in the doorway as the hall appears */}
-            <div
-              ref={aboutBloomRef}
-              aria-hidden="true"
-              className="absolute inset-0 pointer-events-none mix-blend-screen bg-[radial-gradient(ellipse_at_center,rgba(242,232,216,0.55)_0%,rgba(193,67,145,0.22)_38%,transparent_72%)]"
-              style={{ opacity: 0 }}
-            />
+            {/* (kept for the frame writer; no bloom any more) */}
+            <div ref={aboutBloomRef} aria-hidden="true" className="hidden" />
           </div>
         )}
 
@@ -473,7 +480,9 @@ export default function LayeredPortalHero() {
             >
               <div className="flex items-center justify-center gap-2">
                 <p className="text-[8.5px] xs:text-[9.5px] sm:text-[11px] uppercase tracking-[0.24em] text-[var(--color-silver-light)] font-semibold text-center sm:text-left drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]">
-                  {texts.hero?.countdownLabel || "INVITATION WINDOW CLOSES IN"}
+                  {registrationOpen
+                    ? texts.hero?.countdownOpenLabel || "REGISTRATION IS NOW OPEN"
+                    : texts.hero?.countdownLabel || "REGISTRATION OPENS IN"}
                 </p>
               </div>
 

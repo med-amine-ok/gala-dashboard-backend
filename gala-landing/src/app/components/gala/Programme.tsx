@@ -11,8 +11,8 @@ import {
   useSpring,
   useMotionValueEvent,
 } from "framer-motion";
-import { useLanguage } from "../../context/LanguageContext";
-import { GALA_EASE, GalaFrame, RoomMasthead } from "../components/gala/Room";
+import { useLanguage } from "../../../context/LanguageContext";
+import { GALA_EASE, GalaFrame, RoomMasthead } from "./Room";
 
 /* Web-sized photographs for each movement of the evening */
 export const CHAPTER_IMAGES: Record<string, string> = {

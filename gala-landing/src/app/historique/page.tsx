@@ -15,7 +15,7 @@ import {
   MovementIndex,
   NUMERALS,
   type Chapter,
-} from "../experience/page";
+} from "../components/gala/Programme";
 import { useLanguage } from "../../context/LanguageContext";
 import {
   CountUp,
@@ -32,20 +32,26 @@ import Stage3D, {
 } from "../components/gala/Stage3D";
 
 const EDITION_IMAGES: Record<string, string> = {
-  "2017": "/images/lowla.png",
-  "2019": "/images/deuxième.png",
-  "2024": "/images/troisième.png",
-  "2025": "/DSCF7403.jpg",
+  "2017": "/images/2017.jpg",
+  "2018": "/images/2018.jpg",
+  "2019": "/images/2019.png",
+  "2021": "/images/2021.jpg",
+  "2022": "/images/2022.jpg",
+  "2023": "/images/2023.jpg",
+  "2024": "/images/2024.webp",
+  "2025": "/images/2025.webp",
 };
-/* Walked in chronological order, arriving at the most recent edition */
-const YEARS = ["2017", "2019", "2024", "2025"];
+/* Every edition from the first, in order, arriving at this year (2026, the
+   programme). Editions without a photograph yet are shown as an engraved
+   year card until their pictures are added to EDITION_IMAGES. */
+const YEARS = ["2017", "2018", "2019", "2021", "2022", "2023", "2024", "2025"];
 
 interface Edition {
   year: string;
   title: string;
   story: string;
   stats: { value: string; label: string }[];
-  image: string;
+  image?: string;
 }
 
 /**
@@ -77,7 +83,7 @@ export default function ArchivesSection() {
   });
 
   return (
-    <section className="relative w-full bg-transparent pt-16 text-[var(--color-cream)] sm:pt-24">
+    <section className="relative w-full bg-transparent text-[var(--color-cream)]">
       {reduceMotion && (
         <div className="px-6 sm:px-12">
           <RoomMasthead
@@ -134,16 +140,22 @@ function EditionColumn({ editions }: { editions: Edition[] }) {
           <DrawnRule className="mt-3" />
           <GalaFrame className="mt-6">
             <div
-              data-gala-media
+              data-gala-media={e.image ? "" : undefined}
               className="relative aspect-[3/2] overflow-hidden"
             >
-              <Image
-                src={e.image}
-                alt={e.title}
-                fill
-                sizes="(max-width: 640px) 90vw, 560px"
-                className="object-cover [filter:brightness(0.88)_contrast(1.06)_saturate(0.85)]"
-              />
+              {e.image ? (
+                <Image
+                  src={e.image}
+                  alt={e.title}
+                  fill
+                  sizes="(max-width: 640px) 90vw, 560px"
+                  className="object-cover [filter:brightness(0.88)_contrast(1.06)_saturate(0.85)]"
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center bg-[radial-gradient(ellipse_at_center,#4a0c32,#1d0210)]">
+                  <span className="font-cinzel text-[64px] font-semibold gala-engraved">{e.year}</span>
+                </div>
+              )}
             </div>
           </GalaFrame>
           <h3 className="mt-6 font-cormorant text-[28px] italic leading-tight text-[var(--color-cream)]">
@@ -182,7 +194,7 @@ function Stats({ stats }: { stats: Edition["stats"] }) {
 
 /* ───────────────────────────── The film ───────────────────────────── */
 
-const ROMAN = ["I", "II", "III", "IV", "V", "VI"];
+const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
 
 type ReelItem =
   | { kind: "edition"; src: string; edition: Edition; chapter: number }
@@ -204,7 +216,7 @@ function ChaptersReel({
   const items: ReelItem[] = [
     ...editions.map((e, i) => ({
       kind: "edition" as const,
-      src: e.image,
+      src: e.image || `year:${e.year}`,
       edition: e,
       chapter: i,
     })),
@@ -251,14 +263,13 @@ function ChaptersReel({
 
   const it = items[active];
   const chapterNow = it.chapter;
-  const rail = [...editions.map((e) => e.year), "2026"];
 
   return (
     <>
       <div
         ref={ref}
         className="relative"
-        style={{ height: `${N * 70 + 30}vh` }}
+        style={{ height: `${N * 55 + 30}vh` }}
       >
         {/* Menu links to the programme land on Chapter V */}
         <div
@@ -272,7 +283,7 @@ function ChaptersReel({
           <Stage3D setup={setup} className="absolute inset-0" />
 
           {/* The room's title, above the reel */}
-          <div className="pointer-events-none absolute inset-x-0 top-0 z-10 px-5 pt-[84px] sm:px-10 lg:pt-24">
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-10 px-5 pt-[76px] sm:px-10 lg:pt-[84px]">
             <div className="mx-auto flex max-w-7xl items-baseline justify-between gap-6">
               <span className="text-[10.5px] font-semibold uppercase tracking-[0.34em] text-[var(--color-silver)]">
                 III · {a.label || "THE ARCHIVES"}
@@ -342,35 +353,51 @@ function ChaptersReel({
                 className="absolute left-0 top-[5px] h-px origin-left bg-[linear-gradient(90deg,var(--color-silver),var(--color-silver-light))]"
                 style={{ scaleX: scrollYProgress, width: "100%" }}
               />
-              <ol className="relative flex justify-between">
-                {rail.map((label, i) => {
-                  const target = i < P ? i : P;
-                  const reached = i <= chapterNow;
+              {/* One stop for every photograph on the reel, where it stands
+                  along the scroll: a year for each edition, then 2026 and
+                  small stops for this year's four acts */}
+              <ol className="relative h-9">
+                {items.map((item, k) => {
+                  const at = (k / Math.max(1, N - 1)) * 100;
+                  const isYear = item.kind === "edition" || k === P;
+                  const chapter = item.chapter;
+                  const reached = k <= active;
+                  const current = isYear ? chapter === chapterNow && (k < P || active >= P) : k === active;
+                  const label = item.kind === "edition" ? item.edition.year : "2026";
                   return (
-                    <li key={label}>
+                    <li
+                      key={k}
+                      className={`absolute top-0 ${k === 0 ? "" : k === N - 1 ? "-translate-x-full" : "-translate-x-1/2"}`}
+                      style={{ left: `${at}%` }}
+                    >
                       <button
                         type="button"
-                        onClick={() => goTo(target)}
-                        aria-current={i === chapterNow ? "step" : undefined}
-                        className={`group flex flex-col gap-2 luxury-focus-ring ${i === 0 ? "items-start" : i === rail.length - 1 ? "items-end" : "items-center"}`}
+                        onClick={() => goTo(k)}
+                        aria-label={
+                          isYear
+                            ? `Chapter ${ROMAN[chapter]}, ${label}`
+                            : `2026, ${NUMERALS[item.kind === "act" ? item.index : 0]}`
+                        }
+                        aria-current={k === active ? "step" : undefined}
+                        className={`group flex flex-col gap-2 luxury-focus-ring ${k === 0 ? "items-start" : k === N - 1 ? "items-end" : "items-center"}`}
                       >
                         <span
-                          className={`block h-[11px] w-[11px] rotate-45 border transition-colors duration-700 ${
+                          className={`block rotate-45 border transition-colors duration-700 ${
+                            isYear ? "h-[11px] w-[11px]" : "mt-[2px] h-[7px] w-[7px]"
+                          } ${
                             reached
                               ? "border-[var(--color-silver-light)] bg-[var(--color-silver-light)]"
                               : "border-[var(--color-silver)]/40 bg-[#1d0210] group-hover:border-[var(--color-silver-light)]"
                           }`}
                         />
-                        <span
-                          className={`font-cinzel text-[10.5px] tracking-[0.2em] transition-opacity duration-700 ${i === chapterNow ? "opacity-100" : "opacity-45 group-hover:opacity-80"}`}
-                        >
-                          <span className="text-[var(--color-silver-light)]">
-                            {ROMAN[i]}
+                        {isYear && (
+                          <span
+                            className={`whitespace-nowrap font-cinzel text-[10.5px] tracking-[0.2em] transition-opacity duration-700 ${current ? "opacity-100" : "opacity-45 group-hover:opacity-80"}`}
+                          >
+                            <span className="text-[var(--color-silver-light)]">{ROMAN[chapter]}</span>
+                            <span className="ml-1.5 hidden lg:inline">{label}</span>
                           </span>
-                          <span className="ml-1.5 hidden sm:inline">
-                            {label}
-                          </span>
-                        </span>
+                        )}
                       </button>
                     </li>
                   );
@@ -467,6 +494,35 @@ const REEL_FRAG = /* glsl */ `
   }
 `;
 
+/** A card for an edition awaiting its photographs: the year, engraved in silver on plum */
+function yearCard(year: string) {
+  const c = document.createElement("canvas");
+  c.width = 1200;
+  c.height = 800;
+  const g = c.getContext("2d")!;
+  const bg = g.createRadialGradient(600, 380, 40, 600, 400, 760);
+  bg.addColorStop(0, "#4a0c32");
+  bg.addColorStop(1, "#1a020f");
+  g.fillStyle = bg;
+  g.fillRect(0, 0, 1200, 800);
+  const serif = getComputedStyle(document.documentElement).getPropertyValue("--font-cinzel").trim() || "serif";
+  const silver = g.createLinearGradient(0, 260, 0, 520);
+  silver.addColorStop(0, "#ffffff");
+  silver.addColorStop(0.5, "#c9ced8");
+  silver.addColorStop(1, "#8d94a0");
+  g.fillStyle = silver;
+  g.font = `600 260px ${serif}`;
+  g.textAlign = "center";
+  g.textBaseline = "middle";
+  g.fillText(year, 600, 380);
+  g.fillStyle = "rgba(214,219,226,0.55)";
+  g.font = `600 30px ${serif}`;
+  g.fillText("ENGINEERS' GALA", 600, 560);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
 function buildReel(
   ctx: StageContext,
   images: string[],
@@ -485,8 +541,12 @@ function buildReel(
   type Frame = {
     photo: THREE.ShaderMaterial;
     mirror: THREE.ShaderMaterial;
+    meshes: THREE.Mesh[];
     shown: number;
   };
+  // Only the photographs near the front are drawn: with every edition on the
+  // reel it would otherwise wrap round the room and show behind the others
+  const SHOWN = 1.25; // radians either side of straight ahead
   const frames: Frame[] = images.map((src) => {
     const geo = new THREE.PlaneGeometry(W, H);
     const make = (mirror: boolean) =>
@@ -518,8 +578,12 @@ function buildReel(
     m1.renderOrder = 2;
     m2.renderOrder = 1;
     scene.add(m1, m2);
-    const f: Frame = { photo, mirror, shown: 0 };
-    ctx.texture(optimisedImage(src, isMobile ? 1200 : 1920)).then((t) => {
+    const f: Frame = { photo, mirror, meshes: [m1, m2], shown: 0 };
+    // An edition without photographs yet: its year engraved on velvet
+    const source: Promise<THREE.Texture> = src.startsWith("year:")
+      ? Promise.resolve(yearCard(src.slice(5)))
+      : ctx.texture(optimisedImage(src, isMobile ? 1200 : 1920));
+    source.then((t) => {
       const img = t.image as { width: number; height: number };
       const ia = img.width / img.height;
       const fa = W / H;
@@ -577,10 +641,15 @@ function buildReel(
         const angle = i * STEP - rot;
         // Photographs fade in on arrival; far ones rest quietly
         f.shown = Math.min(1, f.shown + dt * 1.5);
-        const far = Math.min(1, Math.abs(angle) / 1.4);
+        const away = Math.abs(angle);
+        const visible = away < SHOWN;
+        for (const mesh of f.meshes) mesh.visible = visible;
+        if (!visible) return;
+        // Neighbours are a little quieter, and fade out towards the edge
+        const fade = 1 - THREE.MathUtils.smoothstep(away, SHOWN * 0.7, SHOWN);
         for (const m of [f.photo, f.mirror]) {
           m.uniforms.uAngle.value = angle;
-          m.uniforms.uOpacity.value = f.shown * (1 - far * 0.55);
+          m.uniforms.uOpacity.value = f.shown * fade * (1 - Math.min(1, away / 1.4) * 0.45);
         }
       });
       dust.rotation.y = t * 0.02 - rot * 0.3;

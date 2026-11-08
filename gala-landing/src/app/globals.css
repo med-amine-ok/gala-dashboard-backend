@@ -59,7 +59,6 @@
 }
 
 html {
-  scroll-behavior: smooth;
   background-color: var(--color-dark);
   color: var(--color-cream);
   font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
@@ -369,8 +368,10 @@ html[data-gala-dust="on"] .gala-hero-mark {
   background:
     radial-gradient(38% 32% at 30% 28%, rgba(211, 55, 145, 0.32), transparent 70%),
     radial-gradient(34% 30% at 74% 68%, rgba(211, 55, 145, 0.24), transparent 70%);
-  mix-blend-mode: screen;
+  /* No blend mode: blending a full-screen moving layer costs a composite every
+     frame; plain translucent light looks the same over the dark velvet */
   animation: velvet-light 26s ease-in-out infinite alternate;
+  will-change: transform;
 }
 @keyframes velvet-light {
   0% { transform: translate3d(-5%, -4%, 0) scale(1); }

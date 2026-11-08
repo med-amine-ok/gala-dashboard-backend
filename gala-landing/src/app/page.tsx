@@ -2,11 +2,9 @@
 
 import NavBar from "./components/NavBar";
 import Accueil from "./accueil/page";
-import Historique from "./historique/page";
-import Pricing from "./ticket/page";
-import Apropos from "./apropos/page";
-import Footer from "./footer/page";
+import HotelWalk from "./components/hotel/HotelWalk";
 import GalaWorld from "./components/gala/GalaWorld";
+import SmoothScroll from "./components/gala/SmoothScroll";
 import { useEffect } from "react";
 
 export default function Home() {
@@ -30,6 +28,7 @@ export default function Home() {
 
   return (
     <div className="w-full min-h-screen bg-[var(--color-dark)] text-[var(--color-cream)]">
+      <SmoothScroll />
       <NavBar />
 
       {/* The hall every room after the entrance stands in (fixed WebGL, behind the content) */}
@@ -39,27 +38,10 @@ export default function Home() {
         {/* I & II — THE ENTRANCE (HERO) & THE MANIFESTO */}
         <Accueil />
 
-        {/* III — THE CHAPTERS: past editions and this year's programme, one story */}
-        <section id="historique" className="relative">
-          {/* Hand-off: the entrance's dark hall dissolves into the enfilade */}
-          <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[45vh] bg-gradient-to-b from-[#2E061E]/70 via-[#2E061E]/30 to-transparent" />
-          <Historique />
-        </section>
+        {/* III–VI — THE HOTEL: through the portal, one walk through a palace hotel:
+            the reception, the salon of frames, the ballroom, the club and its farewell wall */}
+        <HotelWalk />
 
-        {/* V — THE INVITATION */}
-        <section id="tarification">
-          <Pricing />
-        </section>
-
-        {/* VI — THE HOSTS (VIC) */}
-        <section id="apropos">
-          <Apropos />
-        </section>
-
-        {/* THE FAREWELL (FOOTER) */}
-        <section id="footer">
-          <Footer />
-        </section>
       </main>
     </div>
   );
