@@ -144,7 +144,7 @@ export function RevealHeading({
   );
 }
 
-/** Rooms are lit by the hall itself now (GalaWorld); kept so callers stay simple */
+/** Kept so callers stay simple */
 export function RoomSpotlight(_props: { x?: string; y?: string; className?: string }) {
   return null;
 }

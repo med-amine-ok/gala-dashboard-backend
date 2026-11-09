@@ -337,12 +337,6 @@ body {
     linear-gradient(180deg, #d6dce4 0%, #ccd3dc 50%, #bcc4ce 100%);
 }
 
-/* The footer mark is drawn by GalaWorld's dust once it is running */
-html[data-gala-dust="on"] .gala-footer-mark,
-html[data-gala-dust="on"] .gala-hero-mark {
-  visibility: hidden;
-}
-
 /* Editorial italic companion to Cinzel */
 .font-cormorant {
   font-family: 'Cormorant Garamond', Georgia, serif;

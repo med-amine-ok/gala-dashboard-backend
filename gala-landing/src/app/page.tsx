@@ -3,7 +3,6 @@
 import NavBar from "./components/NavBar";
 import Accueil from "./accueil/page";
 import HotelWalk from "./components/hotel/HotelWalk";
-import GalaWorld from "./components/gala/GalaWorld";
 import SmoothScroll from "./components/gala/SmoothScroll";
 import { useEffect } from "react";
 
@@ -30,9 +29,6 @@ export default function Home() {
     <div className="w-full min-h-screen bg-[var(--color-dark)] text-[var(--color-cream)]">
       <SmoothScroll />
       <NavBar />
-
-      {/* The hall every room after the entrance stands in (fixed WebGL, behind the content) */}
-      <GalaWorld />
 
       <main className="relative z-[1] w-full overflow-x-clip">
         {/* I & II — THE ENTRANCE (HERO) & THE MANIFESTO */}

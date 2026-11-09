@@ -423,7 +423,7 @@ export default function LayeredPortalHero() {
                 ref={heroTitleRef}
                 className="flex justify-center mb-3 xs:mb-4 sm:mb-6 relative will-change-transform"
               >
-                {/* GalaWorld's dust draws this mark once it is running; the image is its twin */}
+                {/* The Gala's mark */}
                 <Image
                   id="gala-hero-logo"
                   src="/GALA-silver.png"
