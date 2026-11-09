@@ -3,9 +3,10 @@ import type { StageContext, StageHandle } from "../gala/Stage3D";
 import { optimisedImage } from "../gala/Stage3D";
 import { createLetter, PASS_ASPECT } from "../gala/Letter";
 import * as T from "./hotelTextures";
-import { columnSkin, farewell, lanternGlass, piercedMetal, sealedCard, type FarewellWords, type SealedWords } from "./hotelDecor";
+import { columnSkin, farewell, inlayBand, lanternGlass, marbleFloor, piercedMetal, sealedCard, type FarewellWords, type SealedWords } from "./hotelDecor";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { REGISTRATION_OPENS } from "../../../lib/event";
+import { Reflector } from "three/examples/jsm/objects/Reflector.js";
 
 /*
  * The hotel after the portal, after the Hôtel El Djazaïr (formerly Saint
@@ -198,7 +199,33 @@ export function buildHotel(
   const stuccoMat = new THREE.MeshLambertMaterial({ map: T.stucco([0.5, 0.5]), color: 0xd2c6ba });
   const zelligeTex = T.zellige([1, 1]);
   const friezeTex = T.frieze([1, 1]);
-  const marbleMat = new THREE.MeshStandardMaterial({ map: T.marble([1, 1]), roughness: 0.18, metalness: 0.0, color: 0xcfc4b8 });
+  // Polished marble, as in the hotel: real veining slab by slab, recessed
+  // joints, inlaid stars, and a clear polish that mirrors the room's lights
+  const floor = marbleFloor(isMobile ? 768 : 1024);
+  const marbleMat: THREE.MeshStandardMaterial = isMobile
+    ? new THREE.MeshStandardMaterial({
+        map: floor.map,
+        normalMap: floor.normalMap,
+        roughnessMap: floor.roughnessMap,
+        roughness: 1,
+        metalness: 0,
+        envMapIntensity: 2.2,
+      })
+    : new THREE.MeshPhysicalMaterial({
+        map: floor.map,
+        normalMap: floor.normalMap,
+        roughnessMap: floor.roughnessMap,
+        roughness: 1,
+        metalness: 0,
+        clearcoat: 1,
+        clearcoatRoughness: 0.05,
+        envMapIntensity: 2.2,
+        // A true reflection lies just beneath (desktop): the polish lets it through
+        transparent: true,
+        opacity: 0.84,
+      });
+  const MARBLE_MODULE = 2.4;
+  const bandTex = inlayBand();
   const carpetMat = new THREE.MeshLambertMaterial({ map: T.carpet([1, 1]) });
   const cedarMat = new THREE.MeshLambertMaterial({ map: T.cedar([1, 1]) });
   const drapeMat = new THREE.MeshLambertMaterial({ map: T.drape([1, 1]) });
@@ -254,6 +281,22 @@ export function buildHotel(
     const d = z0 - z1;
     const fm = floorMat.clone();
     fm.map = repeated(floorMat.map!, w / rep, d / rep);
+    if (floorMat === marbleMat) {
+      const m = fm as THREE.MeshStandardMaterial;
+      m.normalMap = repeated(marbleMat.normalMap!, w / rep, d / rep);
+      m.roughnessMap = repeated(marbleMat.roughnessMap!, w / rep, d / rep);
+      // The inlaid border running near both long walls
+      if (w >= 8) {
+        const len = d - 1.6;
+        const bm = new THREE.MeshStandardMaterial({ map: repeated(bandTex, len / MARBLE_MODULE, 1), roughness: 0.14, metalness: 0, envMapIntensity: 1.4 });
+        for (const bx of [x0 + 1.05, x1 - 1.05]) {
+          const band = plane(len, 0.34, bm);
+          band.rotation.set(-Math.PI / 2, 0, Math.PI / 2);
+          band.position.set(bx, 0.004, (z0 + z1) / 2);
+          scene.add(band);
+        }
+      }
+    }
     const floor = plane(w, d, fm);
     floor.rotation.x = -Math.PI / 2;
     floor.position.set((x0 + x1) / 2, 0, (z0 + z1) / 2);
@@ -450,7 +493,7 @@ export function buildHotel(
   /* 1. RECEPTION (z 0 → -22) ------------------------------------------------- */
   const RW = 7;
   const RH = 7;
-  room(-RW, RW, 0, SALON_Z0, RH, marbleMat, 4);
+  room(-RW, RW, 0, SALON_Z0, RH, marbleMat, MARBLE_MODULE);
   const recArches = arches(22, 4, 2.6, 4.6);
   sideWall(-RW, 0, SALON_Z0, RH, recArches);
   sideWall(RW, 0, SALON_Z0, RH, recArches);
@@ -544,7 +587,7 @@ export function buildHotel(
   const SW = 3;
   const SH = 5;
   const salonEndZ = lastFrameZ - 3;
-  room(-SW, SW, SALON_Z0, salonEndZ, SH, marbleMat, 3);
+  room(-SW, SW, SALON_Z0, salonEndZ, SH, marbleMat, MARBLE_MODULE);
   sideWall(-SW, SALON_Z0, salonEndZ, SH, []);
   const winCount = Math.max(2, Math.round((SALON_Z0 - salonEndZ) / FRAME_GAP));
   sideWall(SW, SALON_Z0, salonEndZ, SH, arches(SALON_Z0 - salonEndZ, winCount, 1.6, 3.4));
@@ -622,7 +665,7 @@ export function buildHotel(
   const BW = 8;
   const BH = 8;
   const ballEnd = BALL_Z0 - BALL_LEN;
-  room(-SW, SW, salonEndZ, BALL_Z0, SH, marbleMat, 3);
+  room(-SW, SW, salonEndZ, BALL_Z0, SH, marbleMat, MARBLE_MODULE);
   sideWall(-SW, salonEndZ, BALL_Z0, SH, []);
   sideWall(SW, salonEndZ, BALL_Z0, SH, []);
   room(-BW, BW, BALL_Z0, ballEnd, BH, carpetMat, 4);
@@ -718,10 +761,10 @@ export function buildHotel(
   const CW = 6;
   const CH = 6.5;
   const clubEnd = CLUB_Z0 - CLUB_LEN;
-  room(-SW, SW, ballEnd, CLUB_Z0, SH, marbleMat, 3);
+  room(-SW, SW, ballEnd, CLUB_Z0, SH, marbleMat, MARBLE_MODULE);
   sideWall(-SW, ballEnd, CLUB_Z0, SH, []);
   sideWall(SW, ballEnd, CLUB_Z0, SH, []);
-  room(-CW, CW, CLUB_Z0, clubEnd, CH, marbleMat, 4);
+  room(-CW, CW, CLUB_Z0, clubEnd, CH, marbleMat, MARBLE_MODULE);
   sideWall(-CW, CLUB_Z0, clubEnd, CH, []);
   sideWall(CW, CLUB_Z0, clubEnd, CH, []);
   endWall(-CW, CW, CLUB_Z0, CH, { w: 2.8, h: 4.2 });
@@ -1026,6 +1069,44 @@ export function buildHotel(
   roomLights[2].position.set(0, 4.5, CLUB_Z0 - CLUB_LEN / 2);
   scene.add(...roomLights);
 
+  /* The mirror in the polish (desktop): the hotel reflected in its marble ------------ */
+  // One low-resolution mirror under every marble floor; the carpets, being
+  // opaque and above it, hide it where they lie
+  const mirror = isMobile
+    ? null
+    : new Reflector(new THREE.PlaneGeometry(24, -clubEnd + 8), {
+        textureWidth: Math.round(window.innerWidth * 0.45),
+        textureHeight: Math.round(window.innerHeight * 0.45),
+        clipBias: 0.003,
+        color: 0x8a8076,
+        multisample: 0,
+      });
+  if (mirror) {
+    mirror.rotation.x = -Math.PI / 2;
+    mirror.position.set(0, -0.003, (clubEnd - 4) / 2 + 2);
+    scene.add(mirror);
+  }
+
+  /* What the polish reflects: the hotel itself ---------------------------------------- */
+  // Captured once (a few renders, while the browser is idle): the lit reception
+  // seen from its middle, blurred a touch, becomes every surface's reflection
+  // The lamps are captured at their real brightness (several times white), so
+  // the polish mirrors them as bright points, as polished marble does
+  const lamps: { m: THREE.MeshBasicMaterial; c: THREE.Color }[] = [];
+  scene.traverse((o) => {
+    const m = (o as THREE.Mesh).material as THREE.MeshBasicMaterial | undefined;
+    if (m && !Array.isArray(m) && m.isMeshBasicMaterial && m.toneMapped === false && !m.map && !lamps.some((l) => l.m === m)) {
+      lamps.push({ m, c: m.color.clone() });
+      m.color.multiplyScalar(9);
+    }
+  });
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  const hotelEnv = pmrem.fromScene(scene, 0.015, 0.1, 50, { size: isMobile ? 128 : 256, position: new THREE.Vector3(0, 2.0, -9) });
+  pmrem.dispose();
+  for (const l of lamps) l.m.color.copy(l.c);
+  scene.environment = hotelEnv.texture;
+  scene.environmentIntensity = 0.6;
+
   /* The walk ---------------------------------------------------------------------- */
   const keys: Key[] = [];
   const key = (u: number, pos: [number, number, number], look: [number, number, number]) =>
@@ -1184,6 +1265,10 @@ export function buildHotel(
       // Nothing past the fog is visible, so nothing past it is drawn
       camera.far = 54;
       camera.updateProjectionMatrix();
+    },
+    dispose() {
+      hotelEnv.dispose();
+      mirror?.dispose();
     },
     onClick(ndc) {
       const link = ndc && farewellAt(ndc);

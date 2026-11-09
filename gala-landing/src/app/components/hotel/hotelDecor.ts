@@ -435,3 +435,220 @@ export function sealedCard(words: SealedWords, opensAt: number) {
   draw();
   return { texture, draw };
 }
+
+/* The floor: polished marble, as in the hotel ------------------------------------ */
+
+/** Smooth value noise on a hashed lattice, summed over octaves (0..1) */
+function makeFbm(seed: number) {
+  const hash = (x: number, y: number) => {
+    let h = (x * 374761393 + y * 668265263 + seed * 1442695041) | 0;
+    h = Math.imul(h ^ (h >>> 13), 1274126177);
+    return ((h ^ (h >>> 16)) >>> 0) / 4294967295;
+  };
+  const noise = (x: number, y: number) => {
+    const xi = Math.floor(x);
+    const yi = Math.floor(y);
+    const xf = x - xi;
+    const yf = y - yi;
+    const u = xf * xf * (3 - 2 * xf);
+    const v = yf * yf * (3 - 2 * yf);
+    const a = hash(xi, yi);
+    const b = hash(xi + 1, yi);
+    const c = hash(xi, yi + 1);
+    const d = hash(xi + 1, yi + 1);
+    return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+  };
+  return (x: number, y: number, oct = 4) => {
+    let sum = 0;
+    let amp = 0.5;
+    let f = 1;
+    for (let i = 0; i < oct; i++) {
+      sum += noise(x * f, y * f) * amp;
+      f *= 2.03;
+      amp *= 0.5;
+    }
+    return sum / (1 - Math.pow(0.5, oct));
+  };
+}
+
+/**
+ * Polished cream marble laid in 80 cm slabs, three by three (a 2.4 m module):
+ * every slab cut from a different part of the block (its own veins, its own
+ * cloud and tone), fine recessed joints, and an inlaid star of black
+ * marble ringed in plum at the module's corners. Returns the colour, the relief
+ * (joints) and the polish (roughness: glossy slabs, matt joints).
+ */
+export function marbleFloor(px = 1024) {
+  // Three 80 cm slabs a side (a 2.4 m module)
+  const N = 3;
+  const slab = px / N;
+  const [c, g] = canvas(px, px);
+  const img = g.createImageData(px, px);
+  const d = img.data;
+  const rough = new Uint8ClampedArray(px * px);
+  const r = rng(31);
+  const fbm = makeFbm(7);
+  const fine = makeFbm(19);
+  // Each slab: its veins' direction, rhythm and offset, and its tone
+  const slabs = Array.from({ length: N * N }, () => ({
+    a: (r() - 0.5) * 1.4 + (r() < 0.5 ? 0 : Math.PI / 2),
+    f: 9 + r() * 7,
+    o: r() * 100,
+    warp: 4 + r() * 4,
+    tone: (r() - 0.5) * 10,
+    ox: r() * 50,
+    oy: r() * 50,
+  }));
+  const joint = Math.max(1, Math.round(px / 512));
+  for (let y = 0; y < px; y++) {
+    const sy = Math.floor(y / slab);
+    const ly = (y % slab) / slab;
+    for (let x = 0; x < px; x++) {
+      const sx = Math.floor(x / slab);
+      const lx = (x % slab) / slab;
+      const s = slabs[sy * N + sx];
+      const nx = lx * 3 + s.ox;
+      const ny = ly * 3 + s.oy;
+      const cloud = fbm(nx, ny, 4);
+      // Main veins: a warped sine along the slab's grain, thin and branching
+      const along = (lx - 0.5) * Math.cos(s.a) + (ly - 0.5) * Math.sin(s.a);
+      const v1 = Math.abs(Math.sin((along * s.f + s.o) + cloud * s.warp));
+      const v2 = Math.abs(Math.sin((along * s.f * 2.3 + s.o * 1.7) + fine(nx * 2, ny * 2, 3) * 7));
+      // Veins of varying width with a soft halo, as real marble's are
+      const width = 0.05 + fine(nx * 0.7, ny * 0.7, 2) * 0.09;
+      const core = Math.max(0, 1 - v1 / width);
+      const halo = Math.max(0, 1 - v1 / (width * 4));
+      const vein = core * core * 0.5 + halo * 0.16 + Math.max(0, 1 - v2 / 0.03) * 0.18;
+      const speck = fine(nx * 14, ny * 14, 2);
+      // Cream base with a soft warm cloud, grey-taupe veins
+      let R = 236 + s.tone - cloud * 18 - speck * 6;
+      let G = 228 + s.tone - cloud * 20 - speck * 6;
+      let B = 216 + s.tone - cloud * 24 - speck * 6;
+      const vk = Math.min(1, vein);
+      R += (128 - R) * vk * 0.62;
+      G += (116 - G) * vk * 0.62;
+      B += (106 - B) * vk * 0.62;
+      let ro = 22 + cloud * 18;
+      // The joints
+      const jx = x % slab;
+      const jy = y % slab;
+      if (jx < joint || jy < joint) {
+        R = 168;
+        G = 156;
+        B = 144;
+        ro = 190;
+      }
+      const i = (y * px + x) * 4;
+      d[i] = R;
+      d[i + 1] = G;
+      d[i + 2] = B;
+      d[i + 3] = 255;
+      rough[y * px + x] = ro;
+    }
+  }
+  g.putImageData(img, 0, 0);
+  // Inlaid stars where four slabs meet: black marble, a plum ring, a silver dot
+  const star = (cx: number, cy: number, rad: number, fill: string) => {
+    g.fillStyle = fill;
+    for (const rot of [0, Math.PI / 4]) {
+      g.save();
+      g.translate(cx, cy);
+      g.rotate(rot);
+      g.fillRect(-rad, -rad, rad * 2, rad * 2);
+      g.restore();
+    }
+  };
+  // Only at the module's corners (every 2.4 m), as cabochons are laid
+  for (const [cx, cy] of [
+    [0, 0],
+    [px, 0],
+    [0, px],
+    [px, px],
+  ]) {
+    star(cx, cy, slab * 0.1, "#5a1040");
+    star(cx, cy, slab * 0.082, "#1c1416");
+    g.fillStyle = "#cfd3da";
+    g.beginPath();
+    g.arc(cx, cy, slab * 0.016, 0, Math.PI * 2);
+    g.fill();
+  }
+  const map = tex(c, [1, 1]);
+
+  // Relief: the joints are a hair lower (a normal map from their edges)
+  const [nc, ng] = canvas(px, px);
+  const nimg = ng.createImageData(px, px);
+  const nd = nimg.data;
+  for (let y = 0; y < px; y++)
+    for (let x = 0; x < px; x++) {
+      const jx = x % slab;
+      const jy = y % slab;
+      let dx = 0;
+      let dy = 0;
+      if (jx < joint + 1) dx = jx < joint / 2 ? 0.6 : -0.6;
+      if (jy < joint + 1) dy = jy < joint / 2 ? 0.6 : -0.6;
+      const i = (y * px + x) * 4;
+      nd[i] = 128 + dx * 127;
+      nd[i + 1] = 128 + dy * 127;
+      nd[i + 2] = 255;
+      nd[i + 3] = 255;
+    }
+  ng.putImageData(nimg, 0, 0);
+  const normalMap = tex(nc, [1, 1], false);
+
+  // Polish: glossy slabs, matt joints and inlays a touch softer
+  const [rc, rg] = canvas(px, px);
+  const rimg = rg.createImageData(px, px);
+  const rd = rimg.data;
+  for (let i = 0; i < px * px; i++) {
+    rd[i * 4] = rd[i * 4 + 1] = rd[i * 4 + 2] = rough[i];
+    rd[i * 4 + 3] = 255;
+  }
+  rg.putImageData(rimg, 0, 0);
+  const roughnessMap = tex(rc, [1, 1], false);
+  return { map, normalMap, roughnessMap };
+}
+
+/**
+ * The inlaid border that runs near the walls: a band of black marble between
+ * fine plum and silver fillets, small cream stars along it (one 2.4 m length).
+ */
+export function inlayBand() {
+  const W = 1024;
+  const H = 128;
+  const [c, g] = canvas(W, H);
+  const fbm = makeFbm(3);
+  const img = g.createImageData(W, H);
+  for (let y = 0; y < H; y++)
+    for (let x = 0; x < W; x++) {
+      const n = fbm(x / 60, y / 60, 4);
+      const v = Math.max(0, 1 - Math.abs(Math.sin(x / 40 + n * 6)) / 0.05) * 0.5;
+      const i = (y * W + x) * 4;
+      img.data[i] = 26 + n * 14 + v * 90;
+      img.data[i + 1] = 20 + n * 12 + v * 86;
+      img.data[i + 2] = 23 + n * 13 + v * 84;
+      img.data[i + 3] = 255;
+    }
+  g.putImageData(img, 0, 0);
+  g.fillStyle = "#6a1248";
+  g.fillRect(0, 0, W, 10);
+  g.fillRect(0, H - 10, W, 10);
+  g.fillStyle = "#cfd3da";
+  g.fillRect(0, 12, W, 3);
+  g.fillRect(0, H - 15, W, 3);
+  for (let i = 0; i < 4; i++) {
+    const cx = (i + 0.5) * (W / 4);
+    for (const rot of [0, Math.PI / 4]) {
+      g.save();
+      g.translate(cx, H / 2);
+      g.rotate(rot);
+      g.fillStyle = "#e8dfd2";
+      g.fillRect(-20, -20, 40, 40);
+      g.restore();
+    }
+    g.fillStyle = "#6a1248";
+    g.beginPath();
+    g.arc(cx, H / 2, 8, 0, Math.PI * 2);
+    g.fill();
+  }
+  return tex(c, [1, 1]);
+}
