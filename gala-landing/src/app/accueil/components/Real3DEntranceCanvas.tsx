@@ -2178,8 +2178,13 @@ export default function Real3DEntranceCanvas({
 
     const handleResize = () => {
       if (!mount) return;
-      width = mount.clientWidth || window.innerWidth;
-      height = mount.clientHeight || window.innerHeight;
+      const nextW = mount.clientWidth || window.innerWidth;
+      const nextH = mount.clientHeight || window.innerHeight;
+      // Phones fire resize as the address bar moves; the stage is sized in svh,
+      // so nothing changed: resizing anyway would clear the canvas and jolt it
+      if (nextW === width && nextH === height) return;
+      width = nextW;
+      height = nextH;
       isMobile = width < 768;
 
       const newAspect = width / height;
@@ -2251,8 +2256,10 @@ export default function Real3DEntranceCanvas({
     let onScreen = true;
     let tabVisible = !document.hidden;
     let looping = false;
+    // Once the portal has handed over to the hotel the stage is hidden: no frames
+    const handedOver = () => (scrollProgressRef?.current ?? 0) >= 0.999;
     const syncLoop = () => {
-      const run = onScreen && tabVisible;
+      const run = onScreen && tabVisible && !handedOver();
       if (run === looping) return;
       looping = run;
       // Re-base the timer so the first resumed frame has a small delta
@@ -2275,6 +2282,7 @@ export default function Real3DEntranceCanvas({
       syncLoop();
     };
     document.addEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener("scroll", syncLoop, { passive: true });
 
     // ── 10. SCROLL-DRIVEN CAMERA MOVE ────────────────────────────────────────
     // One progress value drives one short camera path: establish → approach up
@@ -2494,6 +2502,7 @@ export default function Real3DEntranceCanvas({
       timer.dispose();
       observer.disconnect();
       document.removeEventListener("visibilitychange", onVisibilityChange);
+      window.removeEventListener("scroll", syncLoop);
       window.removeEventListener("resize", handleResize);
       if (!isMobile) {
         window.removeEventListener("mousemove", onMouseMove);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useMotionValueEvent, useReducedMotion, useScroll } from "framer-motion";
 import { useLanguage } from "../../../context/LanguageContext";
 import Stage3D, { type StageContext } from "../gala/Stage3D";
@@ -169,6 +169,31 @@ function Walk() {
   const [active, setActive] = useState(false);
   useMotionValueEvent(arriving, "change", (v) => setActive(v > 0.75));
 
+  // The hotel is built once the entrance has loaded (when the browser is idle,
+  // or as soon as you start scrolling), so it never slows the first screen
+  const [armed, setArmed] = useState(false);
+  useEffect(() => {
+    let done = false;
+    const arm = () => {
+      if (done) return;
+      done = true;
+      setArmed(true);
+    };
+    const onScroll = () => window.scrollY > window.innerHeight * 0.15 && arm();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    const idle = () => {
+      if (typeof window.requestIdleCallback === "function") window.requestIdleCallback(arm, { timeout: 2500 });
+      else setTimeout(arm, 1200);
+    };
+    if (document.readyState === "complete") idle();
+    else window.addEventListener("load", idle, { once: true });
+    return () => {
+      done = true;
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("load", idle);
+    };
+  }, []);
+
   // Fonts first, so the engraved words use the Gala's typefaces
   const [fontsReady, setFontsReady] = useState(false);
   useEffect(() => {
@@ -232,7 +257,7 @@ function Walk() {
       <RoomWords frames={frames} words={words} />
 
       <div className="sticky top-0 h-[100dvh] overflow-hidden bg-[#2a1520]">
-        {fontsReady && <Stage3D setup={setup} cursor={settled} active={active} className="absolute inset-0" />}
+        {fontsReady && armed && <Stage3D setup={setup} cursor={settled} active={active} className="absolute inset-0" />}
         <div aria-hidden className="pointer-events-none absolute inset-0 z-[5] bg-[radial-gradient(ellipse_at_center,transparent_55%,rgba(14,1,8,0.45)_100%)]" />
 
         <AnimatePresence>
@@ -355,7 +380,8 @@ function farewellWords(texts: any, fr: boolean): HotelWords["farewell"] {
   };
 }
 
-function RoomWords({ frames, words }: { frames: FrameItem[]; words: HotelWords }) {
+// The rooms' words never change while you walk: rendered once, not on every scroll step
+const RoomWords = memo(function RoomWords({ frames, words }: { frames: FrameItem[]; words: HotelWords }) {
   return (
     <div className="sr-only">
       <h2>{words.manifesto.headline}</h2>
@@ -407,4 +433,4 @@ function RoomWords({ frames, words }: { frames: FrameItem[]; words: HotelWords }
       </a>
     </div>
   );
-}
+});

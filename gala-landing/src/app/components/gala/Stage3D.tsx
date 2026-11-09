@@ -94,7 +94,7 @@ export default function Stage3D({
     renderer.toneMappingExposure = 1.05;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     const canvas = renderer.domElement;
-    canvas.style.cssText = "position:absolute;inset:0;width:100%;height:100%;display:block;";
+    canvas.style.cssText = "position:absolute;left:0;top:0;width:100%;height:100%;display:block;";
     host.appendChild(canvas);
 
     const scene = new THREE.Scene();
@@ -161,10 +161,20 @@ export default function Stage3D({
     };
     const handle = setupRef.current(ctx);
 
+    // On phones the stage's height follows the address bar (dvh). Height-only
+    // changes keep the canvas: it is drawn at the tallest height seen and
+    // anchored to the top, so the picture never clears, stretches or jumps.
+    let drawnH = 0;
     const resize = () => {
       const r = host.getBoundingClientRect();
-      size.w = Math.max(1, r.width);
-      size.h = Math.max(1, r.height);
+      const w = Math.max(1, r.width);
+      const h = Math.max(1, r.height);
+      const sameW = w === size.w;
+      if (isMobile && sameW && h <= drawnH && drawnH - h < 200) return;
+      size.w = w;
+      size.h = isMobile && sameW ? Math.max(h, drawnH) : h;
+      drawnH = size.h;
+      canvas.style.height = isMobile ? `${size.h}px` : "100%";
       renderer.setSize(size.w, size.h, false);
       camera.aspect = size.w / size.h;
       camera.updateProjectionMatrix();
@@ -205,7 +215,14 @@ export default function Stage3D({
 
     // Only draw while on screen and the tab is visible
     let onScreen = false;
-    const sync = () => renderer.setAnimationLoop(onScreen && activeRef.current && !document.hidden ? frame : null);
+    // Shaders are compiled in the background first, so the first frame never stalls
+    let compiled = false;
+    const sync = () => renderer.setAnimationLoop(compiled && onScreen && activeRef.current && !document.hidden ? frame : null);
+    const ready = () => {
+      compiled = true;
+      sync();
+    };
+    renderer.compileAsync(scene, camera).then(ready, ready);
     syncRef.current = sync;
     const io = new IntersectionObserver(
       (entries) => {

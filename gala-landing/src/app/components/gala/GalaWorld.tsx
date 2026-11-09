@@ -209,7 +209,7 @@ export default function GalaWorld() {
     } catch {
       return; // the page keeps its solid burgundy background and the image logo
     }
-    const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 1.75);
+    const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.25 : 1.75);
     renderer.setPixelRatio(dpr);
     renderer.setSize(window.innerWidth, window.innerHeight, false);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -343,9 +343,17 @@ export default function GalaWorld() {
     };
     const onLeave = () => (pointer.tActive = 0);
 
+    // Phones report a new height whenever the address bar slides in or out;
+    // resizing the canvas then clears it and jolts the camera, so those small
+    // height-only changes are ignored (the canvas keeps its size)
+    let sizedW = 0;
+    let sizedH = 0;
     const resize = () => {
       const w = window.innerWidth;
       const h = window.innerHeight;
+      if (isMobile && w === sizedW && Math.abs(h - sizedH) < 160) return;
+      sizedW = w;
+      sizedH = h;
       renderer.setSize(w, h, false);
       camera.aspect = w / h;
       camera.fov = camera.aspect < 0.85 ? 58 : camera.aspect < 1.4 ? 46 : 40;
@@ -690,8 +698,11 @@ export default function GalaWorld() {
 
     let running = false;
     const updateActivity = () => {
-      // From the hero's mark to the footer's, the dust is always on stage
-      const active = !document.hidden;
+      // The dust lives over the hero; once the hotel walk takes the screen
+      // (an opaque scene in front of it) it stops drawing altogether
+      const hero = document.getElementById("home");
+      const heroEnd = hero ? hero.offsetHeight - window.innerHeight + 40 : Infinity;
+      const active = !document.hidden && window.scrollY < heroEnd;
       if (active && !running) {
         running = true;
         renderer.setAnimationLoop(frame);

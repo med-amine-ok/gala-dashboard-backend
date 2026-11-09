@@ -182,7 +182,7 @@ export function buildHotel(
   progress: { current: number },
 ): StageHandle & { letterSettled: () => boolean } {
   const { scene, camera, renderer, isMobile } = ctx;
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobile ? 1.25 : 1.5));
   renderer.toneMappingExposure = 1.05;
   scene.environmentIntensity = 0.45;
   const sealed = words.invitation.sealed;
@@ -1181,7 +1181,8 @@ export function buildHotel(
       portrait = w / h < 0.85;
       camera.fov = portrait ? 66 : 52;
       camera.near = 0.03;
-      camera.far = 140;
+      // Nothing past the fog is visible, so nothing past it is drawn
+      camera.far = 54;
       camera.updateProjectionMatrix();
     },
     onClick(ndc) {
