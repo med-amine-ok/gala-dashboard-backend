@@ -68,7 +68,7 @@ export default function NavBar() {
     {
       label: "The Experience",
       id: "home",
-      subtitle: "Where ambition meets opportunity",
+      subtitle: "Shorten the distance to your future",
     },
     {
       label: "The Manifesto",

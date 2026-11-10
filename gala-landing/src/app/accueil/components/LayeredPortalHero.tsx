@@ -447,7 +447,7 @@ export default function LayeredPortalHero() {
                 id="gala-hero-tagline"
                 className="font-cinzel text-[15px] xs:text-xl sm:text-2xl md:text-4xl lg:text-5xl font-medium sm:font-light text-[var(--color-cream)] leading-[1.35] sm:leading-[1.2] mb-4 sm:mb-6 max-w-[285px] xs:max-w-[360px] sm:max-w-2xl whitespace-pre-line uppercase tracking-[0.18em] sm:tracking-wide drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] drop-shadow-[0_1px_4px_rgba(0,0,0,0.90)] will-change-transform"
               >
-                {texts.hero?.headline || "Where ambition\nmeets opportunity."}
+                {texts.hero?.headline || "Shorten the distance\nto your futureunity."}
               </h2>
 
               {/* Couture Editorial Hero Invitation CTA (Letterpress Plaque) */}

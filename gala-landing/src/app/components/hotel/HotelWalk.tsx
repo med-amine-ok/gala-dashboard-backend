@@ -350,7 +350,7 @@ function farewellWords(texts: any, fr: boolean): HotelWords["farewell"] {
   const inv = texts.invitations || {};
   return {
     tagline: f.tagline,
-    title: fr ? ["À très bientôt,", "pour la soirée."] : ["See you", "on the evening."],
+    title: fr ? ["À très bientôt,", "pour la soirée."] : ["See you", "on that evening."],
     countdownLabels: fr ? ["jours", "h", "min"] : ["days", "hrs", "min"],
     until: fr ? "avant l'ouverture des inscriptions" : "until registration opens",
     cta: texts.nav?.requestInvitation || "REQUEST INVITATION",
