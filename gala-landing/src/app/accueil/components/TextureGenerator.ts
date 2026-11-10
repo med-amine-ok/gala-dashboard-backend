@@ -63,6 +63,12 @@ const BAKED_NAMES = [
 ];
 const baked: Record<string, HTMLImageElement> = {};
 let preload: Promise<void> | null = null;
+let settled = 0;
+
+/** Share of the baked maps settled so far (0..1), for the loader */
+export function heroTextureProgress(): number {
+  return settled / BAKED_NAMES.length;
+}
 
 /** Start loading the baked maps (safe to call many times; resolves even on failure) */
 export function preloadHeroTextures(): Promise<void> {
@@ -76,9 +82,13 @@ export function preloadHeroTextures(): Promise<void> {
             img.decoding = "async";
             img.onload = () => {
               baked[name] = img;
+              settled++;
               resolve();
             };
-            img.onerror = () => resolve();
+            img.onerror = () => {
+              settled++;
+              resolve();
+            };
             img.src = `${BAKED_DIR}/${name}.webp`;
           }),
       ),

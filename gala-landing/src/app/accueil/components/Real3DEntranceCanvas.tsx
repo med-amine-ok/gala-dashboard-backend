@@ -2488,16 +2488,23 @@ export default function Real3DEntranceCanvas({
 
     // Compile every program in parallel (KHR_parallel_shader_compile) while the
     // first frames draw, then hand frames to the renderer's own loop
-    renderer.compileAsync(scene, camera).catch(() => {});
+    // The scene counts as loaded once every program is compiled and a frame
+    // has been drawn with them (the loader lifts then)
+    let disposed = false;
+    renderer
+      .compileAsync(scene, camera)
+      .catch(() => {})
+      .then(() => {
+        if (disposed) return;
+        renderer.render(scene, camera);
+        requestAnimationFrame(() => !disposed && onLoaded?.());
+      });
     timer.update(performance.now());
     syncLoop();
 
-    if (onLoaded) {
-      onLoaded();
-    }
-
     // ── 11. CLEANUP ───────────────────────────────────────────────────────────
     return () => {
+      disposed = true;
       renderer.setAnimationLoop(null);
       timer.dispose();
       observer.disconnect();

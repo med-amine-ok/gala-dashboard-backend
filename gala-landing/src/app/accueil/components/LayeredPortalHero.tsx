@@ -8,6 +8,7 @@ import { useLanguage } from "../../../context/LanguageContext";
 import ManifestoSection from "../../manifesto/page";
 import Real3DEntranceCanvas, { type EntranceFrame } from "./Real3DEntranceCanvas";
 import { preloadHeroTextures } from "./TextureGenerator";
+import HeroLoader from "./HeroLoader";
 import { REGISTRATION_OPENS } from "../../../lib/event";
 
 // Attendee photo (5472 x 3648) used for the out-of-focus hall beyond the doors
@@ -68,6 +69,9 @@ export default function LayeredPortalHero() {
   // The 3D entrance mounts once its baked textures are in (a fraction of a
   // second), instead of generating them on the main thread for ~3 s
   const [texturesReady, setTexturesReady] = useState(false);
+  // ...and the loader stays over the hero until its first frame is drawn
+  const [sceneReady, setSceneReady] = useState(false);
+  const handleLoaded = useCallback(() => setSceneReady(true), []);
   useEffect(() => {
     let live = true;
     preloadHeroTextures().then(() => live && setTexturesReady(true));
@@ -393,9 +397,11 @@ export default function LayeredPortalHero() {
             <Real3DEntranceCanvas
               scrollProgressRef={scrollProgressRef}
               onFrame={handleFrame}
+              onLoaded={handleLoaded}
             />
           )}
         </div>
+        <HeroLoader ready={sceneReady} label={texts.hero?.loading || "Opening the doors"} />
 
         {/* =====================================================================
             3. PINNED VIEWPORT STAGE & DOM OVERLAYS

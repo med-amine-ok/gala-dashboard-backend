@@ -212,6 +212,12 @@ body {
   background: var(--color-silver);
 }
 
+/* The hero loader's mark, breathing softly */
+@keyframes galaBreath {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 0.95; }
+}
+
 /* Luxury Animated Atmospheric Gradient System */
 @keyframes ambient-glow-slow {
 

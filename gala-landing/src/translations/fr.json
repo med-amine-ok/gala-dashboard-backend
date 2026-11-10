@@ -46,6 +46,7 @@
     "date": "Date & lieu : restez à l’écoute",
     "venue": "",
     "countdownLabel": "OUVERTURE DES INSCRIPTIONS DANS",
+    "loading": "Ouverture des portes",
     "countdown": [
       "JOURS",
       "HEURES",

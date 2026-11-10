@@ -41,6 +41,7 @@
     "date": "Date & venue: stay tuned",
     "venue": "",
     "countdownLabel": "REGISTRATION OPENS IN",
+    "loading": "Opening the doors",
     "countdown": [
       "DAYS",
       "HOURS",

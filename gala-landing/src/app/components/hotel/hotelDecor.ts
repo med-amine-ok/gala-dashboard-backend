@@ -652,3 +652,281 @@ export function inlayBand() {
   }
   return tex(c, [1, 1]);
 }
+
+/* The carpets: hand-knotted wool pile, as in the hotel's salons ------------------ */
+
+const WOOL = {
+  field: "#5e1042",
+  fieldAlt: "#530e3a",
+  ground: "#2d0620",
+  rose: "#a35d7c",
+  roseDeep: "#7a2f55",
+  silver: "#b8b2b8",
+  ivory: "#cbbcb2",
+};
+
+/** An eight-pointed star (two squares), optionally outlined */
+function woolStar(g: CanvasRenderingContext2D, cx: number, cy: number, r: number, fill: string, line?: string) {
+  g.save();
+  g.translate(cx, cy);
+  g.beginPath();
+  for (let i = 0; i < 16; i++) {
+    const a = (i / 16) * Math.PI * 2 - Math.PI / 2;
+    const rr = i % 2 === 0 ? r : r * 0.62;
+    g.lineTo(Math.cos(a) * rr, Math.sin(a) * rr);
+  }
+  g.closePath();
+  g.fillStyle = fill;
+  g.fill();
+  if (line) {
+    g.strokeStyle = line;
+    g.lineWidth = Math.max(1.2, r * 0.09);
+    g.stroke();
+  }
+  g.restore();
+}
+
+/** The trellis of the field: diamonds of two tones, double lines, stars at the knots */
+function woolTrellis(g: CanvasRenderingContext2D, w: number, h: number, cell: number) {
+  const half = cell / 2;
+  g.fillStyle = WOOL.field;
+  g.fillRect(0, 0, w, h);
+  // Every other diamond a shade deeper (the dyer's lots)
+  for (let y = 0; y <= h; y += half)
+    for (let x = 0; x <= w; x += half) {
+      if (((x + y) / half) % 2 === 0) continue;
+      if ((x / half) % 2 !== 0) continue;
+      g.fillStyle = WOOL.fieldAlt;
+      g.beginPath();
+      g.moveTo(x, y - half);
+      g.lineTo(x + half, y);
+      g.lineTo(x, y + half);
+      g.lineTo(x - half, y);
+      g.closePath();
+      g.fill();
+    }
+  const lines = (width: number, color: string) => {
+    g.strokeStyle = color;
+    g.lineWidth = width;
+    g.beginPath();
+    for (let i = -Math.ceil(h / cell) - 1; i <= Math.ceil(w / cell) + 1; i++) {
+      g.moveTo(i * cell, 0);
+      g.lineTo(i * cell + h, h);
+      g.moveTo(i * cell, 0);
+      g.lineTo(i * cell - h, h);
+    }
+    g.stroke();
+  };
+  lines(cell * 0.085, WOOL.ground);
+  lines(cell * 0.018, WOOL.roseDeep);
+  for (let y = 0; y <= h; y += half)
+    for (let x = 0; x <= w; x += half) {
+      if (((x + y) / half) % 2 === 0) {
+        // The knots of the trellis
+        woolStar(g, x, y, cell * 0.16, WOOL.ground, WOOL.roseDeep);
+        woolStar(g, x, y, cell * 0.08, "#8f7f88");
+      } else {
+        // A small rosette in each diamond
+        g.fillStyle = WOOL.roseDeep;
+        for (let k = 0; k < 4; k++) {
+          const a = (k * Math.PI) / 2;
+          g.beginPath();
+          g.arc(x + Math.cos(a) * cell * 0.07, y + Math.sin(a) * cell * 0.07, cell * 0.03, 0, Math.PI * 2);
+          g.fill();
+        }
+        g.fillStyle = WOOL.ivory;
+        g.beginPath();
+        g.arc(x, y, cell * 0.026, 0, Math.PI * 2);
+        g.fill();
+      }
+    }
+}
+
+/** The border of a runner, down one side (x0..x0+bw), mirrored on the other */
+function woolBorder(g: CanvasRenderingContext2D, x0: number, bw: number, h: number, flip: boolean) {
+  const X = (u: number) => (flip ? x0 + bw - u : x0 + u);
+  const band = (u0: number, u1: number, color: string) => {
+    g.fillStyle = color;
+    g.fillRect(Math.min(X(u0), X(u1)), 0, Math.abs(X(u1) - X(u0)), h);
+  };
+  band(0, bw, WOOL.ground);
+  band(0, 8, "#22041a");
+  band(14, 17, WOOL.silver);
+  band(bw - 17, bw - 14, WOOL.rose);
+  band(bw - 8, bw, WOOL.roseDeep);
+  // The main border: a meander of rose with stars in its bays, every 64
+  const mid = (17 + bw - 17) / 2;
+  const amp = (bw - 40) / 2 - 4;
+  g.strokeStyle = WOOL.roseDeep;
+  g.lineWidth = 5;
+  g.beginPath();
+  for (let y = 0; y <= h; y += 4) g.lineTo(X(mid + Math.sin((y / 64) * Math.PI) * amp), y);
+  g.stroke();
+  g.strokeStyle = WOOL.rose;
+  g.lineWidth = 2;
+  g.stroke();
+  for (let y = 0; y <= h; y += 64) {
+    const side = (y / 64) % 2 === 0 ? -1 : 1;
+    woolStar(g, X(mid + side * amp * 0.55), y + 32, 9, WOOL.silver, WOOL.ground);
+    g.fillStyle = WOOL.ivory;
+    g.beginPath();
+    g.arc(X(mid - side * amp * 0.55), y + 32, 3, 0, Math.PI * 2);
+    g.fill();
+  }
+  // The inner guard: small dots
+  for (let y = 8; y <= h; y += 16) {
+    g.fillStyle = WOOL.silver;
+    g.beginPath();
+    g.arc(X(bw - 11), y, 1.8, 0, Math.PI * 2);
+    g.fill();
+  }
+}
+
+/** The runner's medallion: a lobed sixteen-point star, an eight-point star, a heart */
+function woolMedallion(g: CanvasRenderingContext2D, cx: number, cy: number, r: number) {
+  const lobed = (rad: number, fill: string, line: string) => {
+    g.beginPath();
+    for (let i = 0; i <= 64; i++) {
+      const a = (i / 64) * Math.PI * 2;
+      const rr = rad * (0.86 + 0.14 * Math.abs(Math.cos(a * 8)));
+      g.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr * 1.25);
+    }
+    g.closePath();
+    g.fillStyle = fill;
+    g.fill();
+    g.strokeStyle = line;
+    g.lineWidth = 3;
+    g.stroke();
+  };
+  lobed(r, WOOL.ground, WOOL.rose);
+  lobed(r * 0.8, WOOL.roseDeep, WOOL.silver);
+  lobed(r * 0.62, WOOL.ground, WOOL.roseDeep);
+  woolStar(g, cx, cy, r * 0.48, WOOL.field, WOOL.silver);
+  woolStar(g, cx, cy, r * 0.24, WOOL.silver, WOOL.ground);
+  g.fillStyle = WOOL.roseDeep;
+  g.beginPath();
+  g.arc(cx, cy, r * 0.07, 0, Math.PI * 2);
+  g.fill();
+  // Pendants above and below
+  for (const s of [-1, 1]) {
+    const py = cy + s * r * 1.42;
+    g.fillStyle = WOOL.ground;
+    g.beginPath();
+    g.moveTo(cx, py - r * 0.2);
+    g.lineTo(cx + r * 0.16, py);
+    g.lineTo(cx, py + r * 0.2);
+    g.lineTo(cx - r * 0.16, py);
+    g.closePath();
+    g.fill();
+    g.strokeStyle = WOOL.rose;
+    g.lineWidth = 2;
+    g.stroke();
+    woolStar(g, cx, py, r * 0.08, WOOL.silver);
+  }
+}
+
+/**
+ * A hand-knotted wool carpet. "runner": 2.4 m wide by 4.8 m long, borders down
+ * both sides and a medallion every 2.4 m (tiles lengthwise). "field": the
+ * wall-to-wall carpet of the ballroom, a trellis that tiles every way.
+ * The pattern is painted, then every knot gets its own tuft of pile: a slightly
+ * different shade and height, the dyer's soft bands (abrash) across the length,
+ * and a pile normal map so the light catches the wool.
+ */
+export function carpetWeave(kind: "runner" | "field", px = 512) {
+  const W = px;
+  const H = kind === "runner" ? px * 2 : px;
+  const [c, g] = canvas(W, H);
+  const k = W / 512;
+  g.save();
+  g.scale(k, k);
+  const uh = H / k;
+  if (kind === "field") {
+    woolTrellis(g, 512, 512, 128);
+  } else {
+    const bw = 92;
+    g.save();
+    g.beginPath();
+    g.rect(bw, 0, 512 - 2 * bw, uh);
+    g.clip();
+    woolTrellis(g, 512, uh, 128);
+    // A plain ground around the medallions
+    for (const cy of [uh / 4, (uh * 3) / 4]) {
+      g.fillStyle = "rgba(45,6,32,0.55)";
+      g.beginPath();
+      g.ellipse(256, cy, 150, 200, 0, 0, Math.PI * 2);
+      g.fill();
+      woolMedallion(g, 256, cy, 92);
+    }
+    g.restore();
+    woolBorder(g, 0, bw, uh, false);
+    woolBorder(g, 512 - bw, bw, uh, true);
+  }
+  g.restore();
+
+  // The pile: one tuft per knot (~3 px), each its own shade and height
+  const img = g.getImageData(0, 0, W, H);
+  const d = img.data;
+  const height = new Float32Array(W * H);
+  const hash = (x: number, y: number, s: number) => {
+    let h = (x * 374761393 + y * 668265263 + s * 1442695041) | 0;
+    h = Math.imul(h ^ (h >>> 13), 1274126177);
+    return ((h ^ (h >>> 16)) >>> 0) / 4294967295;
+  };
+  const knot = Math.max(2, Math.round(3 * k));
+  const knotsX = Math.round(W / knot);
+  const knotsY = Math.round(H / knot);
+  const TAU = Math.PI * 2;
+  for (let y = 0; y < H; y++) {
+    const ky = Math.floor((y / H) * knotsY) % knotsY;
+    // Abrash: soft bands of dye across the length (periodic, so it tiles)
+    const v = y / H;
+    for (let x = 0; x < W; x++) {
+      const kx = Math.floor((x / W) * knotsX) % knotsX;
+      const u = x / W;
+      const abrash =
+        1 + 0.045 * Math.sin(TAU * (v * 3 + 0.18 * Math.sin(TAU * u))) + 0.03 * Math.sin(TAU * (v * 7 + u * 2 + 0.4));
+      const tuft = hash(kx, ky, 3);
+      const fibre = hash(x, y, 9);
+      // Inside a knot the fibres are brighter at the tip than at the edge
+      const fx = ((x / W) * knotsX) % 1;
+      const fy = ((y / H) * knotsY) % 1;
+      const dome = 1 - ((fx - 0.5) ** 2 + (fy - 0.5) ** 2) * 1.6;
+      const shade = abrash * (0.8 + tuft * 0.16 + fibre * 0.1 + dome * 0.12);
+      const i = (y * W + x) * 4;
+      const lum = (d[i] * 0.3 + d[i + 1] * 0.59 + d[i + 2] * 0.11) / 255;
+      d[i] = Math.min(255, d[i] * shade);
+      d[i + 1] = Math.min(255, d[i + 1] * shade);
+      d[i + 2] = Math.min(255, d[i + 2] * shade);
+      // Pale wool is clipped a hair lower than the ground (a carved outline)
+      height[y * W + x] = dome * 0.55 + tuft * 0.3 + fibre * 0.15 - lum * 0.35;
+    }
+  }
+  g.putImageData(img, 0, 0);
+  const map = tex(c, [1, 1]);
+
+  const [nc, ng] = canvas(W, H);
+  const nimg = ng.createImageData(W, H);
+  const nd = nimg.data;
+  const strength = 1.1;
+  for (let y = 0; y < H; y++)
+    for (let x = 0; x < W; x++) {
+      const l = height[y * W + ((x - 1 + W) % W)];
+      const r = height[y * W + ((x + 1) % W)];
+      const t = height[((y - 1 + H) % H) * W + x];
+      const b = height[((y + 1) % H) * W + x];
+      let nx = (l - r) * strength;
+      let ny = (t - b) * strength;
+      const len = Math.hypot(nx, ny, 1);
+      nx /= len;
+      ny /= len;
+      const i = (y * W + x) * 4;
+      nd[i] = 128 + nx * 127;
+      nd[i + 1] = 128 + ny * 127;
+      nd[i + 2] = 128 + (1 / len) * 127;
+      nd[i + 3] = 255;
+    }
+  ng.putImageData(nimg, 0, 0);
+  const normalMap = tex(nc, [1, 1], false);
+  return { map, normalMap };
+}

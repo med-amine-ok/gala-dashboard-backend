@@ -3,7 +3,7 @@ import type { StageContext, StageHandle } from "../gala/Stage3D";
 import { optimisedImage } from "../gala/Stage3D";
 import { createLetter, PASS_ASPECT } from "../gala/Letter";
 import * as T from "./hotelTextures";
-import { columnSkin, farewell, inlayBand, lanternGlass, marbleFloor, piercedMetal, sealedCard, type FarewellWords, type SealedWords } from "./hotelDecor";
+import { carpetWeave, columnSkin, farewell, inlayBand, lanternGlass, marbleFloor, piercedMetal, sealedCard, type FarewellWords, type SealedWords } from "./hotelDecor";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { REGISTRATION_OPENS } from "../../../lib/event";
 import { Reflector } from "three/examples/jsm/objects/Reflector.js";
@@ -226,7 +226,30 @@ export function buildHotel(
       });
   const MARBLE_MODULE = 2.4;
   const bandTex = inlayBand();
-  const carpetMat = new THREE.MeshLambertMaterial({ map: T.carpet([1, 1]) });
+  // Hand-knotted wool: a matt pile with a soft velvet sheen at grazing angles
+  const wool = (t: { map: THREE.Texture; normalMap: THREE.Texture }) =>
+    isMobile
+      ? new THREE.MeshStandardMaterial({ map: t.map, normalMap: t.normalMap, roughness: 0.94, metalness: 0, envMapIntensity: 0.5 })
+      : new THREE.MeshPhysicalMaterial({
+          map: t.map,
+          normalMap: t.normalMap,
+          roughness: 0.94,
+          metalness: 0,
+          envMapIntensity: 0.5,
+          sheen: 1,
+          sheenColor: new THREE.Color(0xc98aa9),
+          sheenRoughness: 0.5,
+        });
+  const runnerWool = wool(carpetWeave("runner", 512));
+  const carpetMat = wool(carpetWeave("field", isMobile ? 512 : 1024));
+  /** A runner of the given length (its texture is 2.4 m wide by 4.8 m long) */
+  const runnerOf = (width: number, len: number) => {
+    const m = runnerWool.clone();
+    const n = len / (width * 2);
+    m.map = repeated(runnerWool.map!, 1, n);
+    m.normalMap = repeated(runnerWool.normalMap!, 1, n);
+    return m;
+  };
   const cedarMat = new THREE.MeshLambertMaterial({ map: T.cedar([1, 1]) });
   const drapeMat = new THREE.MeshLambertMaterial({ map: T.drape([1, 1]) });
   const silverMat = new THREE.MeshStandardMaterial({ color: 0xdfe3ea, metalness: 1, roughness: 0.25 });
@@ -281,10 +304,10 @@ export function buildHotel(
     const d = z0 - z1;
     const fm = floorMat.clone();
     fm.map = repeated(floorMat.map!, w / rep, d / rep);
+    const sm = fm as THREE.MeshStandardMaterial;
+    if (sm.normalMap) sm.normalMap = repeated(sm.normalMap, w / rep, d / rep);
+    if (sm.roughnessMap) sm.roughnessMap = repeated(sm.roughnessMap, w / rep, d / rep);
     if (floorMat === marbleMat) {
-      const m = fm as THREE.MeshStandardMaterial;
-      m.normalMap = repeated(marbleMat.normalMap!, w / rep, d / rep);
-      m.roughnessMap = repeated(marbleMat.roughnessMap!, w / rep, d / rep);
       // The inlaid border running near both long walls
       if (w >= 8) {
         const len = d - 1.6;
@@ -504,8 +527,7 @@ export function buildHotel(
     }
   }
   endWall(-RW, RW, SALON_Z0, RH, { w: 3.2, h: 5 });
-  const runnerMat = carpetMat.clone();
-  runnerMat.map = repeated(carpetMat.map!, 1, 14 / 4.8);
+  const runnerMat = runnerOf(2.4, 14);
   const runner = plane(2.4, 14, runnerMat);
   runner.rotation.x = -Math.PI / 2;
   runner.position.set(0, 0.01, -7);
@@ -521,13 +543,49 @@ export function buildHotel(
   desk.add(body, front, deskTop);
   desk.position.set(0, 0, -14);
   scene.add(desk);
-  // The Gala's mark above the arch
-  const logo = plane(2.6, 2.6 * (215 / 631), new THREE.MeshBasicMaterial({ transparent: true, toneMapped: false, opacity: 0 }));
+  // The Gala's mark above the arch: pure white, lifted off the wall by a soft
+  // dark shadow so it reads clearly against the warm stucco
+  const LOGO_W = 2.6;
+  const LOGO_PAD = 0.12; // share of the width added on each side for the shadow
+  const logo = plane(
+    LOGO_W * (1 + 2 * LOGO_PAD),
+    LOGO_W * (215 / 631) + LOGO_W * 2 * LOGO_PAD,
+    new THREE.MeshBasicMaterial({ transparent: true, toneMapped: false, opacity: 0, depthWrite: false }),
+  );
   logo.position.set(0, 5.55, SALON_Z0 + 0.3);
   scene.add(logo);
   ctx.texture("/GALA-silver.png").then((t) => {
+    const img = t.image as CanvasImageSource & { width: number; height: number };
+    const w = img.width;
+    const h = img.height;
+    const pad = Math.round(w * LOGO_PAD);
+    // The mark's silhouette in white
+    const white = document.createElement("canvas");
+    white.width = w;
+    white.height = h;
+    const wg = white.getContext("2d")!;
+    wg.drawImage(img, 0, 0, w, h);
+    wg.globalCompositeOperation = "source-in";
+    wg.fillStyle = "#ffffff";
+    wg.fillRect(0, 0, w, h);
+    // Drawn twice over a soft drop shadow: a wide halo, then a tight one
+    const c = document.createElement("canvas");
+    c.width = w + pad * 2;
+    c.height = h + pad * 2;
+    const g = c.getContext("2d")!;
+    g.shadowColor = "rgba(20, 2, 12, 0.85)";
+    g.shadowBlur = w * 0.035;
+    g.shadowOffsetY = w * 0.008;
+    g.drawImage(white, pad, pad);
+    g.shadowColor = "rgba(20, 2, 12, 0.9)";
+    g.shadowBlur = w * 0.008;
+    g.shadowOffsetY = w * 0.003;
+    g.drawImage(white, pad, pad);
+    const lt = new THREE.CanvasTexture(c);
+    lt.colorSpace = THREE.SRGBColorSpace;
+    lt.anisotropy = 8;
     const mm = logo.material as THREE.MeshBasicMaterial;
-    mm.map = t;
+    mm.map = lt;
     mm.opacity = 1;
     mm.needsUpdate = true;
   });
@@ -591,11 +649,10 @@ export function buildHotel(
   sideWall(-SW, SALON_Z0, salonEndZ, SH, []);
   const winCount = Math.max(2, Math.round((SALON_Z0 - salonEndZ) / FRAME_GAP));
   sideWall(SW, SALON_Z0, salonEndZ, SH, arches(SALON_Z0 - salonEndZ, winCount, 1.6, 3.4));
-  const srMat = carpetMat.clone();
-  srMat.map = repeated(carpetMat.map!, 1, (SALON_Z0 - salonEndZ) / 3.2);
+  const srMat = runnerOf(1.6, SALON_Z0 - salonEndZ);
   const salonRunner = plane(1.6, SALON_Z0 - salonEndZ, srMat);
   salonRunner.rotation.x = -Math.PI / 2;
-  salonRunner.position.set(0.6, 0.01, (SALON_Z0 + salonEndZ) / 2);
+  salonRunner.position.set(0, 0.01, (SALON_Z0 + salonEndZ) / 2);
   scene.add(salonRunner);
 
   const FW = isMobile ? 1.35 : 1.5;
@@ -657,7 +714,7 @@ export function buildHotel(
       photo.color.set(0xffffff);
       photo.needsUpdate = true;
     });
-    if (i % 2 === 0) lanternSpots.push(new THREE.Vector3(0.6, 4.0, z - FRAME_GAP / 2));
+    if (i % 2 === 0) lanternSpots.push(new THREE.Vector3(0, 4.0, z - FRAME_GAP / 2));
   });
   endWall(-SW, SW, salonEndZ, SH, { w: 2.6, h: 3.8 });
 
@@ -669,6 +726,36 @@ export function buildHotel(
   sideWall(-SW, salonEndZ, BALL_Z0, SH, []);
   sideWall(SW, salonEndZ, BALL_Z0, SH, []);
   room(-BW, BW, BALL_Z0, ballEnd, BH, carpetMat, 4);
+  {
+    // The carpet's woven border, a frame inside the columns (the runner's own
+    // border band: 92/512 of its 2.4 m width)
+    const bw = 2.4 * (92 / 512);
+    const inset = 1.3;
+    const strip = (len: number, flip: boolean) => {
+      const m = runnerWool.clone();
+      for (const key of ["map", "normalMap"] as const) {
+        const t = runnerWool[key]!.clone();
+        t.repeat.set(92 / 512, len / 4.8);
+        t.offset.set(flip ? 1 - 92 / 512 : 0, 0);
+        t.needsUpdate = true;
+        m[key] = t;
+      }
+      return m;
+    };
+    const zLen = BALL_LEN - 2 * inset;
+    const xLen = 2 * BW - 2 * inset - 2 * bw;
+    for (const s of [-1, 1]) {
+      const side = plane(bw, zLen, strip(zLen, s > 0));
+      side.rotation.x = -Math.PI / 2;
+      side.position.set(s * (BW - inset - bw / 2), 0.006, (BALL_Z0 + ballEnd) / 2);
+      scene.add(side);
+      // Turned a quarter, its outer guard still faces the wall
+      const end = plane(bw, xLen, strip(xLen, s < 0));
+      end.rotation.set(-Math.PI / 2, 0, Math.PI / 2);
+      end.position.set(0, 0.006, s > 0 ? BALL_Z0 - inset - bw / 2 : ballEnd + inset + bw / 2);
+      scene.add(end);
+    }
+  }
   const ballArches = arches(BALL_LEN, 6, 3, 5.2);
   sideWall(-BW, BALL_Z0, ballEnd, BH, ballArches);
   sideWall(BW, BALL_Z0, ballEnd, BH, ballArches);
@@ -769,8 +856,7 @@ export function buildHotel(
   sideWall(CW, CLUB_Z0, clubEnd, CH, []);
   endWall(-CW, CW, CLUB_Z0, CH, { w: 2.8, h: 4.2 });
   endWall(-CW, CW, clubEnd, CH);
-  const crMat = carpetMat.clone();
-  crMat.map = repeated(carpetMat.map!, 1, CLUB_LEN / 4.8);
+  const crMat = runnerOf(2.4, CLUB_LEN);
   const clubRunner = plane(2.4, CLUB_LEN, crMat);
   clubRunner.rotation.x = -Math.PI / 2;
   clubRunner.position.set(0, 0.01, CLUB_Z0 - CLUB_LEN / 2);
@@ -1118,14 +1204,14 @@ export function buildHotel(
   key(0.9, [0, EYE, -6], [0, 2.4, -16]);
   key(plan.panelLeft, [-PANEL_X, EYE, panelStand], [-PANEL_X, PANEL_Y, SALON_Z0]);
   key(plan.panelRight, [PANEL_X, EYE, panelStand], [PANEL_X, PANEL_Y, SALON_Z0]);
-  key(plan.receptionEnd, [0.4, EYE, SALON_Z0 + 1.6], [0, 1.9, SALON_Z0 - 8]);
+  key(plan.receptionEnd, [0, EYE, SALON_Z0 + 1.6], [0, 1.9, SALON_Z0 - 8]);
   // The salon: square to each frame
   const stand = isMobile ? 0.9 : -0.2;
   frames.forEach((_, i) => {
     const z = frameZ(i);
     key(plan.frameU(i), [stand, EYE + 0.15, z], [-SW, FY - 0.45, z]);
   });
-  key(plan.salonEnd, [0.6, EYE, lastFrameZ - 2.2], [0, 1.9, lastFrameZ - 12]);
+  key(plan.salonEnd, [0, EYE, lastFrameZ - 2.2], [0, 1.9, lastFrameZ - 12]);
   key(plan.ballroomIn, [0, EYE + 0.2, BALL_Z0 - 6], [0, 2.6, TABLE_Z - 6]);
   const LETTER_VIEW: [number, number, number] = [0, TABLE_H + 0.78, TABLE_Z + 0.5];
   const LETTER_LOOK: [number, number, number] = [0, TABLE_H + 0.1, TABLE_Z - 0.2];
