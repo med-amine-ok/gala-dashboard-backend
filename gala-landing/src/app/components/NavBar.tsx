@@ -308,7 +308,7 @@ export default function NavBar() {
             {/* Bottom Bar of Overlay */}
             <div className="border-t border-[var(--color-silver)]/20 pt-6 max-w-7xl w-full mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[var(--color-cream)]/60 relative z-10">
               <p className="tracking-wider uppercase text-[11px]">
-                ALGIERS · HOTEL MERCURE · NOVEMBER 08, 2026
+                ALGIERS · NOVEMBER 2026
               </p>
               <Link
                 href="/register"
