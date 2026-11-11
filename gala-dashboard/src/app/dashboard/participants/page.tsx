@@ -23,7 +23,8 @@ import {
   BookOpen,
   GraduationCap,
   RefreshCw,
-  CreditCard
+  CreditCard,
+  ExternalLink
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -469,7 +470,21 @@ export default function ParticipantsPage() {
                       />
                     </td>
                     <td className="py-4 px-6 font-medium text-[#1A1A1A]">
-                      <div className="font-semibold">{p.full_name}</div>
+                      <div className="font-semibold flex items-center gap-1.5">
+                        <span>{p.full_name}</span>
+                        {p.linkedin_url && (
+                          <a
+                            href={p.linkedin_url.startsWith('http') ? p.linkedin_url : `https://${p.linkedin_url}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-[#0A66C2] hover:text-[#004182] transition-colors inline-flex items-center"
+                            title="Open LinkedIn Profile"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Linkedin className="h-3.5 w-3.5" />
+                          </a>
+                        )}
+                      </div>
                       <div className="text-[10px] text-[#8C8C8C] font-normal mt-0.5">{p.email}</div>
                     </td>
                     <td className="py-4 px-6 text-[#666666]">
@@ -551,6 +566,17 @@ export default function ParticipantsPage() {
                         >
                           <RefreshCw className={`h-4 w-4 ${syncPaymentMutation.isPending && syncPaymentMutation.variables === p.id ? 'animate-spin' : ''}`} />
                         </button>
+                      )}
+                      {p.linkedin_url && (
+                        <a
+                          href={p.linkedin_url.startsWith('http') ? p.linkedin_url : `https://${p.linkedin_url}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="p-1 hover:text-[#0A66C2] text-gray-400 transition-colors inline-block"
+                          title="Open LinkedIn Profile"
+                        >
+                          <Linkedin className="h-4 w-4" />
+                        </a>
                       )}
                       <button
                         onClick={() => setDetailParticipant(p)}
@@ -665,12 +691,34 @@ export default function ParticipantsPage() {
                     <Phone className="h-4 w-4 text-[#B8964A] shrink-0" />
                     <span>{detailParticipant.phone || 'No phone recorded'}</span>
                   </div>
-                  {detailParticipant.linkedin_url && (
-                    <div className="flex items-center gap-2.5 text-[#1A1A1A] col-span-1 sm:col-span-2 p-2.5 bg-[#FAF8F5] rounded-xl border border-[#EAE3D5]/60">
-                      <Linkedin className="h-4 w-4 text-[#0A66C2] shrink-0" />
-                      <a href={detailParticipant.linkedin_url} target="_blank" rel="noreferrer" className="text-[#6E4FA0] hover:underline truncate">
-                        {detailParticipant.linkedin_url}
+                  {detailParticipant.linkedin_url ? (
+                    <div className="flex items-center justify-between gap-2.5 text-[#1A1A1A] col-span-1 sm:col-span-2 p-2.5 bg-[#FAF8F5] rounded-xl border border-[#EAE3D5]/60">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <Linkedin className="h-4 w-4 text-[#0A66C2] shrink-0" />
+                        <a
+                          href={detailParticipant.linkedin_url.startsWith('http') ? detailParticipant.linkedin_url : `https://${detailParticipant.linkedin_url}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-[#6E4FA0] hover:underline truncate font-medium"
+                          title="Open LinkedIn Profile"
+                        >
+                          {detailParticipant.linkedin_url}
+                        </a>
+                      </div>
+                      <a
+                        href={detailParticipant.linkedin_url.startsWith('http') ? detailParticipant.linkedin_url : `https://${detailParticipant.linkedin_url}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="p-1 hover:text-[#0A66C2] text-[#6B6862] transition-colors shrink-0"
+                        title="Open in new tab"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" />
                       </a>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2.5 text-[#6B6862] col-span-1 sm:col-span-2 p-2.5 bg-[#FAF8F5] rounded-xl border border-[#EAE3D5]/60">
+                      <Linkedin className="h-4 w-4 text-[#6B6862]/60 shrink-0" />
+                      <span>No LinkedIn profile recorded</span>
                     </div>
                   )}
                 </div>
