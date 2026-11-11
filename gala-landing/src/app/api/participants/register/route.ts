@@ -4,6 +4,7 @@ const FIELD_LABELS: Record<string, string> = {
   first_name: "First name",
   last_name: "Last name",
   phone: "Phone",
+  linkedin_url: "LinkedIn profile",
   university: "University",
   university_other: "Institution",
   field_of_study: "Field of study",

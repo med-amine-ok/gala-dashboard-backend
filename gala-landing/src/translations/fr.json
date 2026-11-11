@@ -441,6 +441,7 @@
       "lastName": "Nom de famille *",
       "email": "Adresse E-mail *",
       "phone": "Numéro de Téléphone *",
+      "linkedinUrl": "Profil LinkedIn (Optionnel)",
       "university": "Université / Grande École *",
       "universityOther": "Précisez votre établissement *",
       "fieldOfStudy": "Spécialité d'Ingénierie *",

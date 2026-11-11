@@ -131,7 +131,13 @@ export default function ParticipantsPage() {
 
   const addParticipantMutation = useMutation({
     mutationFn: (payload: typeof addForm) => {
-      return apiClient.post('/api/participants/manual-register/', payload);
+      const normalizedPayload = {
+        ...payload,
+        linkedin_url: payload.linkedin_url?.trim()
+          ? (payload.linkedin_url.trim().startsWith('http') ? payload.linkedin_url.trim() : `https://${payload.linkedin_url.trim()}`)
+          : ''
+      };
+      return apiClient.post('/api/participants/manual-register/', normalizedPayload);
     },
     onSuccess: () => {
       toast.success('Participant manually registered & approved.');

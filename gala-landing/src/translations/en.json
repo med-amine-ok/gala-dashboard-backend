@@ -34,7 +34,7 @@
   },
   "hero": {
     "edition": "ALGIERS · 2026",
-    "headlin":"Shorten the distance\nto your futureunity.",
+    "headline":"Shorten the distance\nto your futureunity.",
     "subheadline": "An exclusive evening uniting elite engineers, pioneering organizations, and visionary leaders.",
     "requestCTA": "REQUEST YOUR INVITATION",
     "discoverCTA": "DISCOVER GALA",
@@ -436,6 +436,7 @@
       "lastName": "Last Name *",
       "email": "Email Address *",
       "phone": "Phone Number *",
+      "linkedinUrl": "LinkedIn Profile (Optional)",
       "university": "University / Grande École *",
       "universityOther": "Specify your institution *",
       "fieldOfStudy": "Engineering Specialization *",

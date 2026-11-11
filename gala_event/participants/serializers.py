@@ -105,6 +105,17 @@ class ParticipantRegistrationSerializer(serializers.Serializer):
     additional_comments = serializers.CharField(max_length=LONG_TEXT, required=False, allow_blank=True)
     linkedin_url = serializers.URLField(max_length=200, required=False, allow_blank=True)
 
+    def to_internal_value(self, data):
+        data = data.copy() if hasattr(data, 'copy') else dict(data)
+        url = data.get('linkedin_url')
+        if url and isinstance(url, str):
+            url = url.strip()
+            if url and not url.startswith(('http://', 'https://')):
+                data['linkedin_url'] = f'https://{url}'
+            elif not url:
+                data['linkedin_url'] = ''
+        return super().to_internal_value(data)
+
     def validate_email(self, value):
         value = value.strip().lower()
         if User.objects.filter(email__iexact=value).exists():
@@ -213,6 +224,17 @@ class ParticipantSelfUpdateSerializer(serializers.ModelSerializer):
     phone = serializers.CharField(max_length=20, required=False, validators=[phone_validator])
     linkedin_url = serializers.URLField(max_length=200, required=False, allow_blank=True)
     personal_description = serializers.CharField(max_length=LONG_TEXT, required=False, allow_blank=True)
+
+    def to_internal_value(self, data):
+        data = data.copy() if hasattr(data, 'copy') else dict(data)
+        url = data.get('linkedin_url')
+        if url and isinstance(url, str):
+            url = url.strip()
+            if url and not url.startswith(('http://', 'https://')):
+                data['linkedin_url'] = f'https://{url}'
+            elif not url:
+                data['linkedin_url'] = ''
+        return super().to_internal_value(data)
 
     class Meta:
         model = Participant

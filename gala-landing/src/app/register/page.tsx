@@ -69,6 +69,7 @@ const createRegistrationSchema = (lang: "fr" | "en") => {
     first_name: z.string().min(1, messages.required),
     last_name: z.string().min(1, messages.required),
     phone: z.string().min(1, messages.required),
+    linkedin_url: z.string().optional().or(z.literal("")),
     participant_type: z.enum(["ST", "G"]).default("ST"),
 
     university: z.enum(["ENP", "ENSTA", "USTHB", "ESAA", "ENSTP", "OTHER"]),
@@ -171,6 +172,7 @@ function RegistrationContent() {
       academic_level: "Engineering Degree",
       graduation_year: "2026",
       heard_about: "LinkedIn",
+      linkedin_url: "",
     },
   });
 
@@ -180,8 +182,14 @@ function RegistrationContent() {
     setSubmitError(null);
     setLoading(true);
 
+    const rawLinkedin = (data.linkedin_url || "").trim();
+    const linkedin_url = rawLinkedin
+      ? (rawLinkedin.startsWith("http://") || rawLinkedin.startsWith("https://") ? rawLinkedin : `https://${rawLinkedin}`)
+      : "";
+
     const payload = {
       ...data,
+      linkedin_url,
       university_other:
         data.university === "OTHER" ? data.university_other || "" : "",
       field_of_study_other:
@@ -998,6 +1006,16 @@ function StepAbout({ texts }: { texts: Texts }) {
         hint="Your answer and your invitation will be sent here."
       />
       <Field name="phone" type="tel" label={plainLabel(f.phone, "Phone number")} required autoComplete="tel" inputMode="tel" placeholder="+213 5XX XX XX XX" />
+      <div className="sm:col-span-2">
+        <Field
+          name="linkedin_url"
+          type="url"
+          label={plainLabel(f.linkedinUrl, "LinkedIn Profile (Optional)")}
+          placeholder="https://linkedin.com/in/username"
+          hint="Optional link to your professional profile."
+          autoComplete="url"
+        />
+      </div>
       <div>
         <SelectField
           name="university"
@@ -1107,6 +1125,7 @@ function StepReview({ data, texts, copy, onEdit }: { data: RegistrationData; tex
         [plainLabel(f.firstName, "First name") + " / " + plainLabel(f.lastName, "Last name"), [data.first_name, data.last_name].filter(Boolean).join(" ")],
         [plainLabel(f.email, "Email address"), data.email],
         [plainLabel(f.phone, "Phone number"), data.phone],
+        ...(data.linkedin_url ? [[plainLabel(f.linkedinUrl, "LinkedIn Profile"), data.linkedin_url] as [string, string]] : []),
         [plainLabel(f.university, "University"), university],
         [plainLabel(f.fieldOfStudy, "Specialization"), field],
       ],
