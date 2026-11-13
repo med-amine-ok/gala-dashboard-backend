@@ -151,7 +151,10 @@ class ParticipantViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsHRAdmin]
     pagination_class = ParticipantPagination
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['status', 'payment_status', 'participant_type']
+    filterset_fields = [
+        'status', 'payment_status', 'participant_type',
+        'university', 'field_of_study', 'academic_level', 'graduation_year'
+    ]
     search_fields = [
         'first_name', 'last_name', 'email', 'phone',
         'user__first_name', 'user__last_name', 'user__email',

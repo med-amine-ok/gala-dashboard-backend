@@ -24,7 +24,8 @@ import {
   GraduationCap,
   RefreshCw,
   CreditCard,
-  ExternalLink
+  ExternalLink,
+  RotateCcw
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -34,6 +35,10 @@ export default function ParticipantsPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [paymentFilter, setPaymentFilter] = useState('');
+  const [universityFilter, setUniversityFilter] = useState('');
+  const [fieldFilter, setFieldFilter] = useState('');
+  const [academicLevelFilter, setAcademicLevelFilter] = useState('');
+  const [graduationYearFilter, setGraduationYearFilter] = useState('');
   const [page, setPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   
@@ -42,6 +47,8 @@ export default function ParticipantsPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [rejectingParticipantId, setRejectingParticipantId] = useState<number | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [isBulkRejectModalOpen, setIsBulkRejectModalOpen] = useState(false);
+  const [bulkRejectionReason, setBulkRejectionReason] = useState('');
 
   // Manual Add Form State
   const [addForm, setAddForm] = useState({
@@ -71,7 +78,18 @@ export default function ParticipantsPage() {
 
   // Query participants list
   const { data, isLoading } = useQuery<{ count: number; results: Participant[] }>({
-    queryKey: ['participants', page, search, statusFilter, typeFilter, paymentFilter],
+    queryKey: [
+      'participants',
+      page,
+      search,
+      statusFilter,
+      typeFilter,
+      paymentFilter,
+      universityFilter,
+      fieldFilter,
+      academicLevelFilter,
+      graduationYearFilter
+    ],
     queryFn: () => {
       const params = new URLSearchParams();
       params.append('page', page.toString());
@@ -79,6 +97,10 @@ export default function ParticipantsPage() {
       if (statusFilter) params.append('status', statusFilter);
       if (typeFilter) params.append('participant_type', typeFilter);
       if (paymentFilter) params.append('payment_status', paymentFilter);
+      if (universityFilter) params.append('university', universityFilter);
+      if (fieldFilter) params.append('field_of_study', fieldFilter);
+      if (academicLevelFilter) params.append('academic_level', academicLevelFilter);
+      if (graduationYearFilter) params.append('graduation_year', graduationYearFilter);
       
       return apiClient.get(`/api/participants/view/?${params.toString()}`);
     }
@@ -89,6 +111,29 @@ export default function ParticipantsPage() {
     queryClient.invalidateQueries({ queryKey: ['participants'] });
     queryClient.invalidateQueries({ queryKey: ['dashboard-overview'] });
     queryClient.invalidateQueries({ queryKey: ['dashboard-activity'] });
+  };
+
+  const hasActiveFilters = Boolean(
+    search ||
+    statusFilter ||
+    typeFilter ||
+    paymentFilter ||
+    universityFilter ||
+    fieldFilter ||
+    academicLevelFilter ||
+    graduationYearFilter
+  );
+
+  const resetAllFilters = () => {
+    setSearch('');
+    setStatusFilter('');
+    setTypeFilter('');
+    setPaymentFilter('');
+    setUniversityFilter('');
+    setFieldFilter('');
+    setAcademicLevelFilter('');
+    setGraduationYearFilter('');
+    setPage(1);
   };
 
   // Mutations
@@ -122,6 +167,8 @@ export default function ParticipantsPage() {
     onSuccess: (res: any) => {
       toast.success(res.message || 'Bulk status updated.');
       setSelectedIds([]);
+      setIsBulkRejectModalOpen(false);
+      setBulkRejectionReason('');
       invalidateQueries();
     },
     onError: (err: any) => {
@@ -340,89 +387,233 @@ export default function ParticipantsPage() {
       </div>
 
       {/* Filters bar */}
-      <div className="bg-white p-4 sm:p-5 rounded-3xl border border-[#EAE3D5] shadow-[0_4px_24px_-4px_rgba(26,26,26,0.02)] flex flex-col md:flex-row gap-3 sm:gap-4 items-center justify-between">
-        <div className="relative w-full md:w-80">
-          <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-[#96928B]" />
-          <input
-            type="text"
-            placeholder="Search by name, school, study..."
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            className="w-full pl-10 pr-4 py-3 bg-[#FAF8F5] border border-[#EAE3D5] rounded-2xl text-xs placeholder-[#96928B] text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2]"
-          />
+      <div className="bg-white p-4 sm:p-5 rounded-3xl border border-[#EAE3D5] shadow-[0_4px_24px_-4px_rgba(26,26,26,0.02)] space-y-3.5">
+        <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
+          <div className="relative w-full md:w-96">
+            <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-[#96928B]" />
+            <input
+              type="text"
+              placeholder="Search by name, email, school, study..."
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+              className="w-full pl-10 pr-4 py-2.5 bg-[#FAF8F5] border border-[#EAE3D5] rounded-2xl text-xs placeholder-[#96928B] text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2]"
+            />
+          </div>
+
+          <div className="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end">
+            <span className="text-[11px] font-medium text-[#6B6862]">
+              {data ? `${data.count} participant${data.count === 1 ? '' : 's'} found` : 'Loading...'}
+            </span>
+            {hasActiveFilters && (
+              <button
+                onClick={resetAllFilters}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FAF8F5] hover:bg-[#EFE8DC] text-[#8C6F45] border border-[#E5DAC6] rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                title="Reset all filters"
+              >
+                <RotateCcw className="h-3 w-3" />
+                <span>Reset Filters</span>
+              </button>
+            )}
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 md:flex gap-3 w-full md:w-auto">
+        {/* Filter Dropdowns Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5 pt-3 border-t border-[#FAF7F2]">
           {/* Status Filter */}
-          <select
-            value={statusFilter}
-            onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-            className="px-4 py-3 bg-[#FAF8F5] border border-[#EAE3D5] rounded-2xl text-xs font-medium text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2] w-full"
-          >
-            <option value="">All Statuses</option>
-            <option value="PENDING">Pending</option>
-            <option value="APPROVED">Approved</option>
-            <option value="REJECTED">Rejected</option>
-          </select>
-
-          {/* Type Filter */}
-          <select
-            value={typeFilter}
-            onChange={(e) => { setTypeFilter(e.target.value); setPage(1); }}
-            className="px-4 py-3 bg-[#FAF8F5] border border-[#EAE3D5] rounded-2xl text-xs font-medium text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2] w-full"
-          >
-            <option value="">All Types</option>
-            <option value="ST">Student</option>
-            <option value="G">Guest</option>
-          </select>
+          <div>
+            <label className="block text-[10px] uppercase font-bold tracking-wider text-[#8C8C8C] mb-1">Status</label>
+            <select
+              value={statusFilter}
+              onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+              className="w-full px-2.5 py-2 bg-[#FAF8F5] border border-[#EAE3D5] rounded-xl text-xs font-medium text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2] cursor-pointer"
+            >
+              <option value="">All Statuses</option>
+              <option value="PENDING">Pending</option>
+              <option value="APPROVED">Approved</option>
+              <option value="REJECTED">Rejected</option>
+            </select>
+          </div>
 
           {/* Payment Filter */}
-          <select
-            value={paymentFilter}
-            onChange={(e) => { setPaymentFilter(e.target.value); setPage(1); }}
-            className="px-4 py-3 bg-[#FAF8F5] border border-[#EAE3D5] rounded-2xl text-xs font-medium text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2] w-full"
-          >
-            <option value="">All Payments</option>
-            <option value="pending">Pending Payment</option>
-            <option value="paid">Paid</option>
-            <option value="failed">Failed</option>
-          </select>
+          <div>
+            <label className="block text-[10px] uppercase font-bold tracking-wider text-[#8C8C8C] mb-1">Payment</label>
+            <select
+              value={paymentFilter}
+              onChange={(e) => { setPaymentFilter(e.target.value); setPage(1); }}
+              className="w-full px-2.5 py-2 bg-[#FAF8F5] border border-[#EAE3D5] rounded-xl text-xs font-medium text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2] cursor-pointer"
+            >
+              <option value="">All Payments</option>
+              <option value="pending">Pending</option>
+              <option value="paid">Paid</option>
+              <option value="failed">Failed</option>
+            </select>
+          </div>
+
+          {/* Type Filter */}
+          <div>
+            <label className="block text-[10px] uppercase font-bold tracking-wider text-[#8C8C8C] mb-1">Type</label>
+            <select
+              value={typeFilter}
+              onChange={(e) => { setTypeFilter(e.target.value); setPage(1); }}
+              className="w-full px-2.5 py-2 bg-[#FAF8F5] border border-[#EAE3D5] rounded-xl text-xs font-medium text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2] cursor-pointer"
+            >
+              <option value="">All Types</option>
+              <option value="ST">Student</option>
+              <option value="G">Guest</option>
+            </select>
+          </div>
+
+          {/* Place of Study / University Filter */}
+          <div>
+            <label className="block text-[10px] uppercase font-bold tracking-wider text-[#8C8C8C] mb-1">University / School</label>
+            <select
+              value={universityFilter}
+              onChange={(e) => { setUniversityFilter(e.target.value); setPage(1); }}
+              className="w-full px-2.5 py-2 bg-[#FAF8F5] border border-[#EAE3D5] rounded-xl text-xs font-medium text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2] cursor-pointer"
+            >
+              <option value="">All Schools</option>
+              <option value="ENP">ENP</option>
+              <option value="USTHB">USTHB</option>
+              <option value="ENSTA">ENSTA</option>
+              <option value="ENSTP">ENSTP</option>
+              <option value="ESAA">ESAA</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </div>
+
+          {/* Field of Study Filter */}
+          <div>
+            <label className="block text-[10px] uppercase font-bold tracking-wider text-[#8C8C8C] mb-1">Field of Study</label>
+            <select
+              value={fieldFilter}
+              onChange={(e) => { setFieldFilter(e.target.value); setPage(1); }}
+              className="w-full px-2.5 py-2 bg-[#FAF8F5] border border-[#EAE3D5] rounded-xl text-xs font-medium text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2] cursor-pointer"
+            >
+              <option value="">All Fields</option>
+              <option value="datascience_ai">Data Science & AI</option>
+              <option value="automation">Automation</option>
+              <option value="electrical">Electrical</option>
+              <option value="electronics">Electronics</option>
+              <option value="mechanical">Mechanical</option>
+              <option value="industrial">Industrial</option>
+              <option value="chemical">Chemical</option>
+              <option value="civil">Civil</option>
+              <option value="mining">Mining</option>
+              <option value="materials">Materials</option>
+              <option value="qhse">QHSE</option>
+              <option value="environmental">Environmental</option>
+              <option value="hydraulics">Hydraulics</option>
+              <option value="green_hydrogen">Green Hydrogen</option>
+              <option value="automotive">Automotive</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </div>
+
+          {/* Academic Level Filter */}
+          <div>
+            <label className="block text-[10px] uppercase font-bold tracking-wider text-[#8C8C8C] mb-1">Academic Level</label>
+            <select
+              value={academicLevelFilter}
+              onChange={(e) => { setAcademicLevelFilter(e.target.value); setPage(1); }}
+              className="w-full px-2.5 py-2 bg-[#FAF8F5] border border-[#EAE3D5] rounded-xl text-xs font-medium text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2] cursor-pointer"
+            >
+              <option value="">All Levels</option>
+              <option value="Engineering Degree">Engineering Degree</option>
+              <option value="Master’s Degree">Master’s Degree</option>
+              <option value="Bachelor’s Degree">Bachelor’s Degree</option>
+              <option value="PhD">PhD</option>
+              <option value="Postgraduate Studies (PGS)">PGS</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </div>
+
+          {/* Graduation Year Filter */}
+          <div>
+            <label className="block text-[10px] uppercase font-bold tracking-wider text-[#8C8C8C] mb-1">Graduation Year</label>
+            <select
+              value={graduationYearFilter}
+              onChange={(e) => { setGraduationYearFilter(e.target.value); setPage(1); }}
+              className="w-full px-2.5 py-2 bg-[#FAF8F5] border border-[#EAE3D5] rounded-xl text-xs font-medium text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2] cursor-pointer"
+            >
+              <option value="">All Years</option>
+              <option value="2023">2023</option>
+              <option value="2024">2024</option>
+              <option value="2025">2025</option>
+              <option value="2026">2026</option>
+              <option value="2027">2027</option>
+              <option value="2028">2028</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </div>
         </div>
       </div>
 
       {/* Bulk actions bar */}
       {selectedIds.length > 0 && (
-        <div className="bg-[#FAF8F5] border border-[#EAE3D5] px-4 sm:px-6 py-4 rounded-2xl flex flex-col sm:flex-row gap-3 items-center justify-between animate-fade-in shadow-2xs">
+        <div className="bg-[#FAF8F5] border border-[#EAE3D5] px-4 sm:px-6 py-4 rounded-2xl flex flex-col md:flex-row gap-3 items-center justify-between animate-fade-in shadow-2xs">
           <span className="text-xs font-semibold text-[#1A1A1A] flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[#6E4FA0]" />
-            {selectedIds.length} participants selected
+            {selectedIds.length} participant{selectedIds.length === 1 ? '' : 's'} selected
           </span>
-          <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full sm:w-auto">
+          <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+            {/* Bulk Approve */}
             <button
               onClick={() => bulkActionMutation.mutate({ ids: selectedIds, action: 'approved' })}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-[#2E5A36] text-white rounded-xl text-xs font-semibold hover:bg-emerald-800 transition-colors cursor-pointer shadow-xs min-h-[40px]"
+              disabled={bulkActionMutation.isPending}
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-[#2E5A36] text-white rounded-xl text-xs font-semibold hover:bg-emerald-800 transition-colors cursor-pointer shadow-xs min-h-[38px] disabled:opacity-50"
             >
-              <Check className="h-3.5 w-3.5" />
-              <span>Approve Selection</span>
+              {bulkActionMutation.isPending && bulkActionMutation.variables?.action === 'approved' ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Check className="h-3.5 w-3.5" />
+              )}
+              <span>Approve ({selectedIds.length})</span>
             </button>
+
+            {/* Bulk Reject */}
             <button
-              onClick={() => {
-                const reason = prompt('Rejection reason (required):');
-                if (reason) bulkActionMutation.mutate({ ids: selectedIds, action: 'rejected', reason });
-              }}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-[#8B2635] text-white rounded-xl text-xs font-semibold hover:bg-red-800 transition-colors cursor-pointer shadow-xs min-h-[40px]"
+              onClick={() => setIsBulkRejectModalOpen(true)}
+              disabled={bulkActionMutation.isPending}
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-[#8B2635] text-white rounded-xl text-xs font-semibold hover:bg-red-800 transition-colors cursor-pointer shadow-xs min-h-[38px] disabled:opacity-50"
             >
-              <X className="h-3.5 w-3.5" />
-              <span>Reject Selection</span>
+              {bulkActionMutation.isPending && bulkActionMutation.variables?.action === 'rejected' ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <X className="h-3.5 w-3.5" />
+              )}
+              <span>Reject ({selectedIds.length})</span>
             </button>
+
+            {/* Bulk Set Pending */}
+            <button
+              onClick={() => bulkActionMutation.mutate({ ids: selectedIds, action: 'pending' })}
+              disabled={bulkActionMutation.isPending}
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-[#FAF8F5] text-[#8C6F45] border border-[#E5DAC6] hover:bg-[#EFE6D5] rounded-xl text-xs font-semibold transition-colors cursor-pointer shadow-xs min-h-[38px] disabled:opacity-50"
+            >
+              {bulkActionMutation.isPending && bulkActionMutation.variables?.action === 'pending' ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <RotateCcw className="h-3.5 w-3.5" />
+              )}
+              <span>Set Pending ({selectedIds.length})</span>
+            </button>
+
+            {/* Bulk Send Payment Links */}
             <button
               onClick={() => bulkPaymentLinksMutation.mutate(selectedIds)}
               disabled={bulkPaymentLinksMutation.isPending}
               title="Email the payment link to the selected approved participants who have not paid"
-              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-[#1A1A1A] text-white rounded-xl text-xs font-semibold hover:bg-black transition-colors cursor-pointer shadow-xs min-h-[40px] disabled:opacity-60"
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-[#1A1A1A] text-white rounded-xl text-xs font-semibold hover:bg-black transition-colors cursor-pointer shadow-xs min-h-[38px] disabled:opacity-60"
             >
               {bulkPaymentLinksMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
               <span>Send Payment Links</span>
+            </button>
+
+            <button
+              onClick={() => setSelectedIds([])}
+              className="text-xs text-[#8C8C8C] hover:text-[#1A1A1A] underline px-2 py-1 transition-colors cursor-pointer"
+            >
+              Clear selection
             </button>
           </div>
         </div>
@@ -1012,6 +1203,54 @@ export default function ParticipantsPage() {
               </button>
               <button
                 onClick={() => { setRejectingParticipantId(null); setRejectionReason(''); }}
+                className="px-4 py-2.5 bg-[#FAF8F5] text-[#6E4FA0] hover:bg-[#ECE5F8] border border-[#EAE3D5] rounded-2xl font-semibold"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Reject Reason Modal Overlay */}
+      {isBulkRejectModalOpen && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-60 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-2xl border border-[#EAE3D5]">
+            <div>
+              <h3 className="text-md font-semibold text-[#1A1A1A] font-serif">
+                Reject {selectedIds.length} Participants
+              </h3>
+              <p className="text-[11px] text-[#6B6862] mt-1">
+                Please provide a rejection reason. This will be stored on all {selectedIds.length} participant records.
+              </p>
+            </div>
+            <textarea
+              placeholder="Provide a reason for rejection..."
+              rows={3}
+              value={bulkRejectionReason}
+              onChange={(e) => setBulkRejectionReason(e.target.value)}
+              className="w-full p-3 bg-[#FAF8F5] border border-[#EAE3D5] rounded-2xl text-xs placeholder-[#96928B] text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2]"
+            />
+            <div className="flex justify-end gap-2 text-xs">
+              <button
+                onClick={() => {
+                  if (!bulkRejectionReason.trim()) {
+                    toast.error('Rejection reason is required.');
+                    return;
+                  }
+                  bulkActionMutation.mutate({
+                    ids: selectedIds,
+                    action: 'rejected',
+                    reason: bulkRejectionReason
+                  });
+                }}
+                disabled={bulkActionMutation.isPending}
+                className="px-4 py-2.5 bg-[#8B2635] text-white rounded-2xl font-semibold hover:bg-red-800 transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+              >
+                {bulkActionMutation.isPending ? 'Rejecting...' : `Reject ${selectedIds.length}`}
+              </button>
+              <button
+                onClick={() => { setIsBulkRejectModalOpen(false); setBulkRejectionReason(''); }}
                 className="px-4 py-2.5 bg-[#FAF8F5] text-[#6E4FA0] hover:bg-[#ECE5F8] border border-[#EAE3D5] rounded-2xl font-semibold"
               >
                 Cancel
