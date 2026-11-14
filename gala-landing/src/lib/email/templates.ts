@@ -17,8 +17,8 @@ export function paymentLinkEmail(firstName: string | null | undefined, paymentUr
       ],
       cta: { label: `Pay ${EVENT.price} & confirm my seat`, url: paymentUrl },
       details: [
-        { label: "Date", value: EVENT.date },
-        { label: "Venue", value: EVENT.venue },
+        { label: "Date", value: EVENT.dateLong },
+        { label: "Venue", value: EVENT.venue, url: EVENT.mapUrl },
         { label: "Entrance", value: EVENT.price },
       ],
       footnote: "This link is personal: please don't share it. Payments are processed securely by Chargily Pay (Edahabia / CIB).",
@@ -26,25 +26,4 @@ export function paymentLinkEmail(firstName: string | null | undefined, paymentUr
   };
 }
 
-/** "Payment received, here is your ticket." (the PDF ticket is attached) */
-export function ticketEmail(firstName: string | null | undefined, serialNumber: string) {
-  return {
-    subject: `Your ticket for the ${EVENT.name}`,
-    ...renderEmail({
-      preheader: `Payment received. Your ticket ${serialNumber} is attached.`,
-      eyebrow: "Payment confirmed",
-      title: "Your ticket is ready",
-      greeting: greet(firstName),
-      paragraphs: [
-        "Thank you, your payment has been received and your seat is officially confirmed.",
-        "Your personal ticket is attached to this email as a PDF. Show its QR code at the entrance, printed or on your phone.",
-      ],
-      highlight: { label: "Ticket number", value: serialNumber, monospace: true },
-      details: [
-        { label: "Date", value: EVENT.date },
-        { label: "Venue", value: EVENT.venue },
-      ],
-      footnote: "Each ticket admits one person and can be scanned only once. Keep it to yourself until the event.",
-    }),
-  };
-}
+// The ticket email itself (the email is the pass): see ./ticket.ts

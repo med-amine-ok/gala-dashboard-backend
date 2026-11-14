@@ -24,8 +24,13 @@ BRAND = {
 
 EVENT = {
     'name': "Engineers' Gala 2026",
-    'date': '8 November 2026',
-    'venue': 'Hotel Mercure, Bab Ezzouar · Algiers',
+    'date': '28 November 2026',
+    'date_long': 'Saturday 28 November 2026',
+    'iso_date': '2026-11-28',  # for calendar links (all-day event)
+    'venue': 'Hotel El Djazaïr, Algiers',
+    'venue_name': 'Hotel El Djazaïr',
+    'venue_city': 'Algiers',
+    'map_url': 'https://maps.app.goo.gl/u5AH7wZHXooa3JUCA',
     'price': '1,000 DA',
     'organiser': 'Vision & Innovation Club · École Nationale Polytechnique',
 }
@@ -87,12 +92,16 @@ def _highlight(label, value, monospace=False, large=False):
 def _details(rows):
     b = BRAND
     cells = []
-    for i, (label, value) in enumerate(rows):
+    for i, row in enumerate(rows):
+        label, value = row[0], row[1]
+        url = row[2] if len(row) > 2 else None
+        shown = (f'<a href="{esc(url)}" target="_blank" style="color:{b["magenta"]};">{esc(value)}</a>'
+                 if url else esc(value))
         border = f'border-top:1px solid {b["cream_muted"]};' if i else ''
         cells.append(f'''
   <tr>
     <td style="padding:12px 18px;{border}font-family:{SANS};font-size:10px;letter-spacing:2px;text-transform:uppercase;color:{b['text_muted']};width:34%;">{esc(label)}</td>
-    <td style="padding:12px 18px;{border}font-family:{SANS};font-size:14px;font-weight:600;color:{b['plum']};">{esc(value)}</td>
+    <td style="padding:12px 18px;{border}font-family:{SANS};font-size:14px;font-weight:600;color:{b['plum']};">{shown}</td>
   </tr>''')
     return f'''
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
@@ -189,8 +198,8 @@ def render_email_text(*, eyebrow, title, paragraphs, greeting=None, highlight=No
         lines += [f"{highlight['label']}: {highlight['value']}", '']
     if cta:
         lines += [f"{cta['label']}: {cta['url']}", '']
-    for label, value in details or []:
-        lines.append(f'{label}: {value}')
+    for row in details or []:
+        lines.append(f'{row[0]}: {row[1]}' + (f' ({row[2]})' if len(row) > 2 and row[2] else ''))
     if details:
         lines.append('')
     if footnote:

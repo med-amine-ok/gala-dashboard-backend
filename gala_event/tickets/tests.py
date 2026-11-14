@@ -67,7 +67,6 @@ class CheckInTests(TestCase):
         self.assertEqual(len(Ticket.objects.create().serial_number), 6 + 16)
 
 
-@mock.patch('notifications.emails._ticket_pdf', mock.Mock(return_value=None))
 class PaymentRuleTests(TestCase):
     def setUp(self):
         self.client = APIClient()

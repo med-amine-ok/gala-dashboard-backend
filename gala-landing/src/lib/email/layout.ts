@@ -27,8 +27,14 @@ export const BRAND = {
 
 export const EVENT = {
   name: "Engineers' Gala 2026",
-  date: "8 November 2026",
-  venue: "Hotel Mercure, Bab Ezzouar · Algiers",
+  date: "28 November 2026",
+  dateLong: "Saturday 28 November 2026",
+  /** For calendar links (all-day event) */
+  isoDate: "2026-11-28",
+  venue: "Hotel El Djazaïr, Algiers",
+  venueName: "Hotel El Djazaïr",
+  venueCity: "Algiers",
+  mapUrl: "https://maps.app.goo.gl/u5AH7wZHXooa3JUCA",
   price: "1,000 DA",
   organiser: "Vision & Innovation Club · École Nationale Polytechnique",
 };
@@ -62,7 +68,7 @@ export type EmailContent = {
   highlight?: { label: string; value: string; monospace?: boolean; large?: boolean };
   cta?: { label: string; url: string };
   /** Small label/value rows in a card (date, venue, ...). */
-  details?: { label: string; value: string }[];
+  details?: { label: string; value: string; url?: string }[];
   /** Small print under the button. */
   footnote?: string;
 };
@@ -108,7 +114,7 @@ function details(rows: NonNullable<EmailContent["details"]>) {
       (r, i) => `
   <tr>
     <td style="padding:12px 18px;${i ? `border-top:1px solid ${BRAND.creamMuted};` : ""}font-family:${SANS};font-size:10px;letter-spacing:2px;text-transform:uppercase;color:${BRAND.textMuted};width:34%;">${esc(r.label)}</td>
-    <td style="padding:12px 18px;${i ? `border-top:1px solid ${BRAND.creamMuted};` : ""}font-family:${SANS};font-size:14px;font-weight:600;color:${BRAND.plum};">${esc(r.value)}</td>
+    <td style="padding:12px 18px;${i ? `border-top:1px solid ${BRAND.creamMuted};` : ""}font-family:${SANS};font-size:14px;font-weight:600;color:${BRAND.plum};">${r.url ? `<a href="${esc(r.url)}" target="_blank" style="color:${BRAND.magenta};">${esc(r.value)}</a>` : esc(r.value)}</td>
   </tr>`
     )
     .join("");
@@ -199,7 +205,7 @@ export function renderEmailText(c: EmailContent) {
   for (const p of c.paragraphs) lines.push(p, "");
   if (c.highlight) lines.push(`${c.highlight.label}: ${c.highlight.value}`, "");
   if (c.cta) lines.push(`${c.cta.label}: ${c.cta.url}`, "");
-  for (const d of c.details || []) lines.push(`${d.label}: ${d.value}`);
+  for (const d of c.details || []) lines.push(`${d.label}: ${d.value}${d.url ? ` (${d.url})` : ""}`);
   if (c.details?.length) lines.push("");
   if (c.footnote) lines.push(c.footnote, "");
   lines.push(`— ${EVENT.name}`, EVENT.organiser, siteUrl());

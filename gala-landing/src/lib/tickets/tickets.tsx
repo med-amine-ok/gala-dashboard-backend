@@ -1,10 +1,5 @@
-import fs from "fs";
-import path from "path";
-import { PDFDocument } from "pdf-lib";
-import QRCode from "qrcode";
-import inngest from "@/lib/inngest/inngest-client";
 import { sendEmail } from "./send-email";
-import { ticketEmail } from "@/lib/email/templates";
+import { TICKET_QR_CID, ticketEmail, ticketQrPng } from "@/lib/email/ticket";
 
 type TicketData = {
   firstName: string;
@@ -13,78 +8,20 @@ type TicketData = {
   ticketId: number | string;
 };
 
+/**
+ * Email the guest their ticket. The email itself is the admission pass (no
+ * PDF attached): the QR code is embedded in it (cid:), so it shows in the
+ * ticket even offline. The printable PDF stays available from
+ * /api/tickets/download for whoever wants one.
+ */
 export async function generateAndSendTicket(p: TicketData) {
   try {
     if (!p) {
       throw new Error("Participant data is required");
     }
-
-    // Load the ticket template reliably across environments
-    let pdfPath = path.join(process.cwd(), "public", "tickets.pdf");
-    if (!fs.existsSync(pdfPath)) {
-      pdfPath = path.resolve(
-        process.cwd(),
-        "gala-landing",
-        "public",
-        "tickets.pdf",
-      );
-    }
-    if (!fs.existsSync(pdfPath)) {
-      pdfPath = "public/tickets.pdf";
-    }
-
-    const existingPdfBytes = fs.readFileSync(pdfPath);
-    const pdfDoc = await PDFDocument.load(existingPdfBytes);
-    const page = pdfDoc.getPage(0);
-
-    // Generate QR data
-    const qrData = JSON.stringify({
-      lastName: p.lastName,
-      firstName: p.firstName,
-      serialNumber: p.ticketId,
-      email: p.email,
-    });
-
-    const qrDataUrl = await QRCode.toDataURL(qrData);
-    const qrImageBytes = Buffer.from(
-      qrDataUrl.replace(/^data:image\/png;base64,/, ""),
-      "base64",
-    );
-    const qrImage = await pdfDoc.embedPng(qrImageBytes);
-
-    // Draw QR code on the template
-    page.drawImage(qrImage, {
-      x: 944.49,
-      y: 113.49,
-      width: 193.02,
-      height: 193.02,
-    });
-
-    // Save the personalized ticket
-    const pdfBytes = await pdfDoc.save();
-
-    // Send ticket via Inngest
-    //     await inngest.send({
-    //       name: "test/email.sent",
-    //       data: {
-    //         to: [p.email],
-    //         subject: "Your Engineers Gala 2026 Ticket",
-    //         text: `Hello ${p.firstName},
-
-    // Your ticket is attached. Please present it at the event.
-
-    // See you soon!`,
-    //         attachments: [
-    //           {
-    //             filename: "ticket.pdf",
-    //             content: Buffer.from(pdfBytes).toString("base64"),
-    //             encoding: "base64",
-    //           },
-    //         ],
-    //       },
-    //     });
-
-    const mail = ticketEmail(p.firstName, String(p.ticketId));
+    const serial = String(p.ticketId);
+    const guest = { firstName: p.firstName, lastName: p.lastName, email: p.email };
+    const mail = ticketEmail(guest, serial);
     await sendEmail({
       to: p.email,
       subject: mail.subject,
@@ -92,9 +29,11 @@ export async function generateAndSendTicket(p: TicketData) {
       html: mail.html,
       attachments: [
         {
-          filename: `ticket-${p.ticketId}.pdf`,
-          content: Buffer.from(pdfBytes).toString("base64"),
-          encoding: "base64",
+          filename: `pass-${serial}.png`,
+          content: await ticketQrPng(guest, serial),
+          contentType: "image/png",
+          cid: TICKET_QR_CID,
+          contentDisposition: "inline",
         },
       ],
     });
