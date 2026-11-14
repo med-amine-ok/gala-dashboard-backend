@@ -676,11 +676,7 @@ export default function ParticipantsPage() {
                       <div className="font-medium text-[#1A1A1A]">{p.university === 'OTHER' ? p.university_other : p.university}</div>
                       <div className="text-[10px] text-[#8C8C8C] mt-0.5">{p.field_of_study === 'OTHER' ? p.field_of_study_other : p.field_of_study}</div>
                     </td>
-                    <td className="py-4 px-6">
-                      <span className="inline-flex px-2 py-0.5 rounded-full text-[9px] font-semibold tracking-wider uppercase bg-[#F4EFFF] text-[#7A5F9E] border border-[#DDD0F3]">
-                        {p.participant_type === 'ST' ? 'Student' : 'Guest'}
-                      </span>
-                    </td>
+                  
                     <td className="py-4 px-6">
                       <select
                         value={p.status}
