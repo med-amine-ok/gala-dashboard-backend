@@ -449,19 +449,7 @@ export default function ParticipantsPage() {
             </select>
           </div>
 
-          {/* Type Filter */}
-          <div>
-            <label className="block text-[10px] uppercase font-bold tracking-wider text-[#8C8C8C] mb-1">Type</label>
-            <select
-              value={typeFilter}
-              onChange={(e) => { setTypeFilter(e.target.value); setPage(1); }}
-              className="w-full px-2.5 py-2 bg-[#FAF8F5] border border-[#EAE3D5] rounded-xl text-xs font-medium text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2] cursor-pointer"
-            >
-              <option value="">All Types</option>
-              <option value="ST">Student</option>
-              <option value="G">Guest</option>
-            </select>
-          </div>
+        
 
           {/* Place of Study / University Filter */}
           <div>
@@ -635,7 +623,7 @@ export default function ParticipantsPage() {
                 </th>
                 <th className="py-4 px-6">Name</th>
                 <th className="py-4 px-6">Affiliation / Study</th>
-                <th className="py-4 px-6">Type</th>
+               
                 <th className="py-4 px-6">Status</th>
                 <th className="py-4 px-6">Payment</th>
                 <th className="py-4 px-6">Registered</th>
@@ -1075,17 +1063,7 @@ export default function ParticipantsPage() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[10px] uppercase tracking-wider text-[#666666] font-semibold mb-1">Type</label>
-                  <select
-                    value={addForm.participant_type}
-                    onChange={(e) => setAddForm(prev => ({ ...prev, participant_type: e.target.value }))}
-                    className="w-full p-2.5 bg-[#FAF7F2] border border-[#E5DAC6] rounded-xl text-xs text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C5A880]"
-                  >
-                    <option value="ST">Student</option>
-                    <option value="G">Guest</option>
-                  </select>
-                </div>
+               
                 <div>
                   <label className="block text-[10px] uppercase tracking-wider text-[#666666] font-semibold mb-1">LinkedIn URL</label>
                   <input
