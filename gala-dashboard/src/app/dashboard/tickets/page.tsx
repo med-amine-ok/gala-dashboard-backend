@@ -38,6 +38,7 @@ export default function TicketsPage() {
 
   // Form states
   const [generateCount, setGenerateCount] = useState(10);
+  const [participantSearch, setParticipantSearch] = useState('');
   const [assignForm, setAssignForm] = useState({
     participant_id: '',
     ticket_serial: '',
@@ -71,6 +72,33 @@ export default function TicketsPage() {
   const candidateParticipants = React.useMemo(() => {
     return participantsData?.results?.filter(p => !p.ticket_serial_number) || [];
   }, [participantsData]);
+
+  // Filter candidates by search term in the assign modal
+  const filteredCandidates = React.useMemo(() => {
+    if (!participantSearch.trim()) return candidateParticipants;
+    const q = participantSearch.toLowerCase().trim();
+    return candidateParticipants.filter(p => {
+      const fullName = (p.full_name || `${p.first_name || ''} ${p.last_name || ''}`).toLowerCase();
+      const email = (p.email || '').toLowerCase();
+      const university = (p.university === 'OTHER' ? p.university_other : p.university || '').toLowerCase();
+      const study = (p.field_of_study === 'OTHER' ? p.field_of_study_other : p.field_of_study || '').toLowerCase();
+      const phone = (p.phone || '').toLowerCase();
+      const status = (p.status || '').toLowerCase();
+      return (
+        fullName.includes(q) ||
+        email.includes(q) ||
+        university.includes(q) ||
+        study.includes(q) ||
+        phone.includes(q) ||
+        status.includes(q)
+      );
+    });
+  }, [candidateParticipants, participantSearch]);
+
+  const selectedParticipant = React.useMemo(() => {
+    if (!assignForm.participant_id) return null;
+    return candidateParticipants.find(p => String(p.id) === String(assignForm.participant_id)) || null;
+  }, [candidateParticipants, assignForm.participant_id]);
 
   const allTickets = ticketsData?.results || [];
   const unassignedTickets = unassignedData?.tickets || [];
@@ -140,6 +168,7 @@ export default function TicketsPage() {
       }
       setIsAssignModalOpen(false);
       setAssignForm({ participant_id: '', ticket_serial: '', reference: 'Manual cash payment' });
+      setParticipantSearch('');
       invalidateQueries();
     },
     onError: (err: any) => {
@@ -707,30 +736,149 @@ export default function TicketsPage() {
               }}
               className="space-y-4"
             >
-              <div>
-                <label className="block text-[10px] text-[#666666] font-semibold mb-1 uppercase">
-                  Select Participant ({candidateParticipants.length} Available)
-                </label>
-                <select
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-[10px] text-[#666666] font-semibold uppercase tracking-wider">
+                    Select Participant ({candidateParticipants.length} Available)
+                  </label>
+                  {selectedParticipant && (
+                    <button
+                      type="button"
+                      onClick={() => setAssignForm(prev => ({ ...prev, participant_id: '' }))}
+                      className="text-[10px] text-[#6E4FA0] hover:underline font-semibold cursor-pointer"
+                    >
+                      Change participant
+                    </button>
+                  )}
+                </div>
+
+                {selectedParticipant ? (
+                  /* Selected Participant Card */
+                  <div className="p-3 bg-[#FAF8F5] border border-[#C8B6E2] rounded-2xl flex items-center justify-between gap-2 shadow-2xs animate-fade-in">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-xs text-[#1A1A1A] truncate">
+                          {selectedParticipant.full_name || selectedParticipant.email}
+                        </span>
+                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase ${
+                          selectedParticipant.status === 'APPROVED'
+                            ? 'bg-[#EBF2EC] text-[#2E5A36] border border-[#D5E6D8]'
+                            : selectedParticipant.status === 'REJECTED'
+                            ? 'bg-[#F9ECEF] text-[#8B2635] border border-[#F2C2CB]'
+                            : 'bg-[#F7F1E6] text-[#8C6F45] border border-[#E5DAC6]'
+                        }`}>
+                          {selectedParticipant.status}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-[#6B6862] truncate mt-0.5">
+                        {selectedParticipant.email}
+                        {selectedParticipant.university && ` • ${selectedParticipant.university === 'OTHER' ? selectedParticipant.university_other : selectedParticipant.university}`}
+                        {selectedParticipant.field_of_study && ` (${selectedParticipant.field_of_study === 'OTHER' ? selectedParticipant.field_of_study_other : selectedParticipant.field_of_study})`}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setAssignForm(prev => ({ ...prev, participant_id: '' }))}
+                      className="p-1.5 text-[#96928B] hover:text-[#1A1A1A] hover:bg-[#EAE3D5]/50 rounded-lg transition-colors cursor-pointer shrink-0"
+                      title="Clear selection"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {/* Search Input */}
+                    <div className="relative">
+                      <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-[#96928B]" />
+                      <input
+                        type="text"
+                        placeholder="Type to search name, email, school..."
+                        value={participantSearch}
+                        onChange={(e) => setParticipantSearch(e.target.value)}
+                        disabled={candidateParticipants.length === 0}
+                        className="w-full pl-9 pr-8 py-2 bg-[#FAF8F5] border border-[#EAE3D5] rounded-xl text-xs text-[#1A1A1A] placeholder-[#96928B] focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2] disabled:opacity-50"
+                      />
+                      {participantSearch && (
+                        <button
+                          type="button"
+                          onClick={() => setParticipantSearch('')}
+                          className="absolute right-2.5 top-2.5 text-[#96928B] hover:text-[#1A1A1A] p-0.5 cursor-pointer"
+                          title="Clear search"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Filtered Candidate List */}
+                    {candidateParticipants.length > 0 && (
+                      <div className="max-h-44 overflow-y-auto border border-[#EAE3D5] rounded-xl bg-[#FAF8F5] divide-y divide-[#EAE3D5]/60 shadow-inner">
+                        {filteredCandidates.length === 0 ? (
+                          <div className="p-3 text-center text-xs text-[#8C8C8C]">
+                            No participants match &ldquo;{participantSearch}&rdquo;
+                          </div>
+                        ) : (
+                          filteredCandidates.map(p => (
+                            <button
+                              key={p.id}
+                              type="button"
+                              onClick={() => {
+                                setAssignForm(prev => ({ ...prev, participant_id: String(p.id) }));
+                              }}
+                              className="w-full text-left p-2.5 hover:bg-[#ECE5F8] transition-colors flex items-center justify-between gap-2 cursor-pointer group"
+                            >
+                              <div className="min-w-0">
+                                <div className="text-xs font-semibold text-[#1A1A1A] group-hover:text-[#6E4FA0] truncate flex items-center gap-1.5">
+                                  <span>{p.full_name || p.email}</span>
+                                  <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase ${
+                                    p.status === 'APPROVED' ? 'bg-[#EBF2EC] text-[#2E5A36]' : 'bg-[#F7F1E6] text-[#8C6F45]'
+                                  }`}>
+                                    {p.status}
+                                  </span>
+                                </div>
+                                <div className="text-[10px] text-[#6B6862] truncate mt-0.5">
+                                  {p.email} • {p.university === 'OTHER' ? p.university_other : p.university} ({p.field_of_study === 'OTHER' ? p.field_of_study_other : p.field_of_study})
+                                </div>
+                              </div>
+                              <span className="text-[10px] font-semibold text-[#6E4FA0] opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                                Select →
+                              </span>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    )}
+
+                    {/* Filtered Select Fallback */}
+                    {candidateParticipants.length > 0 && (
+                      <select
+                        value={assignForm.participant_id}
+                        onChange={(e) => setAssignForm(prev => ({ ...prev, participant_id: e.target.value }))}
+                        className="w-full p-2 bg-[#FAF8F5] border border-[#EAE3D5] rounded-xl text-xs text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2]"
+                      >
+                        <option value="">
+                          {filteredCandidates.length === 0
+                            ? 'No matches in dropdown'
+                            : `-- Or pick from dropdown (${filteredCandidates.length} matching) --`}
+                        </option>
+                        {filteredCandidates.map(p => (
+                          <option key={p.id} value={p.id}>
+                            {p.full_name || p.email} ({p.email || 'No email'}) • [{p.status}]
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                )}
+
+                {/* Hidden input to ensure required validation */}
+                <input
+                  type="text"
+                  className="sr-only"
                   required
-                  disabled={candidateParticipants.length === 0}
                   value={assignForm.participant_id}
-                  onChange={(e) => setAssignForm(prev => ({ ...prev, participant_id: e.target.value }))}
-                  className="w-full p-2.5 bg-[#FAF8F5] border border-[#EAE3D5] rounded-xl text-xs text-[#1A1A1A] focus:outline-hidden focus:ring-2 focus:ring-[#C8B6E2] disabled:opacity-50"
-                >
-                  <option value="">
-                    {isParticipantsLoading
-                      ? 'Loading participants...'
-                      : candidateParticipants.length === 0
-                      ? 'No participants awaiting tickets'
-                      : 'Choose Participant...'}
-                  </option>
-                  {candidateParticipants.map(p => (
-                    <option key={p.id} value={p.id}>
-                      {p.full_name || p.email} ({p.email || 'No email'}) • [{p.status}]
-                    </option>
-                  ))}
-                </select>
+                  onChange={() => {}}
+                />
               </div>
 
               <div>
@@ -777,7 +925,14 @@ export default function TicketsPage() {
                   {assignTicketMutation.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                   <span>Issue & Confirm Payment</span>
                 </button>
-                <button type="button" onClick={() => setIsAssignModalOpen(false)} className="px-5 py-3.5 bg-[#FAF8F5] hover:bg-[#ECE5F8] text-[#6E4FA0] border border-[#EAE3D5] rounded-2xl font-semibold min-h-[44px]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAssignModalOpen(false);
+                    setParticipantSearch('');
+                  }}
+                  className="px-5 py-3.5 bg-[#FAF8F5] hover:bg-[#ECE5F8] text-[#6E4FA0] border border-[#EAE3D5] rounded-2xl font-semibold min-h-[44px] cursor-pointer transition-colors"
+                >
                   Cancel
                 </button>
               </div>
