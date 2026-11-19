@@ -9,7 +9,7 @@ import ManifestoSection from "../../manifesto/page";
 import Real3DEntranceCanvas, { type EntranceFrame } from "./Real3DEntranceCanvas";
 import { preloadHeroTextures } from "./TextureGenerator";
 import HeroLoader from "./HeroLoader";
-import { REGISTRATION_OPENS } from "../../../lib/event";
+import { REGISTRATION_OPENS, registrationPhase } from "../../../lib/event";
 
 // Attendee photo (5472 x 3648) used for the out-of-focus hall beyond the doors
 const HALL_PHOTO_ASPECT = 1.5;
@@ -30,7 +30,7 @@ function setLayer(el: HTMLElement | null, opacity: number, y = 0, scale = 1) {
 }
 
 export default function LayeredPortalHero() {
-  const { texts } = useLanguage();
+  const { texts, lang } = useLanguage();
 
   // Root scroll trigger container & inner pinned stage references
   const containerRef = useRef<HTMLDivElement>(null);
@@ -486,7 +486,9 @@ export default function LayeredPortalHero() {
             >
               <div className="flex items-center justify-center gap-2">
                 <p className="text-[8.5px] xs:text-[9.5px] sm:text-[11px] uppercase tracking-[0.24em] text-[var(--color-silver-light)] font-semibold text-center sm:text-left drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]">
-                  {registrationOpen
+                  {registrationOpen && registrationPhase() === "closed"
+                    ? (lang === "fr" ? "LES INSCRIPTIONS SONT CLOSES" : "REGISTRATION IS CLOSED")
+                    : registrationOpen
                     ? texts.hero?.countdownOpenLabel || "REGISTRATION IS NOW OPEN"
                     : texts.hero?.countdownLabel || "REGISTRATION OPENS IN"}
                 </p>

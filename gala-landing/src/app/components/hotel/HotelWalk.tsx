@@ -12,7 +12,7 @@ import Pricing from "../../ticket/page";
 import Apropos from "../../apropos/page";
 import Footer from "../../footer/page";
 import { CREDIT, SOCIALS } from "../../../lib/socials";
-import { REGISTRATION_OPENS, registrationIsOpen } from "../../../lib/event";
+import { REGISTRATION_OPENS, registrationPhase, type RegistrationPhase } from "../../../lib/event";
 
 // One photo per edition, named after its year
 const EDITION_IMAGES: Record<string, string> = {
@@ -98,17 +98,17 @@ function Walk() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lang]);
 
-  // Registration: closed (a sealed letter and its clock) until it opens, then
-  // the walk is rebuilt with the letter that opens and its pass
-  const [open, setOpen] = useState(true);
+  // Registration: sealed letter with its clock until it opens, then the letter
+  // opens on its pass; after the closing time it is sealed again, without a clock
+  const [phase, setPhase] = useState<RegistrationPhase>("open");
   useEffect(() => {
-    if (registrationIsOpen()) return setOpen(true);
-    setOpen(false);
-    const wait = REGISTRATION_OPENS.getTime() - Date.now();
-    if (wait > 2_000_000_000) return;
-    const id = window.setTimeout(() => setOpen(true), wait + 500);
-    return () => window.clearTimeout(id);
+    const update = () => setPhase(registrationPhase());
+    update();
+    const id = window.setInterval(update, 30_000);
+    return () => window.clearInterval(id);
   }, []);
+  const open = phase === "open";
+  const ended = phase === "closed";
 
   // The words of each room, engraved in the scene
   const words: HotelWords = useMemo(() => {
@@ -130,7 +130,19 @@ function Walk() {
         ...(open
           ? {}
           : {
-              sealed: {
+              sealed: ended
+                ? {
+                    opensAt: 0,
+                    eyebrow: fr ? "Inscriptions closes" : "Registration closed",
+                    title: fr ? "Les inscriptions sont closes." : "Registration is now closed.",
+                    message: fr
+                      ? "Merci pour votre enthousiasme. Les réponses sont envoyées par e-mail."
+                      : "Thank you for the wonderful response. Answers are sent by email.",
+                    countdown: "",
+                    labels: fr ? (["jours", "heures", "min", "sec"] as [string, string, string, string]) : (["days", "hours", "min", "sec"] as [string, string, string, string]),
+                    note: t.date,
+                  }
+                : {
                 opensAt: REGISTRATION_OPENS.getTime(),
                 eyebrow: fr ? "L'invitation est scellée" : "The invitation is sealed",
                 title: texts.register?.closed?.title || (fr ? "Les inscriptions ouvrent le 10 novembre." : "Registration opens on 10 November."),
@@ -148,10 +160,10 @@ function Walk() {
         pillars: s.pillars || [],
       },
       venue: t.venue,
-      farewell: farewellWords(texts, fr),
+      farewell: farewellWords(texts, fr, ended),
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lang, open]);
+  }, [lang, open, ended]);
 
   const plan = hotelPlan(frames.length, !open);
   const ref = useRef<HTMLDivElement>(null);
@@ -345,7 +357,7 @@ function Walk() {
 /** Every word engraved in the hotel, for assistive technology */
 /** The page's last words, for the farewell wall in the club */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function farewellWords(texts: any, fr: boolean): HotelWords["farewell"] {
+function farewellWords(texts: any, fr: boolean, ended = false): HotelWords["farewell"] {
   const f = texts.footer || {};
   const inv = texts.invitations || {};
   return {
@@ -353,7 +365,7 @@ function farewellWords(texts: any, fr: boolean): HotelWords["farewell"] {
     title: fr ? ["À très bientôt,", "pour la soirée."] : ["See you", "on that evening."],
     countdownLabels: fr ? ["jours", "h", "min"] : ["days", "hrs", "min"],
     until: fr ? "avant l'ouverture des inscriptions" : "until registration opens",
-    cta: texts.nav?.requestInvitation || "REQUEST INVITATION",
+    cta: ended ? (fr ? "INSCRIPTIONS CLOSES" : "REGISTRATION CLOSED") : texts.nav?.requestInvitation || "REQUEST INVITATION",
     columns: [
       {
         title: f.eventLabel || (fr ? "LA SOIRÉE" : "THE EVENING"),

@@ -11,7 +11,7 @@ import Image from "next/image";
 import * as z from "zod";
 import { useLanguage } from "../../context/LanguageContext";
 import { GALA_EASE, GalaButton, GalaStar } from "../components/gala/Room";
-import { REGISTRATION_OPENS, registrationIsOpen } from "../../lib/event";
+import { REGISTRATION_OPENS, registrationPhase, type RegistrationPhase } from "../../lib/event";
 
 const fieldOfStudyOptions = [
   { value: "hydraulics", label: "Hydraulics Engineering" },
@@ -488,35 +488,46 @@ export default function RegistrationPage() {
   );
 }
 
-/** Before registration opens, a clear notice with a countdown; then the form */
+/** Before registration opens, a notice with a countdown; then the form; after
+ *  the closing time, a closed notice (the backend refuses late requests too) */
 function RegistrationGate() {
-  const [open, setOpen] = useState<boolean | null>(null);
+  const [phase, setPhase] = useState<RegistrationPhase | null>(null);
   useEffect(() => {
-    const tick = () => setOpen(registrationIsOpen());
+    const tick = () => setPhase(registrationPhase());
     tick();
     const id = window.setInterval(tick, 15_000);
     return () => window.clearInterval(id);
   }, []);
-  if (open === null) {
+  if (phase === null) {
     return <div className="min-h-screen bg-[#1d0314]" />;
   }
-  return open ? <RegistrationContent /> : <RegistrationClosed />;
+  if (phase === "open") return <RegistrationContent />;
+  return <RegistrationClosed ended={phase === "closed"} />;
 }
 
-function RegistrationClosed() {
+function RegistrationClosed({ ended = false }: { ended?: boolean }) {
   const { texts, lang } = useLanguage();
-  const c = texts.register?.closed || {};
   const fr = lang === "fr";
+  const c = ended
+    ? {
+        eyebrow: fr ? "INSCRIPTIONS" : "REGISTRATION",
+        title: fr ? "Les inscriptions sont closes." : "Registration is now closed.",
+        message: fr
+          ? "Merci pour votre enthousiasme : les demandes de pass d'admission sont désormais fermées. Si vous vous êtes inscrit(e), votre réponse vous parviendra par e-mail."
+          : "Thank you for the wonderful response: requests for an admission pass are now closed. If you registered, you will receive our answer by email.",
+        ...(texts.register?.ended || {}),
+      }
+    : texts.register?.closed || {};
   const [left, setLeft] = useState<{ d: number; h: number; m: number } | null>(null);
   useEffect(() => {
     const tick = () => {
-      const ms = REGISTRATION_OPENS.getTime() - Date.now();
+      const ms = ended ? 0 : REGISTRATION_OPENS.getTime() - Date.now();
       setLeft(ms > 0 ? { d: Math.floor(ms / 86_400_000), h: Math.floor(ms / 3_600_000) % 24, m: Math.floor(ms / 60_000) % 60 } : null);
     };
     tick();
     const id = window.setInterval(tick, 30_000);
     return () => window.clearInterval(id);
-  }, []);
+  }, [ended]);
 
   return (
     <div className="relative min-h-screen bg-[#1d0314] text-[var(--color-cream)] font-sans">

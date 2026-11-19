@@ -363,6 +363,8 @@ export type SealedWords = {
   countdown: string;
   labels: [string, string, string, string];
   note?: string;
+  /** Shown instead of the clock once registration has closed */
+  message?: string;
 };
 
 /**
@@ -392,6 +394,21 @@ export function sealedCard(words: SealedWords, opensAt: number) {
     g.font = `italic 500 76px ${italic}`;
     const lines = wrap(g, words.title, W - 260);
     lines.forEach((ln, i) => g.fillText(ln, W / 2, 270 + i * 84));
+    // Registration closed: a message instead of the clock
+    if (words.message && opensAt <= Date.now()) {
+      g.fillStyle = "rgba(246,241,232,0.8)";
+      g.font = `400 46px ${sans}`;
+      const msg = wrap(g, words.message, W - 360);
+      const msgTop = 270 + lines.length * 84 + 110;
+      msg.forEach((ln, i) => g.fillText(ln, W / 2, msgTop + i * 62));
+      if (words.note) {
+        g.fillStyle = "rgba(246,241,232,0.65)";
+        g.font = `400 34px ${sans}`;
+        g.fillText(words.note, W / 2, H - 90);
+      }
+      texture.needsUpdate = true;
+      return;
+    }
     // The clock
     const ms = Math.max(0, opensAt - Date.now());
     const parts = [Math.floor(ms / 86_400_000), Math.floor(ms / 3_600_000) % 24, Math.floor(ms / 60_000) % 60, Math.floor(ms / 1000) % 60];

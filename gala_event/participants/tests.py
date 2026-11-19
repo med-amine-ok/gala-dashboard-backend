@@ -159,3 +159,30 @@ class ApprovalTests(TestCase):
         client = APIClient()
         client.force_authenticate(self.user)
         self.assertEqual(client.get('/api/participants/view/').status_code, 403)
+
+
+class RegistrationDeadlineTests(TestCase):
+    """Public registration closes at settings.REGISTRATION_CLOSES_AT; HR can still add people."""
+
+    def test_open_before_and_closed_after_the_deadline(self):
+        from django.test import override_settings
+        client = APIClient()
+        with override_settings(REGISTRATION_CLOSES_AT='2999-01-01T00:00:00+01:00'):
+            self.assertEqual(client.post('/api/participants/register/', LANDING_PAYLOAD, format='json').status_code, 201)
+        with override_settings(REGISTRATION_CLOSES_AT='2000-01-01T00:00:00+01:00'):
+            r = client.post('/api/participants/register/', dict(LANDING_PAYLOAD, email='late@example.com'), format='json')
+            self.assertEqual(r.status_code, 403)
+            self.assertIn('closed', r.json()['error'])
+            self.assertFalse(Participant.objects.filter(email='late@example.com').exists())
+            # HR manual registration still works after the deadline
+            hr_client = APIClient()
+            hr_client.force_authenticate(make_hr())
+            r = hr_client.post('/api/participants/manual-register/', dict(LANDING_PAYLOAD, email='vip@example.com'), format='json')
+            self.assertEqual(r.status_code, 201, r.content)
+
+    def test_deadline_is_tonight_midnight_algiers(self):
+        from datetime import datetime, timedelta, timezone as tz
+        from participants.views import registration_closed
+        algiers = tz(timedelta(hours=1))
+        self.assertFalse(registration_closed(datetime(2026, 11, 19, 23, 59, 59, tzinfo=algiers)))
+        self.assertTrue(registration_closed(datetime(2026, 11, 20, 0, 0, 0, tzinfo=algiers)))

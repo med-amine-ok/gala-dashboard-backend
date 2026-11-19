@@ -288,6 +288,11 @@ CHARGILY_API_URL = env('CHARGILY_API_URL', default='')
 # Send the payment link inside the approval email
 PAYMENT_LINK_IN_APPROVAL_EMAIL = env.bool('PAYMENT_LINK_IN_APPROVAL_EMAIL', default=True)
 
+# Public registration closes at this moment (ISO 8601 with offset; empty = never).
+# Default: midnight at the end of 19 November 2026, Algiers time (UTC+1).
+# Keep in sync with REGISTRATION_CLOSES in gala-landing/src/lib/event.ts.
+REGISTRATION_CLOSES_AT = env('REGISTRATION_CLOSES_AT', default='2026-11-20T00:00:00+01:00')
+
 # Cache settings: used by DRF throttling. Use Redis only when CACHE_URL is set
 # explicitly, so a missing Redis never breaks requests.
 _cache_url = env('CACHE_URL', default='')

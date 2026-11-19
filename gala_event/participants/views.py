@@ -6,7 +6,9 @@ from cloudinary.uploader import upload as cloudinary_upload
 from django.db import IntegrityError, transaction
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
+from django.conf import settings
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -96,6 +98,15 @@ class ParticipantProfileUpdateView(APIView):
         return self.put(request)
 
 
+def registration_closed(now=None):
+    """True once the public registration deadline (settings.REGISTRATION_CLOSES_AT) has passed.
+    HR can still register people by hand (manual-register) after it."""
+    closes_at = parse_datetime(settings.REGISTRATION_CLOSES_AT or '')
+    if closes_at is None:
+        return False
+    return (now or timezone.now()) >= closes_at
+
+
 class ParticipantRegistrationView(APIView):
     # Public endpoint, no authentication required
     permission_classes = [AllowAny]
@@ -109,6 +120,11 @@ class ParticipantRegistrationView(APIView):
         operation_description="Creates an inactive user account (username=email) and a PENDING participant profile."
     )
     def post(self, request):
+        if registration_closed():
+            return Response(
+                {"error": "Registration is closed. Thank you for your interest in the Engineers' Gala."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         serializer = ParticipantRegistrationSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
