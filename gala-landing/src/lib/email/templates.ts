@@ -7,21 +7,25 @@ export function paymentLinkEmail(firstName: string | null | undefined, paymentUr
   return {
     subject: `Your seat at the ${EVENT.name} is waiting`,
     ...renderEmail({
-      preheader: `Your registration is approved. Confirm your seat with a ${EVENT.price} payment.`,
+      preheader: `Approved! Pay ${EVENT.price} within 48 hours, online or at the VIC office, to confirm your seat.`,
       eyebrow: "Registration approved",
       title: "Your seat is waiting",
       greeting: greet(firstName),
       paragraphs: [
         `Good news: our committee has approved your registration for the ${EVENT.name}.`,
-        `To confirm your seat, complete your payment of ${EVENT.price} using the secure link below. As soon as it is received, your official ticket will be emailed to you.`,
+        `To confirm your seat, please pay the entrance fee of ${EVENT.price} within 48 hours, in one of two ways:`,
+        "• Online: with the secure button below (Edahabia or CIB card).",
+        `• In person: at the VIC office (${EVENT.organiser}).`,
+        "As soon as your payment is received, your official ticket will be emailed to you.",
       ],
-      cta: { label: `Pay ${EVENT.price} & confirm my seat`, url: paymentUrl },
+      cta: { label: `Pay ${EVENT.price} online`, url: paymentUrl },
       details: [
         { label: "Date", value: EVENT.dateLong },
-        { label: "Venue", value: EVENT.venue, url: EVENT.mapUrl },
+        { label: "Venue", value: "To be announced, stay tuned" },
         { label: "Entrance", value: EVENT.price },
+        { label: "Pay within", value: "48 hours" },
       ],
-      footnote: "This link is personal: please don't share it. Payments are processed securely by Chargily Pay (Edahabia / CIB).",
+      footnote: "This link is personal: please don't share it. Online payments are processed securely by Chargily Pay.",
     }),
   };
 }

@@ -262,19 +262,27 @@ def send_ticket_email(participant, ticket, sent_by=None):
 
 def _payment_link_content(participant, intro):
     return dict(
-        preheader=f"Your registration is approved. Confirm your seat with a {EVENT['price']} payment.",
+        preheader=f"Approved! Pay {EVENT['price']} within 48 hours, online or at the VIC office, to confirm your seat.",
         eyebrow="Registration approved",
         title="Your seat is waiting",
         greeting=_greeting(participant),
         paragraphs=[
             intro,
-            f"To confirm your seat, complete your payment of {EVENT['price']} using the secure link "
-            "below. As soon as it is received, your official ticket will be emailed to you.",
+            f"To confirm your seat, please pay the entrance fee of {EVENT['price']} within 48 hours, "
+            "in one of two ways:",
+            "• Online: with the secure button below (Edahabia or CIB card).",
+            f"• In person: at the VIC office ({EVENT['organiser']}).",
+            "As soon as your payment is received, your official ticket will be emailed to you.",
         ],
-        cta={'label': f"Pay {EVENT['price']} & confirm my seat", 'url': payment_link(participant)},
-        details=[('Date', EVENT['date_long']), ('Venue', EVENT['venue'], EVENT['map_url']), ('Entrance', EVENT['price'])],
-        footnote="This link is personal: please don't share it. Payments are processed securely by "
-                 "Chargily Pay (Edahabia / CIB).",
+        cta={'label': f"Pay {EVENT['price']} online", 'url': payment_link(participant)},
+        details=[
+            ('Date', EVENT['date_long']),
+            ('Venue', 'To be announced, stay tuned'),
+            ('Entrance', EVENT['price']),
+            ('Pay within', '48 hours'),
+        ],
+        footnote="This link is personal: please don't share it. Online payments are processed securely by "
+                 "Chargily Pay.",
     )
 
 
