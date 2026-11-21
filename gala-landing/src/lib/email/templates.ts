@@ -12,7 +12,7 @@ export function paymentLinkEmail(firstName: string | null | undefined, paymentUr
       title: "Your seat is waiting",
       greeting: greet(firstName),
       paragraphs: [
-        `Good news: our committee has approved your registration for the ${EVENT.name}.`,
+        `Good news: Ctulations!!! You have been selected to attendn for the ${EVENT.name}.`,
         `To confirm your seat, please pay the entrance fee of ${EVENT.price} within 48 hours, in one of two ways:`,
         "• Online: with the secure button below (Edahabia or CIB card).",
         `• In person: at the VIC office (${EVENT.organiser}).`,
