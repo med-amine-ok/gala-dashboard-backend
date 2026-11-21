@@ -277,7 +277,7 @@ def _payment_link_content(participant, intro):
         cta={'label': f"Pay {EVENT['price']} online", 'url': payment_link(participant)},
         details=[
             ('Date', EVENT['date_long']),
-            ('Venue', 'To be announced, stay tuned'),
+            ('Venue', EVENT['venue'], EVENT['map_url']),
             ('Entrance', EVENT['price']),
             ('Pay within', '48 hours'),
         ],
@@ -291,7 +291,7 @@ def send_approval_email(participant, sent_by=None):
     if not email:
         return False
     variables = {'first_name': _first_name(participant), 'payment_url': payment_link(participant)}
-    intro = f"Good news: our committee has approved your registration for the {EVENT['name']}."
+    intro = f"Congratulations! You have been selected to attend the {EVENT['name']}."
     if settings.PAYMENT_LINK_IN_APPROVAL_EMAIL and participant.payment_status != 'paid':
         content = _payment_link_content(participant, intro)
     else:
@@ -309,23 +309,34 @@ def send_approval_email(participant, sent_by=None):
                       participant=participant, template=template, sent_by=sent_by)
 
 
+WAITLIST_PARAGRAPHS = [
+    "First and foremost, we would like to sincerely thank you for your interest in the 9th edition of "
+    "the Engineers' GALA and for taking the time to register.",
+    "We truly appreciate your enthusiasm and the interest you've shown in being part of this special occasion.",
+    "Unfortunately, due to the limited number of available places, we are unable to confirm your "
+    "participation at this stage. However, we are pleased to inform you that you have been placed on our "
+    "waiting list.",
+    "Should any places become available, we will make sure to contact you accordingly.",
+    "Thank you for your understanding, and we wish you all the best.",
+    "Best regards,",
+    "VICly",
+]
+
+
 def send_rejection_email(participant, sent_by=None):
+    """Sent automatically when HR rejects a registration: the waiting-list message
+    (same text as the landing site's waitlistEmail in gala-landing/src/lib/email/templates.ts)."""
     email = participant.email or (participant.user.email if participant.user else None)
     if not email:
         return False
     variables = {'first_name': _first_name(participant), 'rejection_reason': participant.rejection_reason}
     template, subject, text, html = _branded(
-        'rejection_notification', variables, f"About your {EVENT['name']} registration",
-        preheader=f"An update about your registration for the {EVENT['name']}.",
+        'rejection_notification', variables, "Your registration for the Engineers' GALA: waiting list",
+        preheader="Thank you for registering. You have been placed on our waiting list.",
         eyebrow="Registration update",
-        title="Thank you for your interest",
+        title="You're on our waiting list",
         greeting=_greeting(participant),
-        paragraphs=[
-            f"Thank you for applying to the {EVENT['name']}. We received many more requests than "
-            "we have seats, and unfortunately we are not able to confirm your registration this time.",
-            "We truly appreciate your interest and hope to welcome you at a future edition.",
-        ],
-        footnote="Questions? Simply reply to this email.",
+        paragraphs=WAITLIST_PARAGRAPHS,
     )
     return send_email(to=email, subject=subject, text=text, html=html,
                       participant=participant, template=template, sent_by=sent_by)

@@ -24,6 +24,7 @@ import {
   GraduationCap,
   RefreshCw,
   CreditCard,
+  Hourglass,
   ExternalLink,
   RotateCcw
 } from 'lucide-react';
@@ -225,6 +226,35 @@ export default function ParticipantsPage() {
       toast.error(err.message || 'The payment link could not be sent.');
     }
   });
+
+  // Waiting-list email (pending / rejected registrations)
+  const waitlistMutation = useMutation({
+    mutationFn: async (ids: number[]) => {
+      let sent = 0;
+      const reasons: string[] = [];
+      for (let i = 0; i < ids.length; i += 10) {
+        const res = await apiClient.sendWaitlistEmails(ids.slice(i, i + 10));
+        sent += res.sent.length;
+        reasons.push(...res.skipped.map((s) => s.reason));
+      }
+      return { sent, reasons };
+    },
+    onSuccess: ({ sent, reasons }, ids) => {
+      const skippedText = reasons.length ? ` ${reasons.length} skipped (${[...new Set(reasons)].join(', ')}).` : '';
+      const text = `Waiting-list email sent to ${sent} participant(s).${skippedText}`;
+      if (sent === 0) toast.warning(text); else toast.success(text);
+      if (ids.length > 1) setSelectedIds([]);
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'The waiting-list email could not be sent.');
+    }
+  });
+
+  const sendWaitlist = (ids: number[]) => {
+    if (!ids.length) return;
+    if (ids.length > 1 && !confirm(`Send the waiting-list email to ${ids.length} participant(s)? Only pending and rejected registrations will receive it.`)) return;
+    waitlistMutation.mutate(ids);
+  };
 
   const bulkPaymentLinksMutation = useMutation({
     mutationFn: async (ids: number[]) => {
@@ -597,6 +627,17 @@ export default function ParticipantsPage() {
               <span>Send Payment Links</span>
             </button>
 
+            {/* Bulk waiting-list email (pending / rejected) */}
+            <button
+              onClick={() => sendWaitlist(selectedIds)}
+              disabled={waitlistMutation.isPending}
+              title="Email the waiting-list message to the selected pending / rejected participants"
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-white text-[#5D0D3D] border border-[#E5DAC6] rounded-xl text-xs font-semibold hover:bg-[#FAF7F2] transition-colors cursor-pointer shadow-xs min-h-[38px] disabled:opacity-60"
+            >
+              {waitlistMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Hourglass className="h-3.5 w-3.5" />}
+              <span>Waiting-list Email</span>
+            </button>
+
             <button
               onClick={() => setSelectedIds([])}
               className="text-xs text-[#8C8C8C] hover:text-[#1A1A1A] underline px-2 py-1 transition-colors cursor-pointer"
@@ -736,6 +777,18 @@ export default function ParticipantsPage() {
                           {sendPaymentLinkMutation.isPending && sendPaymentLinkMutation.variables === p.id
                             ? <Loader2 className="h-4 w-4 animate-spin" />
                             : <CreditCard className="h-4 w-4" />}
+                        </button>
+                      )}
+                      {(p.status === 'PENDING' || p.status === 'REJECTED') && (
+                        <button
+                          onClick={() => sendWaitlist([p.id])}
+                          disabled={waitlistMutation.isPending}
+                          className="p-1 hover:text-[#8C6F45] text-gray-400 transition-colors inline-block cursor-pointer disabled:opacity-50"
+                          title="Send the waiting-list email"
+                        >
+                          {waitlistMutation.isPending && waitlistMutation.variables?.length === 1 && waitlistMutation.variables[0] === p.id
+                            ? <Loader2 className="h-4 w-4 animate-spin" />
+                            : <Hourglass className="h-4 w-4" />}
                         </button>
                       )}
                       {p.status === 'APPROVED' && !(p.payment_status === 'paid' && p.ticket_serial_number && p.ticket_email_sent) && (

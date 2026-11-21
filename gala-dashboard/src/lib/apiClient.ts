@@ -358,6 +358,15 @@ class ApiClient {
     }>('/api/payments/send-link', { participantIds }, { acceptStatuses: [422] });
   }
 
+  /** Email the waiting-list message to pending / rejected participants (landing: /api/participants/send-waitlist). */
+  sendWaitlistEmails(participantIds: number[]) {
+    return this.landingPost<{
+      message: string;
+      sent: { id: number; email: string }[];
+      skipped: { id: number; reason: string }[];
+    }>('/api/participants/send-waitlist', { participantIds }, { acceptStatuses: [422] });
+  }
+
   // HTTP Helper Methods
   async get<T>(endpoint: string, options?: RequestInit): Promise<T> {
     return this.request<T>(endpoint, { method: 'GET', ...options });
